@@ -1,0 +1,8 @@
+{% extends "hyde/templates/index.html" %}
+
+{% block content %}
+<div class="site-credits">
+    <h1 class="post-title">{{ page.title }}</h1>
+    {{ page.content | safe }}
+</div>
+{% endblock content %}

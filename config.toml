@@ -1,21 +1,11 @@
-# The URL the site will be built for
+title = "Foresterre"
+description = "A cozy little blog"
 base_url = "https://foresterre.github.io"
 
-# The site title and description; used in feeds by default.
-title = "🗺 Foresterre's Journal"
-description = "My little corner of the internet. Here I post thoughts on (ongoing) software development"
-
-# The default language; used in feeds.
-default_language = "en"
-
-# The site theme to use.
-theme = "DeepThought"
-
-# Whether to automatically compile all Sass files in the sass directory
+theme = "hyde"
 compile_sass = true
-
-# Whether to build a search index to be used later on by a JavaScript library
 build_search_index = true
+generate_feed = true
 
 [markdown]
 # Whether to do syntax highlighting
@@ -23,37 +13,18 @@ build_search_index = true
 highlight_code = true
 
 [extra]
-katex.enabled = true
-katex.auto_render = true
-
-chart.enabled = false
-mermaid.enabled = false
-galleria.enabled = false
-
-navbar_items = [
- { code = "en", nav_items = [
-  { url = "$BASE_URL/", name = "Home" },
-  { url = "$BASE_URL/posts", name = "Posts" },
-  { url = "$BASE_URL/docs", name = "Docs" },
-  { url = "$BASE_URL/tags", name = "Tags" },
-  { url = "$BASE_URL/categories", name = "Categories" },
- ]},
+hyde_sticky = true
+hyde_reverse = false
+hyde_theme = "theme-base-08"
+hyde_links = [
+    {url = "/", name = "Home"},
+    {url = "/about", name = "About"},
+    {url = "/blog", name = "Blog"},
+    {url = "https://github.com/foresterre", name = "GitHub", projects = [
+        {url = "https://github.com/foresterre/cargo-msrv", name = "Cargo MSRV"} # TODO add to templates/index.html <ul>
+    ]},
 ]
 
-# Add links to favicon, you can use https://realfavicongenerator.net/ to generate favicon for your site
-[extra.favicon]
-favicon_16x16 = "/icons/favicon-16x16.png"
-favicon_32x32 = "/icons/favicon-32x32.png"
-apple_touch_icon = "/icons/apple-touch-icon.png"
-safari_pinned_tab = "/icons/safari-pinned-tab.svg"
-webmanifest = "/icons/site.webmanifest"
-
-# Author details
-[extra.author]
-name = "Martijn Gribnau"
-avatar = "https://avatars.githubusercontent.com/u/5955761?v=4"
-
-# Social links
-[extra.social]
-email = "foresterre.github.io@mailbox.ilumeo.com"
-github = "foresterre"
+custom_links = [
+    {url = "/site", name = "site credits"}
+]
