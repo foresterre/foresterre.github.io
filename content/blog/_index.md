@@ -1,7 +1,4 @@
 +++
-title = "Blog"
-paginate_by = 5
-insert_anchor_links = "left"
-sort_by = "date"
-generate_feed = true
+title = "Foresterre's blog"
+description = "A view into the world, by Martijn Gribnau"
 +++

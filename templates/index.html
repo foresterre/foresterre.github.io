@@ -1,34 +1,89 @@
-{% extends "hyde/templates/index.html" %}
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <!-- Title & description -->
+    <title>{% block title %}{{ config.title }}{% endblock title %}</title>
+    <meta name="description" content="{{ config.description }}">
+    
+    {% if config.generate_feed %}
+      <link rel="alternate" type={% if config.feed_filename == "atom.xml" %}"application/atom+xml"{% else %}"application/rss+xml"{% endif %} title="RSS" href="{{ get_url(path=config.feed_filename) | safe }}">
+    {% endif %}
 
-{% block extra_head %}
-<link rel="stylesheet" href="{{ get_url(path="custom.css", trailing_slash=false) }}">
-{% endblock extra_head %}
+    {% block head %}
+    {% endblock head %}
 
-{% block sidebar %}
-<div class="sidebar">
-    <div class="container {% if config.extra.hyde_sticky %}sidebar-sticky{% endif %}">
-        <div class="sidebar-about">
-            {% block sidebar_about %}
-            <a href="{{ config.base_url }}"><h1>{{ config.title }}</h1></a>
-            {% if config.description %}
-            <p class="lead">{{config.description}}</p>
-            {% endif %}
-            {% endblock sidebar_about %}
+    <link rel="stylesheet" href="{{ get_url(path="style.css", trailing_slash=false) | safe }}">
+  </head>
+
+  <body>
+  <section class="section">
+    <div class="container">
+      
+      {# Navigation #}
+      <nav class="navbar" role="navigation" aria-label="main navigation">
+        <div class="navbar-brand">
+          {# Website title #}
+          <a class="navbar-item" href="{{ get_url(path="/", trailing_slash=false) | safe }}">
+            <h1 class="title is-5">{{ config.title }}</h1>
+          </a>
+      
+          {# Mobile hamburger menu #}
+          <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navMenu">
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+          </a>
         </div>
-
-        <ul class="sidebar-nav">
-            {% block sidebar_nav %}
-            {% for link in config.extra.hyde_links %}
-            <li class="sidebar-nav-item"><a href="{{link.url}}">{{link.name}}</a></li>
-            {% endfor %}
-            {% endblock sidebar_nav %}
-        </ul>
-
-        <div class="sidebar-custom-links">
-            {% for link in config.extra.custom_links %}
-            <a href="{{link.url}}">{{link.name}}</a>
-            {% endfor %}
+      
+        {# Site navigation #}
+        <div id="navMenu" class="navbar-menu">
+          <div class="navbar-start">
+            <a class="navbar-item" href="{{ get_url(path="/", trailing_slash=false) }}">
+              Home
+            </a>
+      
+            <a class="navbar-item" href="{{ get_url(path="/blog", trailing_slash=false) }}">
+              Blog
+            </a>
+      
+            <a class="navbar-item" href="{{ get_url(path="/about", trailing_slash=false) }}">
+              About me
+            </a>
+          </div>
+      
+          <div class="navbar-end">
+            <div class="navbar-item">
+              <div class="buttons">
+                <a class="button" href="https://github.com/{{ config.extra.author_github }}">
+                  <strong>GitHub</strong>
+                </a>
+                {% if config.extra.author_linkedin %}
+                <a class="button" href="https://linkedin.com/{{ config.extra.author_linkedin }}">
+                  LinkedIn
+                </a>
+                {% endif %}
+              </div>
+            </div>
+          </div>
         </div>
+      </nav>
+
+      {# Primary page content #}
+      {% block content %} {% endblock content %}
+
+      {# Footer #}
+      <footer class="footer" >
+        <div class="content has-text-centered">
+          <p>© <a href="https://github.com/{{ config.extra.author_github }}">{{ config.extra.author_github }}</a> {{ now() | date(format="%Y") }} | <a href="{{ get_url(path="/colophon", trailing_slash=false) }}">colophon</a></p>
+
+          {% block footer %}{% endblock footer %}
+        </div>
+      </footer>
+
     </div>
-</div>
-{% endblock sidebar %}
+  </section>
+  </body>
+</html>

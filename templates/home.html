@@ -1,0 +1,22 @@
+{% extends "index.html" %}
+
+{% block content %}
+
+  {# TODO: quick access to last posts  #}
+  <div class="content">
+    <h1 class="title">Last blog posts</h1>
+    
+    
+    <ul>
+      {# {% for post in section.toc.children | slice(end=3) %} #}
+        {# <li><strong>📌 {{ post.date | date(format="%Y-%m-%d") }} <a href="{{ post.permalink }}">{{ post.title }}</a></strong></li> #}
+        {# <li>{{ post }}</li> #}
+        {# {% endfor %} #}
+    </ul>
+
+    <p><a href="{{ get_url(path="/blog", trailing_slash=false) }}">More...</a></p>
+
+
+  </div>
+
+{% endblock content %}

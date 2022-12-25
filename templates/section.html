@@ -1,18 +1,17 @@
 {% extends "index.html" %}
 
+{% block title %}{{ section.title }}{% endblock %}
+
 {% block content %}
-<h1>{{ section.title }}</h1>
-{{ section.content | safe }}
 
-{% for page in section.pages %}
-<div class="post">
-    <h2 class="post-title">
-        <a href="{{ page.permalink }}">
-            {{ page.title }}
-        </a>
-    </h2>
+{# TODO: put on separate page, extending from section  #}
+{# TODO: add more thorough access to posts, e.g. sortable list, tags, etc. #}
+<section class="content">
+  <ul>
+  {% for post in section.pages %}
+    <li><strong>📌 {{ post.date | date(format="%Y-%m-%d") }} <a href="{{ post.permalink }}">{{ post.title }}</a></strong></li>
+  {% endfor %}
+  </ul>
+</section>
 
-<!--    <span class="post-date">{{ page.date | date(format="%Y-%m-%d") }}</span>-->
-</div>
-{% endfor %}
 {% endblock content %}

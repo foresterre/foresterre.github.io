@@ -1,11 +1,14 @@
-title = "Foresterre"
-description = "A cozy little blog"
+# The URL the site will be built for
 base_url = "https://foresterre.github.io"
 
-theme = "hyde"
+title = "Foresterre's Place"
+description = "The website of Martijn Gribnau"
+
+# Whether to automatically compile all Sass files in the sass directory
 compile_sass = true
+
+# Whether to build a search index to be used later on by a JavaScript library
 build_search_index = true
-generate_feed = true
 
 [markdown]
 # Whether to do syntax highlighting
@@ -13,18 +16,7 @@ generate_feed = true
 highlight_code = true
 
 [extra]
-hyde_sticky = true
-hyde_reverse = false
-hyde_theme = "theme-base-08"
-hyde_links = [
-    {url = "/", name = "Home"},
-    {url = "/about", name = "About"},
-    {url = "/blog", name = "Blog"},
-    {url = "https://github.com/foresterre", name = "GitHub", projects = [
-        {url = "https://github.com/foresterre/cargo-msrv", name = "Cargo MSRV"} # TODO add to templates/index.html <ul>
-    ]},
-]
+author_github = "foresterre"
+# author_linkedin = "<TODO>"
 
-custom_links = [
-    {url = "/site", name = "site credits"}
-]
+# Put all your custom variables here
