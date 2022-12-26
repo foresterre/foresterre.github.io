@@ -16,6 +16,19 @@
     {% endblock head %}
 
     <link rel="stylesheet" href="{{ get_url(path="style.css", trailing_slash=false) | safe }}">
+
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const burgerMenus = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
+          burgerMenus.forEach(element => {
+            element.addEventListener('click', () => {
+              const target = document.getElementById(element.dataset.target);
+              element.classList.toggle('is-active');
+              target.classList.toggle('is-active');
+            });
+        });
+      });
+    </script>
   </head>
 
   <body>
