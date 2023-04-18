@@ -1,4 +1,2 @@
-/.vscode
-*.iml
-/.idea
-/public
+public/
+static/processed_images/

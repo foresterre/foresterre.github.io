@@ -1,0 +1,3 @@
+[submodule "themes/zola-inky"]
+	path = themes/zola-inky
+	url = git@github.com:jimmyff/zola-inky.git
