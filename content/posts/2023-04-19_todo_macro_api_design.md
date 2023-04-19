@@ -18,7 +18,7 @@ Luckily for us, the Rust standard library has a useful tool in its toolbox, to p
 
 Let's look at an example, [imagine](https://github.com/foresterre/rust-releases) we're re-designing a Rust API to fetch Rust releases metadata. 
 
-Let's first protpotype a few data structures around the concept of "releases":
+Let's first prototype a few data structures around the concept of "releases":
 
 ```rust
 /// A data structure consisting of the set of known Rust releases.  
