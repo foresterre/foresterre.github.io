@@ -1,5 +1,5 @@
 +++
-title = "Using the todo! macro to prototype your API (draft)"
+title = "DRAFT: Using the todo! macro to prototype your API"
 date = 2023-04-19
 
 [taxonomies]
@@ -14,7 +14,7 @@ Let's sketch a situation. You're designing and implementing a library for some g
 One way to figure out the design of the library is to write a prototype, and write the bare minimum to block out the the initial concept of the API. 
 I hear you think: Rust is not to most convenient prototyping language, because it's quite strict and verbose: we have to satisfy the borrow checker and, in many places Rust requires you to explicitely type your code. And altough I believe both will help you design better code, I can also understand the argument that it reduces the prototyping velocity at least a bit.
 
-Luckily for us, the Rust standard library has a useful tool in its toolbox, to prevent just that from happening: the [todo!]() macro.
+Luckily for us, the Rust standard library has a useful tool in its toolbox, to prevent just that from happening: the [todo!](https://doc.rust-lang.org/std/macro.todo.html) macro.
 
 Let's look at an example, [imagine](https://github.com/foresterre/rust-releases) we're re-designing a Rust API to fetch Rust releases metadata. 
 
