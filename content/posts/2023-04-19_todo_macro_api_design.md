@@ -1,16 +1,24 @@
 +++
-title = "Using the todo! macro to prototype your API"
+title = "Using the todo! macro to prototype your API (draft)"
 date = 2023-04-19
 
 [taxonomies]
 tags = ["Rust", "macro", "API design"]
 +++
 
-I like Rust's `todo!` macro a lot. I use it often to block out an initial concept for an API.
+Rust is a modern language in many ways. It has many great aspects, some in the language, some in the tooling, and also some in the standard library.
+In this post I will discuss a macro, which is part of the standard library, and I have come to use a lot.
 
-For example, [imagine](https://github.com/foresterre/rust-releases) we're (re-)designing a Rust API to fetch Rust releases. 
+Let's sketch a situation. You're designing and implementing a library for some great idea you had. And you would like to design some fluent API, which  this library accessible, if not for others, then most definitely also for yourself.
 
-Let's first create a few data structures around the concept of "releases":
+One way to figure out the design of the library is to write a prototype, and write the bare minimum to block out the the initial concept of the API. 
+I hear you think: Rust is not to most convenient prototyping language, because it's quite strict and verbose: we have to satisfy the borrow checker and, in many places Rust requires you to explicitely type your code. And altough I believe both will help you design better code, I can also understand the argument that it reduces the prototyping velocity at least a bit.
+
+Luckily for us, the Rust standard library has a useful tool in its toolbox, to prevent just that from happening: the [todo!]() macro.
+
+Let's look at an example, [imagine](https://github.com/foresterre/rust-releases) we're re-designing a Rust API to fetch Rust releases metadata. 
+
+Let's first protpotype a few data structures around the concept of "releases":
 
 ```rust
 /// A data structure consisting of the set of known Rust releases.  
@@ -36,6 +44,10 @@ struct Distributions {
 /// components.
 struct Release {
     toolchain: rust_toolchain::Toolchain,
+    /// Rustup has the concept of components and extensions.
+    /// 
+    /// When installing a toolchain, components are installed by default, while extensions are optional components.
+    /// In this implementation, they're combined.
     components: Vec<rust_toolchain::Component>,
 }
 
@@ -55,11 +67,8 @@ impl Distributions {
 }
 ```
 
-See that [`todo!`](https://doc.rust-lang.org/std/macro.todo.html) macro 😃?
-Instead of providing an actual, or fake, implementation which needs to satisfy
-the return type of our method, we placed a `todo!` macro in the body.
-This allows us to not worry about our implementation just yet, so we can
-focus on the design of our API.
+See that `todo!` macro 😃? Instead of providing an actual, or fake, implementation which needs to satisfy the return type of our method, we placed a `todo!` macro in the body.
+This allows us to not worry about our implementation just yet, so we can focus on the design of our API instead.
 
 
 Let's expand our design a bit further and add a few more useful methods:
