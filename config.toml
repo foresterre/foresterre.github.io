@@ -24,6 +24,8 @@ default_language = "en"
 #
 taxonomies = [{ name = "tags", lang = "en", rss = true }]
 
+generate_feed = true
+
 [markdown]
 # Whether to do syntax highlighting
 # Theme can be customised by setting the `highlight_theme` variable to a theme supported by Zola
