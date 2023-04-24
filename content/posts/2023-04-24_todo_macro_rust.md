@@ -131,26 +131,31 @@ error[E0277]: `()` is not an iterator
 
 It [turns out](https://github.com/rust-lang/rust/issues/36375#issuecomment-357216289), there is an [issue](https://github.com/rust-lang/rust/issues/36375) where the compiler is unable to figure out what type to use for types which have the never type as their return type and use `impl Trait` in return position. The  `todo!` macro falls in this category.
 
-Luckily, we can still use a trait bound, even if it is a little bit more verbose:
+None of the options to solve this in a compact way are very satisfying.
+
+One option is to box:
 
 ```rust
 impl Release {
-    /// Returns an iterator over the components which are installed by default.
-    pub fn components<'component, I: Iterator<Item = &'component rust_toolchain::Component>>(
-        &self,
-    ) -> I {
-        todo!("components installed by default")
-    }
-
-    /// Returns an iterator over the components which are optional,
-    /// and not installed by default.
-    pub fn extensions<'component, I: Iterator<Item = &'component rust_toolchain::Component>>(
-        &self,
-    ) -> I {
+   pub fn extensions<'this>(
+        &'this self,
+    ) -> Box<dyn Iterator<Item = &'this rust_toolchain::Component> + 'this> {
         todo!("components not installed by default")
     }
 }
 ```
+
+Another is to return a simple concrete type:
+
+```rust
+impl Release {
+    pub fn extensions(&self) -> Vec<&Component> {
+        todo!("components not installed by default")
+    }   
+}
+```
+
+A third is to use the explicit type in the return type, but this require you to think ahead on which iterator type you will be using, which you probably don't want to worry about (especially if you will be using `impl Iterator` on implementation).
 
 ## Taking it to the next level
 
@@ -241,3 +246,9 @@ Once we are satisfied with the basic structure of our API, we can gradually repl
 # Footnotes
 
 <sup>1</sup> I'm currently working on the next version of [rust-releases](https://github.com/foresterre/rust-releases).
+
+# Thanks!
+
+Special thanks to Chris Langhout, Jean de Leeuw and Martijn Steenbergen for proofreading my blog post; any mistakes are solely mine.
+
+Also many thanks to proudHaskeller on [Reddit](https://old.reddit.com/r/rust/comments/12x1lfd/blog_post_using_the_todo_macro_to_prototype_your/jhhn8na/) for reporting an issue I missed: the type signature I used to deal with the `todo!` and `impl Trait` will never type check with concrete implementations.
