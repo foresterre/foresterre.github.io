@@ -155,7 +155,7 @@ impl Release {
 }
 ```
 
-A third is to use the explicit type in the return type, but this require you to think ahead on which iterator type you will be using, which you probably don't want to worry about (especially if you will be using `impl Iterator` on implementation).
+A third is to use the explicit type in the return type, but this requires you to think ahead on which iterator type you will be using, which you probably don't want to worry about (especially if you will be using `impl Iterator` on implementation). A fourth would be to implement `Iterator` for a concrete type, but this also adds a lot of boilerplate.
 
 ## Taking it to the next level
 
