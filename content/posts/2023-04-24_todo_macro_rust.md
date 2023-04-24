@@ -169,7 +169,7 @@ impl Release {
 }
 ```
 
-The reason that this works, is because `std::iter::once` returns a valid iterator, namely [Once](https://doc.rust-lang.org/std/iter/struct.Once.html), which makes the return type satisfyable. Where the never type `!` didn't implement `Iterator`, `Once` does.
+The reason that this works, is because `std::iter::once` returns a valid iterator, namely [Once](https://doc.rust-lang.org/std/iter/struct.Once.html), which makes the return type satisfiable. Where the never type `!` didn't implement `Iterator`, `Once` does.
 
 ## Taking it to the next level
 
