@@ -121,8 +121,8 @@ What happens if we try to compile the code above?:
 error[E0277]: `()` is not an iterator
   --> crates/rust-releases-core/src/lib.rs:80:33
    |
-80 |     pub fn components(&self) -> impl Iterator<Item = rust_toolchain::Component> {
-   |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `()` is not an iterator
+80 |     pub fn components(&self) -> impl Iterator<Item = &rust_toolchain::Component> {
+   |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `()` is not an iterator
    |
    = help: the trait `Iterator` is not implemented for `()`
 ```
@@ -131,7 +131,7 @@ error[E0277]: `()` is not an iterator
 
 It [turns out](https://github.com/rust-lang/rust/issues/36375#issuecomment-357216289), there is an [issue](https://github.com/rust-lang/rust/issues/36375) where the compiler is unable to figure out what type to use for types which have the never type as their return type and use `impl Trait` in return position. The  `todo!` macro falls in this category.
 
-None of the options to solve this in a compact way are very satisfying.
+There are several ways to work around the problem though.
 
 One option is to use dynamic dispatch and box:
 
@@ -149,13 +149,27 @@ Another is to return a simple concrete type:
 
 ```rust
 impl Release {
-    pub fn extensions(&self) -> Vec<&Component> {
+    pub fn extensions(&self) -> Vec<&rust_toolchain::Component> {
         todo!("components not installed by default")
     }   
 }
 ```
 
 A third is to use the explicit type in the return type, but this requires you to think ahead on which iterator type you will be using, which you probably don't want to worry about (especially if you will be using `impl Iterator` on implementation). A fourth would be to implement `Iterator` for a concrete type, but this also adds a lot of boilerplate.
+
+A [fifth](https://reddit.com/r/rust/comments/12x1lfd/blog_post_using_the_todo_macro_to_prototype_your/jhjecab/) was suggested by _natalialt_. I like this one very much, because it is short and to the point (altough also not universably applicable to any `impl Trait` return type). This solution returns an iterator via the `std::iter::once()` function:
+
+```rust
+use std::iter;
+
+impl Release {
+    pub fn extensions(&self) -> impl Iterator<Item = &rust_toolchain::Component> {
+        iter::once(todo!("components not installed by default"))
+    }
+}
+```
+
+The reason that this works, is because `std::iter::once` returns a valid iterator, namely [Once](https://doc.rust-lang.org/std/iter/struct.Once.html), which makes the return type satisfyable. Where the never type `!` didn't implement `Iterator`, `Once` does.
 
 ## Taking it to the next level
 
@@ -251,7 +265,8 @@ Once we are satisfied with the basic structure of our API, we can gradually repl
 
 Special thanks to Chris Langhout, Jean de Leeuw and Martijn Steenbergen for proofreading my blog post; any mistakes are solely mine.
 
-Also many thanks to proudHaskeller on [Reddit](https://reddit.com/r/rust/comments/12x1lfd/blog_post_using_the_todo_macro_to_prototype_your/jhhn8na/) for reporting an issue I missed: the type signature I used to deal with the `todo!` and `impl Trait` will never type check with concrete implementations.
+Also many thanks to _proudHaskeller_ on [Reddit](https://reddit.com/r/rust/comments/12x1lfd/blog_post_using_the_todo_macro_to_prototype_your/jhhn8na/) for reporting an issue I missed: the type signature I used to deal with the `todo!` and `impl Trait` will never type check with concrete implementations, and to _natalialt_ on [Reddit](https://reddit.com/r/rust/comments/12x1lfd/blog_post_using_the_todo_macro_to_prototype_your/jhjecab/) for suggesting a useful workaround to the same issue when the return type is `impl Iterator`, by using `iter::once(todo!())`.
+
 
 # Discuss
 
