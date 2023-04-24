@@ -13,7 +13,7 @@ I hear you think: Rust is not to most convenient prototyping language, because i
 
 Luckily for us, the Rust standard library has a useful tool in its toolbox: the [todo!](https://doc.rust-lang.org/std/macro.todo.html) macro.
 
-Let's look at an example. Imagine<sup>1</sup> we're re-designing a Rust API to fetch Rust releases metadata. 
+Let's look at an example. Imagine<sup><a href="#footnote1">1</a></sup> we're re-designing a Rust API to fetch Rust releases metadata. 
 
 We will first prototype a few data structures around the concept of "releases":
 
@@ -259,7 +259,7 @@ Once we are satisfied with the basic structure of our API, we can gradually repl
 
 # Footnotes
 
-<sup>1</sup> I'm currently working on the next version of [rust-releases](https://github.com/foresterre/rust-releases).
+<sup><span id="footnote1">1</span></sup> I'm currently working on the next version of [rust-releases](https://github.com/foresterre/rust-releases).
 
 # Thanks!
 
