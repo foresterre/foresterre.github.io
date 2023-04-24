@@ -251,4 +251,8 @@ Once we are satisfied with the basic structure of our API, we can gradually repl
 
 Special thanks to Chris Langhout, Jean de Leeuw and Martijn Steenbergen for proofreading my blog post; any mistakes are solely mine.
 
-Also many thanks to proudHaskeller on [Reddit](https://old.reddit.com/r/rust/comments/12x1lfd/blog_post_using_the_todo_macro_to_prototype_your/jhhn8na/) for reporting an issue I missed: the type signature I used to deal with the `todo!` and `impl Trait` will never type check with concrete implementations.
+Also many thanks to proudHaskeller on [Reddit](https://reddit.com/r/rust/comments/12x1lfd/blog_post_using_the_todo_macro_to_prototype_your/jhhn8na/) for reporting an issue I missed: the type signature I used to deal with the `todo!` and `impl Trait` will never type check with concrete implementations.
+
+# Discuss
+
+Discussions and feedback are most welcome! Discuss on [Reddit](https://reddit.com/r/rust/comments/12x1lfd/blog_post_using_the_todo_macro_to_prototype_your/), [HackerNews](https://news.ycombinator.com/item?id=35683396) or create an [issue](https://github.com/foresterre/foresterre.github.io/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc).
