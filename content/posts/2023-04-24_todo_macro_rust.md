@@ -265,7 +265,7 @@ Once we are satisfied with the basic structure of our API, we can gradually repl
 
 Special thanks to Chris Langhout, Jean de Leeuw and Martijn Steenbergen for proofreading my blog post; any mistakes are solely mine.
 
-Also many thanks to _proudHaskeller_ on [Reddit](https://reddit.com/r/rust/comments/12x1lfd/blog_post_using_the_todo_macro_to_prototype_your/jhhn8na/) for reporting an issue I missed: the type signature I used to deal with the `todo!` and `impl Trait` will never type check with concrete implementations, and to _natalialt_ on [Reddit](https://reddit.com/r/rust/comments/12x1lfd/blog_post_using_the_todo_macro_to_prototype_your/jhjecab/) for suggesting a useful workaround to the same issue when the return type is `impl Iterator`, by using `iter::once(todo!())`.
+Also many thanks to _proudHaskeller_ on [Reddit](https://reddit.com/r/rust/comments/12x1lfd/blog_post_using_the_todo_macro_to_prototype_your/jhhn8na/) for reporting an issue I missed: the type signature I initially used to deal with the `todo!` and `impl Trait` would never type check with a concrete implementation (this has been addressed), and to _natalialt_ on [Reddit](https://reddit.com/r/rust/comments/12x1lfd/blog_post_using_the_todo_macro_to_prototype_your/jhjecab/) for suggesting a useful workaround to the same issue when the return type is `impl Iterator`, by using `iter::once(todo!())`.
 
 
 # Discuss
