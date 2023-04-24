@@ -133,7 +133,7 @@ It [turns out](https://github.com/rust-lang/rust/issues/36375#issuecomment-35721
 
 None of the options to solve this in a compact way are very satisfying.
 
-One option is to box:
+One option is to use dynamic dispatch and box:
 
 ```rust
 impl Release {
