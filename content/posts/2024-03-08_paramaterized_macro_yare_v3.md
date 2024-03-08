@@ -1,6 +1,6 @@
 +++
-title = "Yare 3.0.0"
-date = 2023-04-24
+title = "What's new in Yare v3.0.0 - Lean parameterized testing macro for Rust"
+date = 2024-03-08
 
 [taxonomies]
 tags = ["Rust", "testing", "yare"]
