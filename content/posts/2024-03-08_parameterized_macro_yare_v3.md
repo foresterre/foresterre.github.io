@@ -325,6 +325,10 @@ const extern "C" fn has_reds(streamed_color: &[u8]) {
 ```
 
 
-# Ideas, feedback and bug reports
+# Ideas, feedback and bug reports for Yare
 
 Ideas, feedback and bug reports are most welcome. Feel free to open an issue on [GitHub](https://github.com/foresterre/yare/issues).
+
+# Discuss this post
+
+Discuss on [Reddit](https://reddit.com/r/rust/comments/1b9ijs6/yare_v300_a_lean_parameterized_testing_macro_for/).
