@@ -8,7 +8,7 @@ tags = ["Rust", "testing", "yare"]
 
 # What is Yare?
 
-Yare is a lean parameterized testing macro for Rust.
+[Yare](https://github.com/foresterre/yare) is a lean parameterized testing macro for Rust.
 
 This practically means that when using `#[yare::parameterized]`, it is easier to write a test scenario,
 which can be tested against multiple different inputs. Each set of inputs is a separate test case.
