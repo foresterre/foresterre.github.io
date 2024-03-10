@@ -4,7 +4,7 @@ theme = "zola-inky"
 authors = ["Martijn Gribnau"]
 
 # The URL the site will be built for
-base_url = "https://foresterre.github.io"
+base_url = "https://gribnau.dev"
 
 # Whether to automatically compile all Sass files in the sass directory
 compile_sass = true
