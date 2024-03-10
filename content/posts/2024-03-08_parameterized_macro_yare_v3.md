@@ -48,8 +48,8 @@ asynchronous runtime. While you could create your own [Runtime](https://docs.rs/
 and spawn futures onto this runtime for your test cases, it is perhaps not as elegant as using the [tokio::test](https://docs.rs/tokio/latest/tokio/attr.test.html)
 macro.
 
-With this use case in mind, Yare can now be used with user specified test macro's. If none is specified, the Rust build-in
-`#[test]` will be continued to be used.
+With this use case in mind, Yare can now be used with user specified test macro's. If none is specified, the Rust built-in
+`#[test]` will be used.
 
 **Example**
 
@@ -74,8 +74,8 @@ async fn test(wait: u64, time_elapsed: u128) {
 
 ### How does it work?
 
-To make this work, the `#[parameterized(...)]` attribute in Yare parses all attributes placed after it, on top of the
-test function:
+To make this work, the `#[parameterized(...)]` attribute in Yare parses all attributes placed after it (all attributes must be placed on top of the
+test function):
 
 ```rust
 use syn::parse::{Parse, ParseStream, Result};
@@ -113,7 +113,7 @@ impl Parse for TestFn {
 }
 ```
 
-So for this hypothetical Rust source code:
+So for the following Rust source code:
 
 ```rust
 #[parameterized(
@@ -127,7 +127,7 @@ fn test(color: FunctionColor) {
 }
 ```
 
-We end up with 1 test macro attribute and 1 "normal" attribute (i.e. not test_macro):
+We end up with 1 test_macro attribute and 1 "normal" attribute (i.e. not test_macro):
 
 ```rust
 vec![
@@ -172,7 +172,7 @@ impl TestCase {
         let attributes = test_fn.attributes();
         // Many other things omitted...
         
-        Ok(::quote::quote! {
+        Ok(quote::quote! {
             #[#test_meta]   // <-- Our custom macro attribute, or #[test] if none was specified
             #(#attributes)* // <-- The "normal" attributes, reproduced
             #visibility #constness #asyncness #unsafety #abi fn #identifier() #return_type {
@@ -184,7 +184,7 @@ impl TestCase {
 }
 ```
 
-Substituted for our example test scenario, when the code generation phase is complete, we will have two test functions:
+When the code generation phase of the macro has been completed, the parameterized test function will have been substituted by two separate test functions:
 
 ```rust
 #[function_color::test_macro]
@@ -205,8 +205,8 @@ fn blue() {
 **The `#[test_macro(...)]` attribute must be placed after `#[parameterized]`** 
 
 Like all macro's, `yare::parameterized` can only parse the available scope. Since `yare::parameterized` is supposed
-to be placed on top of functions, we can access our own attribute (which we use to parse the test case id, and arguments for test cases)
-and the function underneath (used to e.g. specify the parameters, and the test scenario in the function body).
+to be placed on top of functions, we can access our own attribute (which we use to parse the test case identifier and arguments for test cases)
+and the function underneath (used to specify the parameters and test scenario in the function body).
 
 While `yare::parameterized` does have access to attributes placed after it, the ones which come before it, are inaccessible.
 
@@ -299,14 +299,12 @@ However, since the `#[test_macro(...)]` is parsed by `yare::parameterized`, it c
 
 Previously, when Yare was still written to support mostly just the built-in `#[test]` macro, it wasn't so useful to
 support the function qualifiers: `const`, `async`, `unsafe` and `extern`. Firstly, because half of these aren't even
-supported by `#[test]`, and for the ones which are `const` and `extern`, the usefulness is limited.
-For example: for the first, `const` you can't use the commonly used `assert_eq!` since the `PartialEq` trait is not marked as `const`,
-and the for the second, `extern`, I at leas haven't seen anyone call unit test functions over FFI (but maybe it does happen?).
+supported by `#[test]`. For the ones that are, namely `const` and `extern`, the I deemed the usefulness to be limited.
+For example: with `const` you can't use the commonly used `assert_eq!` since the `PartialEq` trait is not marked as `const`. And regarding `extern`, I've never seen anyone call unit test functions over FFI (but if you do, I would like to know, it does sound fun 😅).
 
-Regardless, now that Yare supports custom test macro's as shown above, using these custom test macro's
-would significantly be limited. Thus support was added for all of Rust's current set of function qualifiers.
+However, with custom test macro's, you want at least support for `async` and maybe for `unsafe`. Adding the other two is hardly more work, so I also added `const` and `extern` for completeness.
 
-Note that, when used with a `#[test_macro(x)]`, the underlying test macro `x` must also support the specified qualifiers.
+NB: when specifying one ore more qualifiers in the function definition of your test function, the underlying test macro (whether `#[test]` or a custom macro `#[test_macro(x)]`) must also support the specified qualifiers.
 
 **Example**
 
