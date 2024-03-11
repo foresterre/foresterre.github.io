@@ -1,5 +1,5 @@
 +++
-title = "What's new in Yare v3.0.0 - Lean parameterized testing macro for Rust"
+title = "What's new in Yare 3.0.0 (A lean parameterized testing macro for Rust)"
 date = 2024-03-08
 
 [taxonomies]
