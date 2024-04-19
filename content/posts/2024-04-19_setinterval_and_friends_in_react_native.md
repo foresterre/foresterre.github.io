@@ -7,10 +7,13 @@ tags = ["react-native", "javascript", "typescript"]
 +++
 
 At work, I've been building a new [React Native](https://reactnative.dev) app.  Initially, I wanted this app to be as simple
-as possible, to allow quick iterative cycles. Although I must admit: I briefly considered to use [React Query](https://tanstack.com/query/v3/docs/framework/react/react-native),
-but it wasn't quite time for that yet. Simple first. Complex later.
+as possible, to allow for quick iterative cycles.
 
-Now this app needs to refetch a certain resource from the server in regular intervals. I looked at the React Native
+Now this app needs to refetch a certain resource from the server in regular intervals. I have to admit: I briefly considered 
+to use [React Query](https://tanstack.com/query/v3/docs/framework/react/react-native), but decided it wasn't quite time
+for that yet. Simple first. Complex later.
+
+I looked at the React Native
 docs in an attempt for figure out what the canonical way of doing this was. The docs told me: "hey, you can use
 the `Timers` module which contains `setInterval` and `clearInterval`". Just what I needed!
 
