@@ -57,7 +57,7 @@ making requests to fetch the resource tens of times per second. Whoops.
 So what happened? The callback in `useEffect` was being rerendered after each change in the code. And as a result, the
 `setInterval` function was being rerun as well. On repeat. Oops 😅.
 
-Luckily, it can be fixed! As it turns out, `setInterval` can return a clean up function, which is run when the component
+Luckily, it can be fixed! As it turns out, `setInterval` can return a clean up function, which runs when the component
 unmounts (or when the props get updated and the dependencies provided to the `useEffect` have been changed, or even every rerender
 if no dependency array is provided):
 
