@@ -6,8 +6,6 @@ date = 2024-04-19
 tags = ["react-native", "javascript", "typescript"]
 +++
 
-# A tale of `setInterval` and `useEffect` in React Native
-
 At work, I've been building a new [React Native](https://reactnative.dev) app.  Initially, I wanted this app to be as simple
 as possible, to allow quick iterative cycles. Although I must admit: I briefly considered to use [React Query](https://tanstack.com/query/v3/docs/framework/react/react-native),
 but it wasn't quite time for that yet. Simple first. Complex later.
