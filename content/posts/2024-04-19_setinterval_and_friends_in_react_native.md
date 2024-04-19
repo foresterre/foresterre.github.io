@@ -70,11 +70,11 @@ type Id = ReturnType<typeof setInterval>;
 export default function OtherComponent(): React.JSX.Element {
     const [refetchId, setRefetchId] = useState<Id | undefined>(undefined);
     
-    return <MyComponent id={refreshId} setId={setRefetchId} />;
+    return <MyComponent id={refreshId} setId={setRefetchId} onClear={() => setRefetchId(undefined)} />;
 }
  
 
-export default function MyComponent(props: { id?: Id; setId: (id: Id) => void;   }): React.JSX.Element {
+export default function MyComponent(props: { id?: Id; setId: (id: Id) => void; onClear: () => void;  }): React.JSX.Element {
     useEffect(() => {
         const id = setInterval(() => void fetchResource());
         props.setId(id);
