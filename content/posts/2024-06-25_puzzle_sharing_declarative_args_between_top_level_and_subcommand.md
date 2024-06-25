@@ -1,6 +1,6 @@
 +++
 title = "Puzzle: Sharing declarative args between top level and subcommand using Clap"
-date = 2024-03-08
+date = 2024-06-25
 
 [taxonomies]
 tags = ["Rust", "cargo-msrv", "msrv", "clap", "side-quest"]
