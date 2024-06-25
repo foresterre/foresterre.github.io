@@ -461,7 +461,7 @@ I still think I don't really understand the true value of `ArgGroup`. The "a gro
 
 # Conclusion
 
-If you, dear reader, by any chance know how to solve the issue of this post, or have other ideas: I love to learn.
+If you, dear reader, by any chance know how to solve the issue of this post, or have other ideas: I love [to learn](https://github.com/foresterre/cargo-msrv/issues/936) (about them). <sup>You also send me a mail, or contact me in another way, see my GitHub profile.</sup>
 
 In the mean time, I suppose that this just isn't the way forward. To meet goal (2) in particular, having some shared arguments also at the top level makes solving the issue a lot harder. I tried to add constraints on how this definition could be used, but none of these really worked out.
 
