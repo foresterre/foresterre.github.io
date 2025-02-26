@@ -6,8 +6,6 @@ date = 2025-02-26
 tags = ["shower-thought", "dreaming"]
 +++
 
-# 100% battery allowance per month
-
 Today I took the train to work. I watch mesmerizingly beautiful landscapes glittering in sunshine pass by.
 
 But inside, all I see is people staring and scrolling at their phones.

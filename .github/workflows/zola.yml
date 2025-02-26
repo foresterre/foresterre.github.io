@@ -7,8 +7,8 @@ jobs:
     steps:
       - name: Checkout main
         uses: actions/checkout@v3
-      - name: Build only 
-        uses: shalzz/zola-deploy-action@v0.17.2
+      - name: Build only
+        uses: shalzz/zola-deploy-action@v0.20.0
         env:
           BUILD_ONLY: true
           BUILD_FLAGS: --drafts
@@ -20,7 +20,7 @@ jobs:
       - name: Checkout main
         uses: actions/checkout@v3
       - name: Build and deploy
-        uses: shalzz/zola-deploy-action@v0.17.2
+        uses: shalzz/zola-deploy-action@v0.20.0
         env:
           PAGES_BRANCH: gh-pages
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
