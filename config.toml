@@ -85,6 +85,6 @@ menu_links = [
     { url = "$BASE_URL/posts/", name = "Posts" },
     # { url = "$BASE_URL/gallery/", name = "Gallery" },
     { url = "$BASE_URL/tags/", name = "Tags" },
-    { url = "https://github.com/foresterre", name = "GitHub" },
     { url = "$BASE_URL/search/", name = "Search" },
+    { url = "https://github.com/foresterre", name = "GitHub ↗" },
 ]
