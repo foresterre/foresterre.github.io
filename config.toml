@@ -63,7 +63,7 @@ search_enabled = false
 image_resizing_disabled = false
 image_format = "auto"           # "auto", "jpg", "png", "webp"
 
-# responsive image shortcode 
+# responsive image shortcode
 # example: {{ image(src="foo.jpeg", alt="some image") }}
 image_quality = 80
 images_default_size = 1024
