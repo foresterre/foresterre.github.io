@@ -18,7 +18,7 @@ This snippet, produces the following output:
 
 ---
 
-## [0.18.4] - 2025-04-19
+## [0.18.3] - 2025-04-19
 
 - Lost: references to version numbers
 
@@ -39,11 +39,13 @@ So how do we fix our changelog? By adding reference style links:
 This produces the following output:
 
 ---
+
 ## [0.18.4] - 2025-04-19
 
 - Found: references to version numbers
 
 [0.18.4]: https://github.com/foresterre/cargo-msrv/compare/v0.18.3...v0.18.4
+
 ---
 
 # Don't like linking to the diff?
