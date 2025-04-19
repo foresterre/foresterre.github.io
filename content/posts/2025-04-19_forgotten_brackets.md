@@ -1,5 +1,5 @@
 +++
-title = "Changelog tumbleweeds: a case of orphaned markdown [brackets]"
+title = "Changelog tumbleweeds: the case of orphaned markdown [brackets]"
 date = 2025-04-19
 
 [taxonomies]
@@ -29,14 +29,22 @@ However, if you scroll to the bottom of the keep-a-changelog [example](https://r
 So how do we fix our changelog? By adding reference style links:
 
 ```markdown
-# What it should have been
-
 ## [0.18.4] - 2025-04-19
 
 - Found: references to version numbers
 
 [0.18.4]: https://github.com/foresterre/cargo-msrv/compare/v0.18.3...v0.18.4
 ```
+
+This produces the following output:
+
+---
+## [0.18.4] - 2025-04-19
+
+- Found: references to version numbers
+
+[0.18.4]: https://github.com/foresterre/cargo-msrv/compare/v0.18.3...v0.18.4
+---
 
 # Don't like linking to the diff?
 
