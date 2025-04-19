@@ -1,4 +1,4 @@
-title = "Foresterre's Treehouse"
+title = "Don't panic, impl Things"
 description = "A blog by Martijn Gribnau"
 theme = "zola-inky"
 author = "Martijn Gribnau"
@@ -86,5 +86,5 @@ menu_links = [
     # { url = "$BASE_URL/gallery/", name = "Gallery" },
     { url = "$BASE_URL/tags/", name = "Tags" },
     { url = "$BASE_URL/search/", name = "Search" },
-    { url = "https://github.com/foresterre", name = "GitHub ↗" },
+    { url = "https://github.com/foresterre", name = "GitHub↗" },
 ]
