@@ -24,7 +24,7 @@ This snippet, produces the following output:
 
 ---
 
-However, if you scroll to the bottom of the keep-a-changelog [example](https://raw.githubusercontent.com/olivierlacan/keep-a-changelog/refs/heads/main/CHANGELOG.md), you can see that the version numbers in brackets, have their link completed at the bottom. And then rendered, it looks like [this](https://github.com/olivierlacan/keep-a-changelog/blob/main/CHANGELOG.md).
+However, if you scroll to the bottom of the keep-a-changelog [example](https://raw.githubusercontent.com/olivierlacan/keep-a-changelog/refs/heads/main/CHANGELOG.md), you can see that the version numbers in brackets, have their link completed at the bottom. And rendered, it looks like [this](https://github.com/olivierlacan/keep-a-changelog/blob/main/CHANGELOG.md).
 
 So how do we fix our changelog? By adding reference style links:
 
