@@ -1,5 +1,5 @@
 +++
-title = "Changelog tumbleweeds: the case of orphaned markdown [brackets]"
+title = "Orphaned markdown [brackets]"
 date = 2025-04-19
 
 [taxonomies]
