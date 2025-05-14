@@ -1,6 +1,7 @@
 +++
 title = "100% battery allowance per month"
 date = 2025-02-26
+draft = true
 
 [taxonomies]
 tags = ["shower-thought", "dreaming"]
