@@ -6,7 +6,7 @@ date = 2025-05-13
 tags = ["accessibility", "accesskit", "rust"]
 +++
 
-Just hours ago, the first full conference day of [RustWeek](https://rustweek.org/) ended. Everything went really smoothly, so big props to the organisers, volunteers\*, the audio and video crew, and staff at the venue. Also shoutout to the people who designed and organized the stickers, they're really really great, and also to the excellent barista coffee ☕.
+Just hours ago, the first full conference day of [RustWeek](https://rustweek.org/) ended. Everything went smoothly, so big props to the organisers, volunteers\*, the audio and video crew, and staff at the venue. Also shoutout to the people who designed and organized the stickers, they're really really great, and also to the excellent barista coffee ☕.
 
 ![A small sample of stickers at RustWeek](/img/stickers_rustweek.jpg)
 
@@ -20,7 +20,7 @@ This talk also addressed another possible reason (applified by the audience afte
 
 For the second question, I hope people will support their work and perhaps provide funding to them (or others) to develop a general test suite or framework which can be used by implementers of accessibility libraries\*\*\*. In the mean time, I found that there is an [introduction](https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Accessibility) on the topic over at MDN, which has a particular focus on accessibility for webpages, but also includes a more general introduction.
 
-Matt will give a talk about [AccessKit](AccessKit) tomorrow at [10:25](https://time.is/compare/1025_14_May_2025_in_Utrecht) (main track). RustWeek has a [livestream](https://rustweek.org/live/wednesday/) if you want to follow along online. Recordingss of talks will be published online at a later moment.
+Matt will give a talk about [AccessKit](AccessKit) tomorrow at [10:25](https://time.is/compare/1025_14_May_2025_in_Utrecht) local time (main track). RustWeek has a [livestream](https://rustweek.org/live/wednesday/) if you want to follow along online. Recordingss of talks will be published online at a later moment.
 
 _\* Disclaimer: I also volunteered, props go to the other volunteers 😉._ <br>
 _\*\* I'm not involved with Slint in any way_ <br>
