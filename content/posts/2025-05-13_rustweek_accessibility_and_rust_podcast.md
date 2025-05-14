@@ -6,7 +6,7 @@ date = 2025-05-13
 tags = ["accessibility", "accesskit", "rust"]
 +++
 
-Just hours ago, the first full conference day of [RustWeek](https://rustweek.org/) ended. Everything went smoothly, so big props to the organisers, volunteers\*, the audio and video crew, and staff at the venue. Also shoutout to the people who designed and organized the stickers, they're really really great, and also to the excellent barista coffee ☕.
+Just hours ago, the first full conference day of [RustWeek 2025](https://rustweek.org/) ended. Everything went smoothly, so big props to the organisers, volunteers\*, the audio and video crew, and staff at the venue. Also shoutout to the people who designed and organized the stickers, they're really really great, and also to the excellent barista coffee ☕.
 
 ![A small sample of stickers at RustWeek](/img/stickers_rustweek.jpg)
 
