@@ -12,7 +12,7 @@ A anniversary is usually a good moment to look forward, but it also marks a good
 
 The one which pops out of that list the most (for me) is probably the `?` operator. It was stabilized in [Rust 1.13.0](https://blog.rust-lang.org/2016/11/10/Rust-1.13/), but prototyped via the `try!` macro some time before that. I can truthfully say that every time I write in another language, I miss that `?` and the associated [`Try`](https://doc.rust-lang.org/std/ops/trait.Try.html) trait (I kind of wish the trait was marked stable 😅).
 
-The other big ones which made Rust less cumbersome to write were of course [non lexical lifetimes](https://blog.rust-lang.org/2018/12/06/Rust-1.31-and-rust-2018/#non-lexical-lifetimes), lifetime elision improvements, the deref improvements (no more `&***`) and a boat load of library improvements. <sup>And then there is of course the documentation. And the tools. And the always helpful community. Too much to name.</sup>
+The other big ones which made Rust less cumbersome to write were of course [non lexical lifetimes](https://blog.rust-lang.org/2018/12/06/Rust-1.31-and-rust-2018/#non-lexical-lifetimes), lifetime elision improvements, the deref improvements (no more `&***`) and a boat load of library improvements. <sup>And then there is of course the documentation. And the tools. And the always helpful community. And the transparent in the open development. And much, much more.</sup>
 
 The time where a large portion of the community was on nightly by default is now far in the past. With the vision doc for Rust taking shape, and likely hundreds of other [improvements](https://rust-lang.github.io/rust-project-goals/2025h1/index.html), I can't wait for the next 10 years of stable Rust.
 
