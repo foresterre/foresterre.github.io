@@ -3,7 +3,7 @@ title = "Accessibility and Rust podcast at RustWeek"
 date = 2025-05-13
 
 [taxonomies]
-tags = ["accessibility", "accesskit", "rust"]
+tags = ["accessibility", "accesskit", "rust", "rustweek25"]
 +++
 
 Just hours ago, the first full conference day of [RustWeek 2025](https://rustweek.org/) ended. Everything went smoothly, so big props to the organisers, volunteers\*, the audio and video crew, and staff at the venue. Also shoutout to the people who designed and organized the stickers, they're really really great, and also to the excellent barista coffee ☕.
