@@ -1,5 +1,5 @@
 +++
-title = "Ten years of stable Rust 🦀"
+title = "Thank you all for 10 years of (stable) Rust"
 date = 2025-05-15
 
 [taxonomies]
