@@ -10,7 +10,7 @@ Today marks the 10th anniversary of [Rust 1.0](https://blog.rust-lang.org/2015/0
 
 **Thanks to all Rust contributors and to our community, it has been a blast 🎉**.
 
-A anniversary is usually a good moment to look forward, but it also marks a good moment to take a step back, and reflect a bit on the past. Yesterday I scrolled back through the [release notes](https://github.com/rust-lang/rust/blob/master/RELEASES.md) for a bit, and reflected on some improvements which I've been taking more and more for granted.
+An anniversary is usually a good moment to look forward, but it also marks a good moment to take a step back, and reflect a bit on the past. Yesterday I scrolled back through the [release notes](https://github.com/rust-lang/rust/blob/master/RELEASES.md) for a bit, and reflected on some improvements which I've been taking more and more for granted.
 
 The one which pops out of that list the most (for me) is probably the `?` operator. It was stabilized in [Rust 1.13.0](https://blog.rust-lang.org/2016/11/10/Rust-1.13/), but prototyped via the `try!` macro some time before that. I can truthfully say that every time I write in another language, I miss that `?` and the associated [`Try`](https://doc.rust-lang.org/std/ops/trait.Try.html) trait (I kind of wish the trait was marked stable 😅).
 
