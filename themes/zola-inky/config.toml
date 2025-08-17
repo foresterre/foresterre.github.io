@@ -1,10 +1,8 @@
-title = "Don't panic, impl Things"
-description = "A blog by Martijn Gribnau"
-theme = "zola-inky"
-author = "Martijn Gribnau"
+title = "Zola Inky"
+description = "An elegant and understated theme for Zola"
 
 # The URL the site will be built for
-base_url = "https://gribnau.dev"
+base_url = "https://jimmyff.github.io/zola-inky"
 
 # Whether to automatically compile all Sass files in the sass directory
 compile_sass = true
@@ -24,8 +22,6 @@ default_language = "en"
 #
 taxonomies = [{ name = "tags", lang = "en", rss = true }]
 
-generate_feeds = true
-
 [markdown]
 # Whether to do syntax highlighting
 # Theme can be customised by setting the `highlight_theme` variable to a theme supported by Zola
@@ -37,28 +33,17 @@ paths = "on"
 taxonomies = "on"
 anchors = "on"
 
-[search]
-# Whether to include the title of the page/section in the index
-include_title = true
-# Whether to include the description of the page/section in the index
-include_description = true
-# Whether to include the path of the page/section in the index
-include_path = false
-# Whether to include the rendered content of the page/section in the index
-include_content = true
-
 [extra]
 
 # Place your avatar in your /static folder
-avatar = "/ava.png"
+avatar = "/inky.png"
 
 # Your Google Analytics measurement id ("G-XXXXXXXXXX")
 # google_analytics_tag_id = "";
 
-keywords = "foresterre, rust, cargo-msrv, msrv, software engineering"
+keywords = "zola, theme, ink, hugo-ink"
 
 search_enabled = false
-
 
 image_resizing_disabled = false
 image_format = "auto"           # "auto", "jpg", "png", "webp"
@@ -76,13 +61,13 @@ thumbnail_sizes = [128, 256]
 
 link_github_username = "foresterre"
 # link_bluesky_username = ""
-link_linkedin_username = "martijn-gribnau"
+# link_linkedin_username = ""
 
 menu_links = [
-    { url = "$BASE_URL/", name = "Home" },
+    { url = "$BASE_URL/", name = "About" },
     { url = "$BASE_URL/posts/", name = "Posts" },
-    # { url = "$BASE_URL/gallery/", name = "Gallery" },
+    { url = "$BASE_URL/gallery/", name = "Gallery" },
     { url = "$BASE_URL/tags/", name = "Tags" },
+    # { url = "https://github.com/jimmyff/zola-inky", name = "Github" },
     { url = "$BASE_URL/search/", name = "Search" },
-    { url = "https://github.com/foresterre", name = "GitHub↗" },
 ]
