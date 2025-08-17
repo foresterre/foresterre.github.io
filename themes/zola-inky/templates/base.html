@@ -1,0 +1,158 @@
+{% import "macros/head.html" as head -%}
+{% import "macros/opengraph.html" as social -%}
+{% import "macros/hooks.html" as hooks -%}
+{% import "macros/images.html" as images -%}
+
+
+
+<!DOCTYPE html>
+<html lang="en" prefix="og: https://ogp.me/ns#">
+<head>
+    {%- block general_meta -%}
+    {{ head::general_meta() }}
+    {%- endblock general_meta -%}
+    {%- block og_preview -%}
+    {{ social::og_preview() }}
+    {%-endblock og_preview -%}
+    {% block rss -%}
+    <link rel="alternate"
+          type="application/rss+xml"
+          title="{{config.title}}"
+          href="{{ get_url(path='atom.xml',trailing_slash=false)|safe}}">
+    {% endblock rss -%}
+
+    <link rel="stylesheet"
+          href="{{ get_url(path='base.css',trailing_slash=false)|safe}}">
+
+</head>
+
+<body>
+    <header>
+    <div class="top">
+        {% if config.extra.avatar -%}
+		<div class="avatar">
+			<a href="/">
+                {{ images::responsive_image(path="", src=config.extra.avatar, default_size=128, sizes=[64,128,256], alt=config.title  ) }}
+			</a>
+		</div>
+	    {% endif -%}
+        <div class="details">
+            <a class="site-name"
+            href="/">
+                <h1>{{ config.title }}</h1>
+            </a>
+            <div class="site-description">
+                <p>{{ config.description }}</p>
+            </div>
+        </div>
+
+        {% if config.extra.search_path -%}
+        {% set search_url = config.extra.search_path  | replace(from="$BASE_URL", to=config.base_url) -%}
+        <div class="right-button">
+            <a href="{{ search_url }}" alt="Search" class="{% if current_url and current_url==search_url %}active{%  endif %}">
+                🔎
+            </a>
+        </div>
+        {% endif -%}
+    </div>
+        <nav>
+            <div class="links">
+            {% for menu_link in config.extra.menu_links -%}
+                {% set link_url = menu_link.url | replace(from="$BASE_URL", to=config.base_url) -%}
+                <a {% if current_url and current_url==link_url %}class="active"  {%  endif %}
+                href="{{ link_url | safe}} " alt="{{menu_link.name}}">{% if menu_link.emoji -%}<span class="emoji">{{ menu_link.emoji }}</span>{% endif -%}<span class="name">{{menu_link.name}}</span></a>
+            {% endfor -%}
+
+            {% if config.extra.overflow_menu_links -%}
+
+            <details class="overflow-menu dropdown dropdown-right" alt="Menu">
+                <summary>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                </summary>
+                <ul>
+                {% for menu_link in config.extra.overflow_menu_links -%}
+                {% set link_url = menu_link.url | replace(from="$BASE_URL", to=config.base_url) -%}
+                    <li><a {% if current_url and current_url==link_url %}class="active"  {%  endif %}
+                    href="{{ link_url | safe}} " alt="{{menu_link.name}}">{% if menu_link.emoji -%}<span class="emoji">{{ menu_link.emoji }}</span>{% endif -%}<span class="name">{{menu_link.name}}</span></a></li>
+                {% endfor -%}
+                </ul>
+            </details>
+
+            {% endif -%}
+        </div>
+
+        </nav>
+    </header>
+    <article>
+    {% block content -%}
+    {% endblock -%}
+    </article>
+    <footer>
+        <div class="social">
+            <ul>
+                {# Github #}
+                {% if config.extra.link_github_username -%}
+                <li>
+                    <a href="https://github.com/{{ config.extra.link_github_username }}"
+                       title="Github" rel="me"><i class="icon-github"></i></a>
+                </li>
+                {% endif -%}
+
+                {# Bluesky #}
+                {% if config.extra.link_bluesky_url -%}
+                <li>
+                    <a href="{{ config.extra.link_bluesky_url }}"
+                       title="Bluesky" rel="me"><i class="icon-badge-check"></i></a>
+                </li>
+                {% endif -%}
+
+                {# Linkedin #}
+                {% if config.extra.link_linkedin_username -%}
+                <li>
+                    <a href="https://www.linkedin.com/in/{{ config.extra.link_linkedin_username }}"
+                       title="Linkedin" rel="me"><i class="icon-linkedin"></i></a>
+                </li>
+                {% endif -%}
+
+                {# RSS feed #}
+                <li>
+                    <a href="{{ get_url(path='atom.xml',trailing_slash=false)|safe }}"
+                       title="{{config.title}}"><i class="icon-rss"></i></a>
+                </li>
+            </ul>
+        </div>
+        <p> © {{ config.author }} {{ now() | date(format="%Y") }}
+
+        {#  If you remove the powered by information, it would be appreciated if
+            you could add information & links somewhere else on your site to credit
+            those that have created your tools. #}
+        {% if config.extra.disable_powered_by and config.extra.disable_powered_by == true %}{% else %}<br>Powered by <a target="_blank" href="https://getzola.org/">Zola</a>. Theme based on <a target="_blank" href="https://github.com/jimmyff/zola-inky">Inky</a>.{% endif %}
+        </p>
+    </footer>
+
+    {% block body_end -%}
+    {% endblock body_end -%}
+    {% if config.extra.google_analytics_tag_id -%}
+    <!-- Google Analytics tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ config.extra.google_analytics_tag_id }}"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', '{{ config.extra.google_analytics_tag_id }}');
+    </script>
+    {% endif -%}
+
+{% if config.extra.overflow_menu_links -%}
+    <script async src="/js/drop.js"></script>
+{% endif -%}
+    <!--<link href="https://fonts.googleapis.com/css2?family=Andada+Pro&display=swap&family=Playfair+Display" rel="stylesheet">-->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://unpkg.com/lucide-static@latest/font/lucide.css" />
+</body>
+</html>
