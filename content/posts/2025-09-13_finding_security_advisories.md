@@ -1,5 +1,5 @@
 +++
-title = "Where are the advisories of the recently compromised NPM packages?"
+title = "Where are the security advisories of the recently compromised NPM packages?"
 date = 2025-09-13
 
 [taxonomies]
