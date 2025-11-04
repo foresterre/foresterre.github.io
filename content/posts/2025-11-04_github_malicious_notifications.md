@@ -49,7 +49,7 @@ However, you should know that it doesn't quite remove the malicious notification
 Apparently, that can be done with the API too. I've adapted the invocation from [this](https://github.com/orgs/community/discussions/178439) thread, to match on the repository owner (instead of the notification subject title), and added a flag to paginate the notifications in case you have more than one page like me:
 
 ```bash
-gh api notifications\?all=true | jq -r '.[] | select(.subject.title | test("(kamino-network|gitcoincom|ycombiinator|paradigm-notification)"; "i")) | .id' \
+gh api notifications\?all=true | jq -r '.[] | select(.repository.owner.login | test("(kamino-network|gitcoincom|ycombiinator|paradigm-notification)"; "i")) | .id' \
 | xargs -L1 -I{} gh api --method DELETE \
   -H "Accept: application/vnd.github+json" \
   -H "X-GitHub-Api-Version: 2022-11-28" \
@@ -93,7 +93,7 @@ gh api --method DELETE \
 We can use `xargs` to do this for all id's, resulting in the suggested query:
 
 ```bash
-gh api notifications\?all=true | jq -r '.[] | select(.subject.title | test("(kamino-network|gitcoincom|ycombiinator|paradigm-notification)"; "i")) | .id' \
+gh api notifications\?all=true | jq -r '.[] | select(.repository.owner.login | test("(kamino-network|gitcoincom|ycombiinator|paradigm-notification)"; "i")) | .id' \
 | xargs -L1 -I{} gh api --method DELETE \
   -H "Accept: application/vnd.github+json" \
   -H "X-GitHub-Api-Version: 2022-11-28" \
