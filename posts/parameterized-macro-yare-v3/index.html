@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en" prefix="og: https://ogp.me/ns#">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="X-UA-Compatible"
+      content="IE=edge">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0" />
+<meta name="description"
+      content="A blog by Martijn Gribnau" />
+<meta name="keywords"
+      content="foresterre, rust, cargo-msrv, msrv, software engineering" /> 
+
+<title>
+  What&#x27;s new in Yare 3.0.0 (A lean parameterized testing macro for Rust) // Don&#x27;t panic, impl Things</title>
+<meta
+  property="og:title"
+  content="Don&#x27;t panic, impl Things | What&#x27;s new in Yare 3.0.0 (A lean parameterized testing macro for Rust)"
+/>
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://gribnau.dev/posts/parameterized-macro-yare-v3/" />
+<meta property="og:description" content="A blog by Martijn Gribnau" />
+
+
+<link rel="alternate"
+          type="application/rss+xml"
+          title="Don&#x27;t panic, impl Things"
+          href="https://gribnau.dev/atom.xml">
+    <link rel="stylesheet"
+          href="https://gribnau.dev/base.css">
+
+</head>
+
+<body>
+    <header>
+    <div class="top">
+        <div class="avatar">
+			<a href="/">
+                <img alt="Don&#x27;t panic, impl Things" title="Don&#x27;t panic, impl Things" src="https://gribnau.dev/processed_images/ava.b334fba4086c009a.png" srcset="https://gribnau.dev/processed_images/ava.df7a2100a2f090a4.png 64w, https://gribnau.dev/processed_images/ava.b334fba4086c009a.png 128w, https://gribnau.dev/processed_images/ava.b00c0c1742b92e66.png 256w" class="" />
+
+			</a>
+		</div>
+	    <div class="details">
+            <a class="site-name"
+            href="/">
+                <h1>Don&#x27;t panic, impl Things</h1>
+            </a>
+            <div class="site-description">
+                <p>A blog by Martijn Gribnau</p>
+            </div>
+        </div>
+
+        </div>
+        <nav>
+            <div class="links">
+            <a 
+                href="https://gribnau.dev/ " alt="Home"><span class="name">Home</span></a>
+            <a 
+                href="https://gribnau.dev/posts/ " alt="Posts"><span class="name">Posts</span></a>
+            <a 
+                href="https://gribnau.dev/tags/ " alt="Tags"><span class="name">Tags</span></a>
+            <a 
+                href="https://gribnau.dev/search/ " alt="Search"><span class="name">Search</span></a>
+            <a 
+                href="https://github.com/foresterre " alt="GitHub↗"><span class="name">GitHub↗</span></a>
+            </div>
+
+        </nav>
+    </header>
+    <article>
+    
+
+<section class="post">
+  <div class="post-header">
+    <div class="meta">
+      <div class="date">
+        <span class="day">08</span>
+        <span class="rest">Mar 24</span>
+      </div>
+    </div>
+
+    <div class="matter">
+      <h1 class="title">What&#x27;s new in Yare 3.0.0 (A lean parameterized testing macro for Rust) </h1>
+    </div>
+  </div>
+    
+  <article><h1 id="what-is-yare">What is Yare?</h1>
+<p><a href="https://github.com/foresterre/yare">Yare</a> is a lean parameterized testing macro for Rust.</p>
+<p>This practically means that when using <code>#[yare::parameterized]</code>, it is easier to write a test scenario,
+which can be tested against multiple different inputs. Each set of inputs is a separate test case.</p>
+<p>For example:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">use </span><span>yare::parameterized;
+</span><span>
+</span><span>#[</span><span style="color:#bf616a;">parameterized</span><span>(
+</span><span>    apple = { Fruit::Apple, &quot;</span><span style="color:#a3be8c;">apple</span><span>&quot; },
+</span><span>    pear = { Fruit::Pear, &quot;</span><span style="color:#a3be8c;">pear</span><span>&quot; },
+</span><span>    blackberry = { Fruit::</span><span style="color:#bf616a;">Bramble</span><span>(BrambleFruit::Blackberry), &quot;</span><span style="color:#a3be8c;">blackberry</span><span>&quot; },
+</span><span>)]
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">a_fruity_test</span><span>(</span><span style="color:#bf616a;">fruit</span><span>: Fruit, </span><span style="color:#bf616a;">name</span><span>: &amp;</span><span style="color:#b48ead;">str</span><span>) {
+</span><span>    assert_eq!(fruit.</span><span style="color:#96b5b4;">name_of</span><span>(), name)
+</span><span>}
+</span></code></pre>
+<p>The above scenario will generate 3 test cases: <code>apple</code>, <code>pear</code> and <code>blackberry</code>, while it was only necessary to specify the
+scenario once.</p>
+<p>As you might imagine, if your add more tests, the removal of duplicated test cases does not only save
+writing (and maintenance!) time, but makes it also easier to keep scenarios the same for a large set of inputs (especially
+while refactoring code, changes to test scenarios may sneak in, which should also have applied to equivalent inputs).</p>
+<h1 id="what-s-new-in-3-0-0">What's new in 3.0.0</h1>
+<h2 id="custom-test-macro-e-g-tokio-test">Custom test macro (e.g. tokio::test)</h2>
+<p>Prior to 3.0.0, Yare would always generate test cases with the Rust built in <code>#[test]</code> attribute. While it is exceptionally
+useful to have this macro built in, at times you may want to use a different macro because the built-in one doesn't support
+a feature you need.</p>
+<p>A common example is the <code>tokio::test</code> macro, when using the <a href="https://github.com/tokio-rs/tokio">tokio</a>
+asynchronous runtime. While you could create your own <a href="https://docs.rs/tokio/latest/tokio/runtime/struct.Runtime.html#method.spawn">Runtime</a>
+and spawn futures onto this runtime for your test cases, it is perhaps not as elegant as using the <a href="https://docs.rs/tokio/latest/tokio/attr.test.html">tokio::test</a>
+macro.</p>
+<p>With this use case in mind, Yare can now be used with user specified test macro's. If none is specified, the Rust built-in
+<code>#[test]</code> will be used.</p>
+<p><strong>Example</strong></p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">use </span><span>yare::parameterized;
+</span><span>
+</span><span>#[</span><span style="color:#bf616a;">parameterized</span><span>(
+</span><span>    zero_wait = { 0, 0 },
+</span><span>    show_paused = { 500, 0 },
+</span><span>)]
+</span><span>#[</span><span style="color:#bf616a;">test_macro</span><span>(tokio::</span><span style="color:#bf616a;">test</span><span>(start_paused = true))]
+</span><span>async </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">test</span><span>(</span><span style="color:#bf616a;">wait</span><span>: </span><span style="color:#b48ead;">u64</span><span>, </span><span style="color:#bf616a;">time_elapsed</span><span>: </span><span style="color:#b48ead;">u128</span><span>) {
+</span><span>    </span><span style="color:#b48ead;">let</span><span> start = std::time::Instant::now();
+</span><span>    tokio::time::sleep(tokio::time::Duration::from_millis(wait)).await;
+</span><span>
+</span><span>    assert_eq!(time_elapsed, start.</span><span style="color:#96b5b4;">elapsed</span><span>().</span><span style="color:#96b5b4;">as_millis</span><span>());
+</span><span>}
+</span><span>
+</span><span style="color:#65737e;">// to use `start_paused = true`, enable the test-util feature for your tokio dependency
+</span><span style="color:#65737e;">// example inspired by: https://tokio.rs/tokio/topics/testing
+</span></code></pre>
+<h3 id="how-does-it-work">How does it work?</h3>
+<p>To make this work, the <code>#[parameterized(...)]</code> attribute in Yare parses all attributes placed after it (all attributes must be placed on top of the
+test function):</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">use </span><span>syn::parse::{Parse, ParseStream, Result};
+</span><span>
+</span><span style="color:#b48ead;">enum </span><span>Attribute {
+</span><span>    </span><span style="color:#65737e;">/// A regular attribute, which isn&#39;t named &quot;test_macro&quot;
+</span><span>    </span><span style="color:#65737e;">/// NB: Attribute and syn::Attribute are not the same!
+</span><span>    Normal(syn::Attribute),
+</span><span>    </span><span style="color:#65737e;">// An attribute named &quot;test_macro&quot;
+</span><span>    TestMacro(syn::Meta),
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">pub struct </span><span>TestFn {
+</span><span>    </span><span style="color:#bf616a;">attributes</span><span>: Vec&lt;Attribute&gt;,
+</span><span>    </span><span style="color:#bf616a;">fun</span><span>: syn::ItemFn,
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">impl </span><span>Parse </span><span style="color:#b48ead;">for </span><span>TestFn {
+</span><span>    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">parse</span><span>(</span><span style="color:#bf616a;">input</span><span>: ParseStream) -&gt; Result&lt;</span><span style="color:#b48ead;">Self</span><span>&gt; {
+</span><span>        Ok(TestFn {
+</span><span>            attributes: input
+</span><span>                .</span><span style="color:#96b5b4;">call</span><span>(syn::Attribute::parse_outer)?
+</span><span>                .</span><span style="color:#96b5b4;">into_iter</span><span>()
+</span><span>                .</span><span style="color:#96b5b4;">map</span><span>(|</span><span style="color:#bf616a;">attr</span><span>| {
+</span><span>                    </span><span style="color:#b48ead;">if</span><span> attr.</span><span style="color:#96b5b4;">path</span><span>().</span><span style="color:#96b5b4;">is_ident</span><span>(&quot;</span><span style="color:#a3be8c;">test_macro</span><span>&quot;) {
+</span><span>                        attr.parse_args::&lt;syn::Meta&gt;().</span><span style="color:#96b5b4;">map</span><span>(Attribute::TestMacro)
+</span><span>                    } </span><span style="color:#b48ead;">else </span><span>{
+</span><span>                        Ok(Attribute::Normal(attr))
+</span><span>                    }
+</span><span>                })
+</span><span>                .collect::&lt;Result&lt;Vec&lt;_&gt;&gt;&gt;()?,
+</span><span>            fun: input.</span><span style="color:#96b5b4;">parse</span><span>()?,
+</span><span>        })
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<p>So for the following Rust source code:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>#[</span><span style="color:#bf616a;">parameterized</span><span>(
+</span><span>    red = { FunctionColor::Red },
+</span><span>    blue = { FunctionColor::Blue },
+</span><span>)]
+</span><span>#[</span><span style="color:#bf616a;">test_macro</span><span>(function_color::test_macro)]
+</span><span>#[</span><span style="color:#bf616a;">should_panic</span><span>]
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">test</span><span>(</span><span style="color:#bf616a;">color</span><span>: FunctionColor) {
+</span><span>    </span><span style="color:#65737e;">// ...
+</span><span>}
+</span></code></pre>
+<p>We end up with 1 test_macro attribute and 1 "normal" attribute (i.e. not test_macro):</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>vec![
+</span><span>    Attribute::TestMacro(syn::Meta::parse(&quot;</span><span style="color:#a3be8c;">test_macro(function_color::test_macro)</span><span>&quot;)), </span><span style="color:#65737e;">// hypothetically, if a &amp;str would be a syn::ParseStream
+</span><span>    Attribute::Normal(syn::Attribute::parse(&quot;</span><span style="color:#a3be8c;">#[should_panic]</span><span>&quot;)),
+</span><span>];
+</span></code></pre>
+<p>In the code generation phase, we can obtain these separately from <code>TestFn</code>:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">impl </span><span>TestFn {
+</span><span>    </span><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">attributes</span><span>(&amp;</span><span style="color:#bf616a;">self</span><span>) -&gt; Vec&lt;syn::Attribute&gt; {
+</span><span>        </span><span style="color:#bf616a;">self
+</span><span>            .attributes
+</span><span>            .</span><span style="color:#96b5b4;">iter</span><span>()
+</span><span>            .</span><span style="color:#96b5b4;">filter_map</span><span>(Attribute::to_normal)
+</span><span>            .</span><span style="color:#96b5b4;">collect</span><span>()
+</span><span>    }
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">test_macro_attribute</span><span>(&amp;</span><span style="color:#bf616a;">self</span><span>) -&gt; syn::Meta {
+</span><span>        </span><span style="color:#bf616a;">self</span><span>.attributes
+</span><span>            .</span><span style="color:#96b5b4;">iter</span><span>()
+</span><span>            .</span><span style="color:#96b5b4;">find_map</span><span>(Attribute::to_test_macro) </span><span style="color:#65737e;">// NB: We elsewhere asserted that there&#39;s at most one of these. 
+</span><span>            .</span><span style="color:#96b5b4;">unwrap_or_else</span><span>(|| {
+</span><span>                </span><span style="color:#65737e;">// A definition for the default #[test] macro
+</span><span>                syn::Meta::Path(syn::Path::from(syn::Ident::new(
+</span><span>                    &quot;</span><span style="color:#a3be8c;">test</span><span>&quot;,
+</span><span>                    proc_macro2::Span::call_site(),
+</span><span>                )))
+</span><span>            })
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<p>And finally during generation itself:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">impl </span><span>TestCase {
+</span><span>    </span><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">to_token_stream</span><span>(&amp;</span><span style="color:#bf616a;">self</span><span>, </span><span style="color:#bf616a;">test_fn</span><span>: &amp;TestFn) -&gt; Result&lt;proc_macro2::TokenStream&gt; {
+</span><span>        </span><span style="color:#b48ead;">let</span><span> test_meta = test_fn.</span><span style="color:#96b5b4;">test_macro_attribute</span><span>();
+</span><span>        </span><span style="color:#b48ead;">let</span><span> attributes = test_fn.</span><span style="color:#96b5b4;">attributes</span><span>();
+</span><span>        </span><span style="color:#65737e;">// Many other things omitted...
+</span><span>        
+</span><span>        Ok(quote::quote! {
+</span><span>            #[#</span><span style="color:#bf616a;">test_meta</span><span>]   </span><span style="color:#65737e;">// &lt;-- Our custom macro attribute, or #[test] if none was specified
+</span><span>            #(#attributes)* </span><span style="color:#65737e;">// &lt;-- The &quot;normal&quot; attributes, reproduced
+</span><span>            #visibility #constness #asyncness #unsafety #abi </span><span style="color:#b48ead;">fn </span><span>#</span><span style="color:#96b5b4;">identifier</span><span>() #return_type {
+</span><span>                #bindings
+</span><span>                #body
+</span><span>            }
+</span><span>        })
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<p>When the code generation phase of the macro has been completed, the parameterized test function will have been substituted by two separate test functions:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>#[</span><span style="color:#bf616a;">function_color</span><span>::</span><span style="color:#bf616a;">test_macro</span><span>]
+</span><span>#[</span><span style="color:#bf616a;">should_panic</span><span>]
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">red</span><span>() {
+</span><span>    </span><span style="color:#65737e;">// ...
+</span><span>}
+</span><span>
+</span><span>#[</span><span style="color:#bf616a;">function_color</span><span>::</span><span style="color:#bf616a;">test_macro</span><span>]
+</span><span>#[</span><span style="color:#bf616a;">should_panic</span><span>]
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">blue</span><span>() {
+</span><span>    </span><span style="color:#65737e;">// ...
+</span><span>}
+</span></code></pre>
+<h3 id="gotchas-to-be-aware-of">Gotchas to be aware of</h3>
+<p><strong>The <code>#[test_macro(...)]</code> attribute must be placed after <code>#[parameterized]</code></strong></p>
+<p>Like all macro's, <code>yare::parameterized</code> can only parse the available scope. Since <code>yare::parameterized</code> is supposed
+to be placed on top of functions, we can access our own attribute (which we use to parse the test case identifier and arguments for test cases)
+and the function underneath (used to specify the parameters and test scenario in the function body).</p>
+<p>While <code>yare::parameterized</code> does have access to attributes placed after it, the ones which come before it, are inaccessible.</p>
+<p>Subsequently, <code>yare::parameterized</code> can only recognize placements of <code>#[test_macro(...)]</code> which come after it.</p>
+<p>So, the following is ok:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">use </span><span>yare::parameterized;
+</span><span>
+</span><span>#[</span><span style="color:#bf616a;">parameterized</span><span>(
+</span><span>    wow = { &quot;</span><span style="color:#a3be8c;">wow!</span><span>&quot; },
+</span><span>    whew = { &quot;</span><span style="color:#a3be8c;">whew!</span><span>&quot; },
+</span><span>)]
+</span><span>#[</span><span style="color:#bf616a;">test_macro</span><span>(tokio::test)]
+</span><span>async </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">test</span><span>(</span><span style="color:#bf616a;">sample</span><span>: &amp;</span><span style="color:#b48ead;">str</span><span>) {
+</span><span>    </span><span style="color:#65737e;">// ...
+</span><span>}
+</span></code></pre>
+<p>While this doesn't work:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">use </span><span>yare::parameterized;
+</span><span>
+</span><span>#[</span><span style="color:#bf616a;">test_macro</span><span>(tokio::test)]
+</span><span>#[</span><span style="color:#bf616a;">parameterized</span><span>(
+</span><span>    wow = { &quot;</span><span style="color:#a3be8c;">wow!</span><span>&quot; },
+</span><span>    whew = { &quot;</span><span style="color:#a3be8c;">whew!</span><span>&quot; },
+</span><span>)]
+</span><span>async </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">test</span><span>(</span><span style="color:#bf616a;">sample</span><span>: &amp;</span><span style="color:#b48ead;">str</span><span>) {
+</span><span>    </span><span style="color:#65737e;">// ...
+</span><span>}
+</span></code></pre>
+<p><strong>One <code>#[test_macro(...)]</code> per parameterized test function</strong></p>
+<p>Yare currently accepts one <code>#[test_macro(...)]</code> for a parameterized test function. The following is not allowed and will return an error:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">use </span><span>yare::parameterized;
+</span><span>
+</span><span>#[</span><span style="color:#bf616a;">parameterized</span><span>(
+</span><span>    wow = { &quot;</span><span style="color:#a3be8c;">wow!</span><span>&quot; },
+</span><span>    whew = { &quot;</span><span style="color:#a3be8c;">whew!</span><span>&quot; },
+</span><span>)]
+</span><span>#[</span><span style="color:#bf616a;">test_macro</span><span>(tokio::test)]
+</span><span>#[</span><span style="color:#bf616a;">test_macro</span><span>(tokio::</span><span style="color:#bf616a;">test</span><span>(start_paused = true))]
+</span><span>async </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">test</span><span>(</span><span style="color:#bf616a;">sample</span><span>: &amp;</span><span style="color:#b48ead;">str</span><span>) {
+</span><span>    </span><span style="color:#65737e;">// ...
+</span><span>}
+</span></code></pre>
+<p>Returned error:</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>error: Expected at most 1 #[test_macro(...)] attribute, but 2 were given
+</span><span>--&gt; tests/fail/multiple_test_macro_attributes.rs:8:14
+</span><span>  |
+</span><span>8 | #[test_macro(tokio::test(start_paused = true))]
+</span><span>  |              ^^^^^
+</span></code></pre>
+<p>The reason is that it's unclear what should happen when multiple <code>#[test_macro(...)]</code> attributes are present.
+Should the first one be used by  <code>#[parameterized(...)]</code>, and subsequent be left in place? Or would that just be
+confusing, if only because the test author will need to keep track of which macro uses which attributes.</p>
+<p><strong>Renaming attributes</strong></p>
+<p>Yare's parameterized attribute can be used with a different name if you would like, by rebinding the target import
+part under a local name:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">use </span><span>yare::parameterized as test_macro_for_twitchcraft_and_lizardry; </span><span style="color:#65737e;">// &lt;-- Rebinding!
+</span><span>
+</span><span>#[</span><span style="color:#bf616a;">test_macro_for_twitchcraft_and_lizardry</span><span>(                             &lt;-- Usage
+</span><span>    gryffinroar = { &quot;</span><span style="color:#a3be8c;">Gryffinroar</span><span>&quot; },
+</span><span>    hufflefluff = { &quot;</span><span style="color:#a3be8c;">Hufflefluff</span><span>&quot; },
+</span><span>    ravenpaw = { &quot;</span><span style="color:#a3be8c;">Ravenpaw</span><span>&quot; },
+</span><span>    slytherfin = { &quot;</span><span style="color:#a3be8c;">Slytherfin</span><span>&quot; },
+</span><span>)]
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">houses</span><span>(</span><span style="color:#bf616a;">name</span><span>: &amp;</span><span style="color:#b48ead;">str</span><span>) {
+</span><span>    </span><span style="color:#65737e;">// ...
+</span><span>}
+</span></code></pre>
+<p>However, since the <code>#[test_macro(...)]</code> is parsed by <code>yare::parameterized</code>, it cannot be renamed.</p>
+<h2 id="extended-function-qualifier-support">Extended function qualifier support</h2>
+<p>Previously, when Yare was still written to support mostly just the built-in <code>#[test]</code> macro, it wasn't so useful to
+support the function qualifiers: <code>const</code>, <code>async</code>, <code>unsafe</code> and <code>extern</code>. Firstly, because half of these aren't even
+supported by <code>#[test]</code>. For the ones that are, namely <code>const</code> and <code>extern</code>, the I deemed the usefulness to be limited.
+For example: with <code>const</code> you can't use the commonly used <code>assert_eq!</code> since the <code>PartialEq</code> trait is not marked as <code>const</code>. And regarding <code>extern</code>, I've never seen anyone call unit test functions over FFI (but if you do, I would like to know, it does sound fun 😅).</p>
+<p>However, with custom test macro's, you want at least support for <code>async</code> and maybe for <code>unsafe</code>. Adding the other two is hardly more work, so I also added <code>const</code> and <code>extern</code> for completeness.</p>
+<p>NB: when specifying one ore more qualifiers in the function definition of your test function, the underlying test macro (whether <code>#[test]</code> or a custom macro <code>#[test_macro(x)]</code>) must also support the specified qualifiers.</p>
+<p><strong>Example</strong></p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">use </span><span>yare::parameterized;
+</span><span>
+</span><span style="color:#65737e;">// NB: The underlying test macro also must support these qualifiers. For example, the default `#[test]` doesn&#39;t support async and unsafe.
+</span><span>
+</span><span>#[</span><span style="color:#bf616a;">parameterized</span><span>(
+</span><span>    purple = { &amp;[128, 0, 128] },
+</span><span>    orange = { &amp;[255, 127, 0] },
+</span><span>)]
+</span><span style="color:#b48ead;">const extern </span><span>&quot;</span><span style="color:#a3be8c;">C</span><span>&quot; </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">has_reds</span><span>(</span><span style="color:#bf616a;">streamed_color</span><span>: &amp;[</span><span style="color:#b48ead;">u8</span><span>]) {
+</span><span>    assert!(streamed_color.</span><span style="color:#96b5b4;">first</span><span>().</span><span style="color:#96b5b4;">is_some</span><span>());
+</span><span>}
+</span></code></pre>
+<h1 id="ideas-feedback-and-bug-reports-for-yare">Ideas, feedback and bug reports for Yare</h1>
+<p>Ideas, feedback and bug reports are most welcome. Feel free to open an issue on <a href="https://github.com/foresterre/yare/issues">GitHub</a>.</p>
+<h1 id="discuss-this-post">Discuss this post</h1>
+<p>Discuss on <a href="https://reddit.com/r/rust/comments/1b9ijs6/yare_v300_a_lean_parameterized_testing_macro_for/">Reddit</a>.</p>
+</article>
+
+  
+    
+  
+  <ul class="tags">
+    
+      <li><a href='https://gribnau.dev/tags/rust'>Rust</a></li>
+    
+      <li><a href='https://gribnau.dev/tags/testing'>testing</a></li>
+    
+      <li><a href='https://gribnau.dev/tags/yare'>yare</a></li>
+    
+  </ul>
+  
+  
+    
+</section>
+</article>
+    <footer>
+        <div class="social">
+            <ul>
+                
+                <li>
+                    <a href="https://github.com/foresterre"
+                       title="Github" rel="me"><i class="icon-github"></i></a>
+                </li>
+                
+                
+                <li>
+                    <a href="https://www.linkedin.com/in/martijn-gribnau"
+                       title="Linkedin" rel="me"><i class="icon-linkedin"></i></a>
+                </li>
+                
+                <li>
+                    <a href="https://gribnau.dev/atom.xml"
+                       title="Don&#x27;t panic, impl Things"><i class="icon-rss"></i></a>
+                </li>
+            </ul>
+        </div>
+        <p> © Martijn Gribnau 2026
+
+        
+        <br>Powered by <a target="_blank" href="https://getzola.org/">Zola</a>. Theme based on <a target="_blank" href="https://github.com/jimmyff/zola-inky">Inky</a>.
+        </p>
+    </footer>
+
+    <!--<link href="https://fonts.googleapis.com/css2?family=Andada+Pro&display=swap&family=Playfair+Display" rel="stylesheet">-->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://unpkg.com/lucide-static@latest/font/lucide.css" />
+</body>
+</html>

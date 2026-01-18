@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en" prefix="og: https://ogp.me/ns#">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="X-UA-Compatible"
+      content="IE=edge">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0" />
+<meta name="description"
+      content="A blog by Martijn Gribnau" />
+<meta name="keywords"
+      content="foresterre, rust, cargo-msrv, msrv, software engineering" /> 
+
+<title>
+  Thank you all for 10 years of (stable) Rust // Don&#x27;t panic, impl Things</title>
+<meta
+  property="og:title"
+  content="Don&#x27;t panic, impl Things | Thank you all for 10 years of (stable) Rust"
+/>
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://gribnau.dev/posts/thank-you-all-for-ten-years-of-stable-rust/" />
+<meta property="og:description" content="A blog by Martijn Gribnau" />
+
+
+<link rel="alternate"
+          type="application/rss+xml"
+          title="Don&#x27;t panic, impl Things"
+          href="https://gribnau.dev/atom.xml">
+    <link rel="stylesheet"
+          href="https://gribnau.dev/base.css">
+
+</head>
+
+<body>
+    <header>
+    <div class="top">
+        <div class="avatar">
+			<a href="/">
+                <img alt="Don&#x27;t panic, impl Things" title="Don&#x27;t panic, impl Things" src="https://gribnau.dev/processed_images/ava.b334fba4086c009a.png" srcset="https://gribnau.dev/processed_images/ava.df7a2100a2f090a4.png 64w, https://gribnau.dev/processed_images/ava.b334fba4086c009a.png 128w, https://gribnau.dev/processed_images/ava.b00c0c1742b92e66.png 256w" class="" />
+
+			</a>
+		</div>
+	    <div class="details">
+            <a class="site-name"
+            href="/">
+                <h1>Don&#x27;t panic, impl Things</h1>
+            </a>
+            <div class="site-description">
+                <p>A blog by Martijn Gribnau</p>
+            </div>
+        </div>
+
+        </div>
+        <nav>
+            <div class="links">
+            <a 
+                href="https://gribnau.dev/ " alt="Home"><span class="name">Home</span></a>
+            <a 
+                href="https://gribnau.dev/posts/ " alt="Posts"><span class="name">Posts</span></a>
+            <a 
+                href="https://gribnau.dev/tags/ " alt="Tags"><span class="name">Tags</span></a>
+            <a 
+                href="https://gribnau.dev/search/ " alt="Search"><span class="name">Search</span></a>
+            <a 
+                href="https://github.com/foresterre " alt="GitHub↗"><span class="name">GitHub↗</span></a>
+            </div>
+
+        </nav>
+    </header>
+    <article>
+    
+
+<section class="post">
+  <div class="post-header">
+    <div class="meta">
+      <div class="date">
+        <span class="day">15</span>
+        <span class="rest">May 25</span>
+      </div>
+    </div>
+
+    <div class="matter">
+      <h1 class="title">Thank you all for 10 years of (stable) Rust </h1>
+    </div>
+  </div>
+    
+  <article><p>Today marks the 10th anniversary of <a href="https://blog.rust-lang.org/2015/05/15/Rust-1.0/">Rust 1.0</a>. <a href="https://internals.rust-lang.org/t/rust-1-87-0-pre-release-testing/22896">Rust 1.87</a> will be released live on stage at the <a href="https://rustweek.org/celebration/">10 years of Rust celebration</a> this afternoon (hosted by RustWeek, there are still tickets I heard). Over these past 10 years, Rust had a major positive impact on my life in various ways, and I'm extremely grateful for that.</p>
+<p><strong>Thanks to all Rust contributors and to our community, it has been a blast 🎉</strong>.</p>
+<p>An anniversary is usually a good moment to look forward, but it also marks a good moment to take a step back, and reflect a bit on the past. Yesterday I scrolled back through the <a href="https://github.com/rust-lang/rust/blob/master/RELEASES.md">release notes</a> for a bit, and reflected on some improvements which I've been taking more and more for granted.</p>
+<p>The one which pops out of that list the most (for me) is probably the <code>?</code> operator. It was stabilized in <a href="https://blog.rust-lang.org/2016/11/10/Rust-1.13/">Rust 1.13.0</a>, but prototyped via the <code>try!</code> macro some time before that. I can truthfully say that every time I write in another language, I miss that <code>?</code> and the associated <a href="https://doc.rust-lang.org/std/ops/trait.Try.html"><code>Try</code></a> trait (I kind of wish the trait was marked stable 😅).</p>
+<!-- The other big ones which made Rust less cumbersome to write were of course [non lexical lifetimes](https://blog.rust-lang.org/2018/12/06/Rust-1.31-and-rust-2018/#non-lexical-lifetimes), lifetime elision improvements, the deref improvements (no more `&***`) and a boat load of library improvements.
+
+<sup>...and then there is of course the documentation, the tools, the community, the transparent and in the open development. And so much more.</sup> -->
+<p>The time where a large portion of the community was on nightly by default is now far in the past. With the vision doc for Rust taking shape, and likely hundreds of other <a href="https://rust-lang.github.io/rust-project-goals/2025h1/index.html">improvements</a>, I can't wait for the next 10 years of stable Rust.</p>
+</article>
+
+  
+    
+  
+  <ul class="tags">
+    
+      <li><a href='https://gribnau.dev/tags/rust'>rust</a></li>
+    
+      <li><a href='https://gribnau.dev/tags/rust-10-years'>rust-10-years</a></li>
+    
+      <li><a href='https://gribnau.dev/tags/rustweek25'>rustweek25</a></li>
+    
+      <li><a href='https://gribnau.dev/tags/crab'>🦀</a></li>
+    
+  </ul>
+  
+  
+    
+</section>
+</article>
+    <footer>
+        <div class="social">
+            <ul>
+                
+                <li>
+                    <a href="https://github.com/foresterre"
+                       title="Github" rel="me"><i class="icon-github"></i></a>
+                </li>
+                
+                
+                <li>
+                    <a href="https://www.linkedin.com/in/martijn-gribnau"
+                       title="Linkedin" rel="me"><i class="icon-linkedin"></i></a>
+                </li>
+                
+                <li>
+                    <a href="https://gribnau.dev/atom.xml"
+                       title="Don&#x27;t panic, impl Things"><i class="icon-rss"></i></a>
+                </li>
+            </ul>
+        </div>
+        <p> © Martijn Gribnau 2026
+
+        
+        <br>Powered by <a target="_blank" href="https://getzola.org/">Zola</a>. Theme based on <a target="_blank" href="https://github.com/jimmyff/zola-inky">Inky</a>.
+        </p>
+    </footer>
+
+    <!--<link href="https://fonts.googleapis.com/css2?family=Andada+Pro&display=swap&family=Playfair+Display" rel="stylesheet">-->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://unpkg.com/lucide-static@latest/font/lucide.css" />
+</body>
+</html>
