@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en" prefix="og: https://ogp.me/ns#">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="X-UA-Compatible"
+      content="IE=edge">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0" />
+<meta name="description"
+      content="A blog by Martijn Gribnau" />
+<meta name="keywords"
+      content="foresterre, rust, cargo-msrv, msrv, software engineering" /> 
+
+<title>
+  Using the todo! macro to prototype your API in Rust // Don&#x27;t panic, impl Things</title>
+<meta
+  property="og:title"
+  content="Don&#x27;t panic, impl Things | Using the todo! macro to prototype your API in Rust"
+/>
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://gribnau.dev/posts/todo-macro-rust/" />
+<meta property="og:description" content="A blog by Martijn Gribnau" />
+
+
+<link rel="alternate"
+          type="application/rss+xml"
+          title="Don&#x27;t panic, impl Things"
+          href="https://gribnau.dev/atom.xml">
+    <link rel="stylesheet"
+          href="https://gribnau.dev/base.css">
+
+</head>
+
+<body>
+    <header>
+    <div class="top">
+        <div class="avatar">
+			<a href="/">
+                <img alt="Don&#x27;t panic, impl Things" title="Don&#x27;t panic, impl Things" src="https://gribnau.dev/processed_images/ava.b334fba4086c009a.png" srcset="https://gribnau.dev/processed_images/ava.df7a2100a2f090a4.png 64w, https://gribnau.dev/processed_images/ava.b334fba4086c009a.png 128w, https://gribnau.dev/processed_images/ava.b00c0c1742b92e66.png 256w" class="" />
+
+			</a>
+		</div>
+	    <div class="details">
+            <a class="site-name"
+            href="/">
+                <h1>Don&#x27;t panic, impl Things</h1>
+            </a>
+            <div class="site-description">
+                <p>A blog by Martijn Gribnau</p>
+            </div>
+        </div>
+
+        </div>
+        <nav>
+            <div class="links">
+            <a 
+                href="https://gribnau.dev/ " alt="Home"><span class="name">Home</span></a>
+            <a 
+                href="https://gribnau.dev/posts/ " alt="Posts"><span class="name">Posts</span></a>
+            <a 
+                href="https://gribnau.dev/tags/ " alt="Tags"><span class="name">Tags</span></a>
+            <a 
+                href="https://gribnau.dev/search/ " alt="Search"><span class="name">Search</span></a>
+            <a 
+                href="https://github.com/foresterre " alt="GitHub↗"><span class="name">GitHub↗</span></a>
+            </div>
+
+        </nav>
+    </header>
+    <article>
+    
+
+<section class="post">
+  <div class="post-header">
+    <div class="meta">
+      <div class="date">
+        <span class="day">24</span>
+        <span class="rest">Apr 23</span>
+      </div>
+    </div>
+
+    <div class="matter">
+      <h1 class="title">Using the todo! macro to prototype your API in Rust </h1>
+    </div>
+  </div>
+    
+  <article><p>Let's sketch a situation. You're designing and implementing a library in Rust, for some great idea you had. And, you aim to create a seamless API that makes this library user-friendly not only for others, but also for yourself.</p>
+<p>One way to figure out the design of the library is to write a prototype, and write the bare minimum code to stub out the the initial API.
+I hear you think: Rust is not to most convenient prototyping language, because it's quite strict and verbose: we have to satisfy the borrow checker and, in many places, Rust requires you to explicitely type your code. And altough I believe both will help you design better code, I can also understand the argument that it reduces the prototyping velocity at least a bit.</p>
+<p>Luckily for us, the Rust standard library has a useful tool in its toolbox: the <a href="https://doc.rust-lang.org/std/macro.todo.html">todo!</a> macro.</p>
+<p>Let's look at an example. Imagine<sup><a href="#footnote1">1</a></sup> we're re-designing a Rust API to fetch Rust releases metadata.</p>
+<p>We will first prototype a few data structures around the concept of "releases":</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#65737e;">/// A data structure consisting of the set of known Rust releases.  
+</span><span style="color:#65737e;">///  
+</span><span style="color:#65737e;">/// Whether a release is known, and how much information is known
+</span><span style="color:#65737e;">/// about a release, depends on the source used to build up this
+</span><span style="color:#65737e;">/// information.
+</span><span style="color:#b48ead;">struct </span><span>RustReleases {
+</span><span>    </span><span style="color:#65737e;">// We divide all releases by platform, so we end up with the
+</span><span>    </span><span style="color:#65737e;">// set of available toolchains for each platform.
+</span><span>    </span><span style="color:#bf616a;">registry</span><span>: HashMap&lt;rust_toolchain::Platform, ReleaseRecords&gt;, 
+</span><span>}
+</span><span>
+</span><span style="color:#65737e;">/// A set of releases, for a single platform.
+</span><span style="color:#b48ead;">struct </span><span>ReleaseRecords {
+</span><span>    </span><span style="color:#bf616a;">releases</span><span>: BTreeSet&lt;Release&gt;,
+</span><span>}
+</span><span>
+</span><span style="color:#65737e;">/// A single release. 
+</span><span style="color:#65737e;">///
+</span><span style="color:#65737e;">/// In this example, we define a release as a toolchain of a specific
+</span><span style="color:#65737e;">/// version (stable, beta) or date (nightly), and its associated
+</span><span style="color:#65737e;">/// components.
+</span><span style="color:#b48ead;">struct </span><span>Release {
+</span><span>    </span><span style="color:#bf616a;">toolchain</span><span>: rust_toolchain::Toolchain,
+</span><span>    </span><span style="color:#65737e;">/// Rustup has the concept of components and extensions.
+</span><span>    </span><span style="color:#65737e;">/// 
+</span><span>    </span><span style="color:#65737e;">/// When installing a toolchain, components are installed by default, while extensions are optional components.
+</span><span>    </span><span style="color:#65737e;">/// In this implementation, they&#39;re combined.
+</span><span>    </span><span style="color:#bf616a;">components</span><span>: Vec&lt;rust_toolchain::Component&gt;,
+</span><span>}
+</span></code></pre>
+<p>Now, let's consider how we want to use the data captured by these data structures.
+For example, we may want to find the most recently released Rust release:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">impl </span><span>ReleaseRecords {
+</span><span>    </span><span style="color:#65737e;">/// Find the most recent Rust release.
+</span><span>    </span><span style="color:#65737e;">///
+</span><span>    </span><span style="color:#65737e;">/// Returns `None` if no release could be found.
+</span><span>    </span><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">last_released</span><span>(&amp;</span><span style="color:#bf616a;">self</span><span>) -&gt; Option&lt;&amp;Release&gt; {
+</span><span>        todo!()
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<p>See that <code>todo!</code> macro 😃? Instead of providing an actual, or fake, implementation which needs to satisfy the return type of our method, we placed a <code>todo!</code> macro in the body.
+This allows us to not worry about our implementation just yet, so we can focus on the design of our API instead.</p>
+<p>It also accepts the same arguments as <a href="https://doc.rust-lang.org/std/macro.panic.html">panic!</a>, so the following will work as well:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">impl </span><span>Release {
+</span><span>    </span><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">release_date</span><span>(&amp;</span><span style="color:#bf616a;">self</span><span>) -&gt; rust_toolchain::ReleaseDate {
+</span><span>        todo!(&quot;</span><span style="color:#a3be8c;">release date of the toolchain</span><span>&quot;)
+</span><span>    }
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">find_component</span><span>(&amp;</span><span style="color:#bf616a;">self</span><span>, </span><span style="color:#bf616a;">name</span><span>: &amp;</span><span style="color:#b48ead;">str</span><span>) -&gt; Option&lt;rust_toolchain::Component&gt; {
+</span><span>        todo!(&quot;</span><span style="color:#a3be8c;">find component with name: &#39;{name}&#39;</span><span>&quot;)
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<p>If we run the <code>find_component</code> method, we'll find that it panics the thread, and shows the panic message we provided, prefixed with "not yet implemented":</p>
+<pre data-lang="text" style="background-color:#2b303b;color:#c0c5ce;" class="language-text "><code class="language-text" data-lang="text"><span>not yet implemented: find component with name: &#39;hello-world&#39;
+</span><span>thread &#39;tests::find_component&#39; panicked at &#39;not yet implemented: find component with name: &#39;hello-world&#39;&#39;, crates/rust-releases-core/src/lib.rs:77:9
+</span><span>stack backtrace:
+</span><span>   0: std::panicking::begin_panic_handler
+</span><span>             at /rustc/84c898d65adf2f39a5a98507f1fe0ce10a2b8dbc/library/std/src/panicking.rs:579
+</span><span>   1: &lt;snip&gt;
+</span><span>note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+</span></code></pre>
+<p>Under the hood, <code>todo!</code> is the same as <code>panic!</code>, to which it defers its implementation, but with a clear change of semantics: this bit is not yet implemented, but we'll do so soon.</p>
+<h2 id="every-rose-has-its-thorn">Every rose has its thorn</h2>
+<p>Let's expand our design and add a few more useful methods:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">impl </span><span>Release {
+</span><span>    </span><span style="color:#65737e;">/// Returns an iterator over the components which are installed by default.
+</span><span>    </span><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">components</span><span>(&amp;</span><span style="color:#bf616a;">self</span><span>) -&gt; impl Iterator&lt;Item = &amp;rust_toolchain::Component&gt; {
+</span><span>        todo!(&quot;</span><span style="color:#a3be8c;">components installed by default</span><span>&quot;)
+</span><span>    }
+</span><span>
+</span><span>    </span><span style="color:#65737e;">/// Returns an iterator over the components which are optional,
+</span><span>    </span><span style="color:#65737e;">/// and not installed by default.
+</span><span>    </span><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">extensions</span><span>(&amp;</span><span style="color:#bf616a;">self</span><span>) -&gt; impl Iterator&lt;Item = &amp;rust_toolchain::Component&gt; {
+</span><span>        todo!(&quot;</span><span style="color:#a3be8c;">components not installed by default</span><span>&quot;)
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<p>In the above code we defined two methods on <code>Release</code>, which both return an iterator of <code>&amp;rust_toolchain::Component</code> items.
+What happens if we try to compile the code above?:</p>
+<pre data-lang="rust_errors" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust_errors "><code class="language-rust_errors" data-lang="rust_errors"><span>error[E0277]: `()` is not an iterator
+</span><span>  --&gt; crates/rust-releases-core/src/lib.rs:80:33
+</span><span>   |
+</span><span>80 |     pub fn components(&amp;self) -&gt; impl Iterator&lt;Item = &amp;rust_toolchain::Component&gt; {
+</span><span>   |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `()` is not an iterator
+</span><span>   |
+</span><span>   = help: the trait `Iterator` is not implemented for `()`
+</span></code></pre>
+<p>😢</p>
+<p>It <a href="https://github.com/rust-lang/rust/issues/36375#issuecomment-357216289">turns out</a>, there is an <a href="https://github.com/rust-lang/rust/issues/36375">issue</a> where the compiler is unable to figure out what type to use for types which have the never type as their return type and use <code>impl Trait</code> in return position. The  <code>todo!</code> macro falls in this category.</p>
+<p>There are several ways to work around the problem though.</p>
+<p>One option is to use dynamic dispatch and box:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">impl </span><span>Release {
+</span><span>   </span><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">extensions</span><span>&lt;</span><span style="color:#b48ead;">&#39;this</span><span>&gt;(
+</span><span>        &amp;</span><span style="color:#b48ead;">&#39;this </span><span style="color:#bf616a;">self</span><span>,
+</span><span>    ) -&gt; Box&lt;dyn Iterator&lt;Item = &amp;</span><span style="color:#b48ead;">&#39;this </span><span>rust_toolchain::Component&gt; + </span><span style="color:#b48ead;">&#39;this</span><span>&gt; {
+</span><span>        todo!(&quot;</span><span style="color:#a3be8c;">components not installed by default</span><span>&quot;)
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<p>Another is to return a simple concrete type:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">impl </span><span>Release {
+</span><span>    </span><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">extensions</span><span>(&amp;</span><span style="color:#bf616a;">self</span><span>) -&gt; Vec&lt;&amp;rust_toolchain::Component&gt; {
+</span><span>        todo!(&quot;</span><span style="color:#a3be8c;">components not installed by default</span><span>&quot;)
+</span><span>    }   
+</span><span>}
+</span></code></pre>
+<p>A third is to use the explicit type in the return type, but this requires you to think ahead on which iterator type you will be using, which you probably don't want to worry about (especially if you will be using <code>impl Iterator</code> on implementation). A fourth would be to implement <code>Iterator</code> for a concrete type, but this also adds a lot of boilerplate.</p>
+<p>A <a href="https://reddit.com/r/rust/comments/12x1lfd/blog_post_using_the_todo_macro_to_prototype_your/jhjecab/">fifth</a> was suggested by <em>natalialt</em>. I like this one very much, because it is short and to the point (altough also not universably applicable to any <code>impl Trait</code> return type). This solution returns an iterator via the <code>std::iter::once()</code> function:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">use </span><span>std::iter;
+</span><span>
+</span><span style="color:#b48ead;">impl </span><span>Release {
+</span><span>    </span><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">extensions</span><span>(&amp;</span><span style="color:#bf616a;">self</span><span>) -&gt; impl Iterator&lt;Item = &amp;rust_toolchain::Component&gt; {
+</span><span>        iter::once(todo!(&quot;</span><span style="color:#a3be8c;">components not installed by default</span><span>&quot;))
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<p>The reason that this works, is because <code>std::iter::once</code> returns a valid iterator, namely <a href="https://doc.rust-lang.org/std/iter/struct.Once.html">Once</a>, which makes the return type satisfiable. Where the never type <code>!</code> didn't implement <code>Iterator</code>, <code>Once</code> does.</p>
+<h2 id="taking-it-to-the-next-level">Taking it to the next level</h2>
+<p>So far, we saw that <code>todo!</code> can be a powerful prototyping tool. If we want to take it to the next level,
+we should start making use of Rust's type checking capabilities for the composition and usage of our API.
+This helps us be much more confident throughout designing of the library.</p>
+<p>As shown before, the compiler knows that we do not need to satisfy our return types (within the method body).
+However, the return type of these methods will still be checked wherever we use these methods.
+This allows us to not only define the new API, while leaving the implementation for later but also write some code on how to use it.
+This can be particularly useful to explore whether an API is easy to use as a caller.</p>
+<p>I like to do this by writing unit tests for my API. If your API is painful to use, you're much more likely to find this out if you had to write
+a usage example yourself. Plus, this way you also already have a first test in place. Example:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>#[</span><span style="color:#bf616a;">test</span><span>]
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">find_component_returns_none_if_release_has_no_components</span><span>() {
+</span><span>    </span><span style="color:#b48ead;">let</span><span> channel = rust_toolchain::Channel::Nightly;
+</span><span>    </span><span style="color:#b48ead;">let</span><span> release_date = rust_toolchain::ReleaseDate::new(</span><span style="color:#d08770;">2023</span><span>, </span><span style="color:#d08770;">1</span><span>, </span><span style="color:#d08770;">1</span><span>);
+</span><span>    </span><span style="color:#b48ead;">let</span><span> platform = rust_toolchain::Platform::host();
+</span><span>    </span><span style="color:#b48ead;">let</span><span> version = None;
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">let</span><span> toolchain = rust_toolchain::Toolchain::new(channel, release_date, platform, version);
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">let</span><span> release = Release::new(toolchain, vec![]);
+</span><span>    </span><span style="color:#b48ead;">let</span><span> component = release.</span><span style="color:#96b5b4;">find_component</span><span>(&quot;</span><span style="color:#a3be8c;">hello</span><span>&quot;);
+</span><span>
+</span><span>    assert!(component.</span><span style="color:#96b5b4;">is_none</span><span>());
+</span><span>}
+</span></code></pre>
+<p>And if we were not yet sure how to construct an input for our function under test, we can also use the <code>todo!</code> macro here:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>#[</span><span style="color:#bf616a;">test</span><span>]
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">find_component_returns_none_if_release_has_no_components</span><span>() {
+</span><span>    </span><span style="color:#65737e;">// We can use todo!() here too!
+</span><span>    </span><span style="color:#65737e;">//
+</span><span>    </span><span style="color:#65737e;">// We may not be sure yet how to construct our input.
+</span><span>    </span><span style="color:#65737e;">// Let&#39;s take the design of the API, one step at a time.
+</span><span>    </span><span style="color:#b48ead;">let</span><span> toolchain = todo!();
+</span><span>    
+</span><span>    </span><span style="color:#65737e;">// The code below will be unreachable though!
+</span><span>    </span><span style="color:#b48ead;">let</span><span> release = Release::new(toolchain, vec![]);
+</span><span>    </span><span style="color:#b48ead;">let</span><span> component = release.</span><span style="color:#96b5b4;">find_component</span><span>(&quot;</span><span style="color:#a3be8c;">hello</span><span>&quot;);
+</span><span>
+</span><span>    assert!(component.</span><span style="color:#96b5b4;">is_none</span><span>());
+</span><span>}
+</span></code></pre>
+<p>Alternatively, instead of writing inline unit tests, you could also use <a href="https://doc.rust-lang.org/rustdoc/write-documentation/documentation-tests.html">doctests</a> for this purpose:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">impl </span><span>Release {
+</span><span>    </span><span style="color:#65737e;">/// Find a component by its name.
+</span><span>    </span><span style="color:#65737e;">///
+</span><span>    </span><span style="color:#65737e;">/// If the component does not exist for this `Release`,
+</span><span>    </span><span style="color:#65737e;">/// returns `Option::None`.
+</span><span>    </span><span style="color:#65737e;">///
+</span><span>    </span><span style="color:#65737e;">/// # Example
+</span><span>    </span><span style="color:#65737e;">///
+</span><span>    </span><span style="color:#65737e;">/// ```rust
+</span><span>    </span><span style="color:#65737e;">/// use rust_releases_core::Release;
+</span><span>    </span><span style="color:#65737e;">///
+</span><span>    </span><span style="color:#65737e;">/// let channel = rust_toolchain::Channel::Nightly;
+</span><span>    </span><span style="color:#65737e;">/// let release_date = rust_toolchain::ReleaseDate::new(2023, 1, 1);
+</span><span>    </span><span style="color:#65737e;">/// let platform = rust_toolchain::Platform::host();
+</span><span>    </span><span style="color:#65737e;">/// let version = None;
+</span><span>    </span><span style="color:#65737e;">///
+</span><span>    </span><span style="color:#65737e;">/// let toolchain = rust_toolchain::Toolchain::new(channel, release_date, platform, version);
+</span><span>    </span><span style="color:#65737e;">///
+</span><span>    </span><span style="color:#65737e;">/// let release = Release::new(toolchain, vec![]);
+</span><span>    </span><span style="color:#65737e;">/// let component = release.find_component(&quot;hello&quot;);
+</span><span>    </span><span style="color:#65737e;">///
+</span><span>    </span><span style="color:#65737e;">/// assert!(component.is_none());
+</span><span>    </span><span style="color:#65737e;">/// ```
+</span><span>    </span><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">find_component</span><span>(&amp;</span><span style="color:#bf616a;">self</span><span>, </span><span style="color:#bf616a;">name</span><span>: &amp;</span><span style="color:#b48ead;">str</span><span>) -&gt; Option&lt;&amp;rust_toolchain::Component&gt; {
+</span><span>        todo!(&quot;</span><span style="color:#a3be8c;">find component with name: &#39;{name}&#39;</span><span>&quot;)
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<h2 id="implementation-time">Implementation time!</h2>
+<p>Once we are satisfied with the basic structure of our API, we can gradually replace each <code>todo!</code> macro with an actual implementation. We do not have to replace all the macros simultaneously, so we can focus on one implementation step at a time. Developing a well-designed API requires careful planning and attention to detail. Taking the time to establish a solid foundation will pay off in the long run, as it will result in  more user-friendly and reliably designed API.</p>
+<h1 id="footnotes">Footnotes</h1>
+<p><sup><span id="footnote1">1</span></sup> I'm currently working on the next version of <a href="https://github.com/foresterre/rust-releases">rust-releases</a>.</p>
+<h1 id="thanks">Thanks!</h1>
+<p>Special thanks to Chris Langhout, Jean de Leeuw and Martijn Steenbergen for proofreading my blog post; any mistakes are solely mine.</p>
+<p>Also many thanks to <em>proudHaskeller</em> on <a href="https://reddit.com/r/rust/comments/12x1lfd/blog_post_using_the_todo_macro_to_prototype_your/jhhn8na/">Reddit</a> for reporting an issue I missed: the type signature I initially used to deal with the <code>todo!</code> and <code>impl Trait</code> would never type check with a concrete implementation (this has been addressed), and to <em>natalialt</em> on <a href="https://reddit.com/r/rust/comments/12x1lfd/blog_post_using_the_todo_macro_to_prototype_your/jhjecab/">Reddit</a> for suggesting a useful workaround to the same issue when the return type is <code>impl Iterator</code>, by using <code>iter::once(todo!())</code>.</p>
+<h1 id="discuss">Discuss</h1>
+<p>Discussions and feedback are most welcome! Discuss on <a href="https://reddit.com/r/rust/comments/12x1lfd/blog_post_using_the_todo_macro_to_prototype_your/">Reddit</a>, <a href="https://news.ycombinator.com/item?id=35683396">HackerNews</a> or create an <a href="https://github.com/foresterre/foresterre.github.io/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc">issue</a>.</p>
+</article>
+
+  
+    
+  
+  <ul class="tags">
+    
+      <li><a href='https://gribnau.dev/tags/rust'>Rust</a></li>
+    
+      <li><a href='https://gribnau.dev/tags/macro'>macro</a></li>
+    
+      <li><a href='https://gribnau.dev/tags/api-design'>API design</a></li>
+    
+  </ul>
+  
+  
+    
+</section>
+</article>
+    <footer>
+        <div class="social">
+            <ul>
+                
+                <li>
+                    <a href="https://github.com/foresterre"
+                       title="Github" rel="me"><i class="icon-github"></i></a>
+                </li>
+                
+                
+                <li>
+                    <a href="https://www.linkedin.com/in/martijn-gribnau"
+                       title="Linkedin" rel="me"><i class="icon-linkedin"></i></a>
+                </li>
+                
+                <li>
+                    <a href="https://gribnau.dev/atom.xml"
+                       title="Don&#x27;t panic, impl Things"><i class="icon-rss"></i></a>
+                </li>
+            </ul>
+        </div>
+        <p> © Martijn Gribnau 2026
+
+        
+        <br>Powered by <a target="_blank" href="https://getzola.org/">Zola</a>. Theme based on <a target="_blank" href="https://github.com/jimmyff/zola-inky">Inky</a>.
+        </p>
+    </footer>
+
+    <!--<link href="https://fonts.googleapis.com/css2?family=Andada+Pro&display=swap&family=Playfair+Display" rel="stylesheet">-->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://unpkg.com/lucide-static@latest/font/lucide.css" />
+</body>
+</html>

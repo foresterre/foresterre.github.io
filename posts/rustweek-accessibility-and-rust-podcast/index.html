@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en" prefix="og: https://ogp.me/ns#">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="X-UA-Compatible"
+      content="IE=edge">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0" />
+<meta name="description"
+      content="A blog by Martijn Gribnau" />
+<meta name="keywords"
+      content="foresterre, rust, cargo-msrv, msrv, software engineering" /> 
+
+<title>
+  Accessibility and Rust podcast at RustWeek // Don&#x27;t panic, impl Things</title>
+<meta
+  property="og:title"
+  content="Don&#x27;t panic, impl Things | Accessibility and Rust podcast at RustWeek"
+/>
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://gribnau.dev/posts/rustweek-accessibility-and-rust-podcast/" />
+<meta property="og:description" content="A blog by Martijn Gribnau" />
+
+
+<link rel="alternate"
+          type="application/rss+xml"
+          title="Don&#x27;t panic, impl Things"
+          href="https://gribnau.dev/atom.xml">
+    <link rel="stylesheet"
+          href="https://gribnau.dev/base.css">
+
+</head>
+
+<body>
+    <header>
+    <div class="top">
+        <div class="avatar">
+			<a href="/">
+                <img alt="Don&#x27;t panic, impl Things" title="Don&#x27;t panic, impl Things" src="https://gribnau.dev/processed_images/ava.b334fba4086c009a.png" srcset="https://gribnau.dev/processed_images/ava.df7a2100a2f090a4.png 64w, https://gribnau.dev/processed_images/ava.b334fba4086c009a.png 128w, https://gribnau.dev/processed_images/ava.b00c0c1742b92e66.png 256w" class="" />
+
+			</a>
+		</div>
+	    <div class="details">
+            <a class="site-name"
+            href="/">
+                <h1>Don&#x27;t panic, impl Things</h1>
+            </a>
+            <div class="site-description">
+                <p>A blog by Martijn Gribnau</p>
+            </div>
+        </div>
+
+        </div>
+        <nav>
+            <div class="links">
+            <a 
+                href="https://gribnau.dev/ " alt="Home"><span class="name">Home</span></a>
+            <a 
+                href="https://gribnau.dev/posts/ " alt="Posts"><span class="name">Posts</span></a>
+            <a 
+                href="https://gribnau.dev/tags/ " alt="Tags"><span class="name">Tags</span></a>
+            <a 
+                href="https://gribnau.dev/search/ " alt="Search"><span class="name">Search</span></a>
+            <a 
+                href="https://github.com/foresterre " alt="GitHub↗"><span class="name">GitHub↗</span></a>
+            </div>
+
+        </nav>
+    </header>
+    <article>
+    
+
+<section class="post">
+  <div class="post-header">
+    <div class="meta">
+      <div class="date">
+        <span class="day">13</span>
+        <span class="rest">May 25</span>
+      </div>
+    </div>
+
+    <div class="matter">
+      <h1 class="title">Accessibility and Rust podcast at RustWeek </h1>
+    </div>
+  </div>
+    
+  <article><p>Just hours ago, the first full conference day of <a href="https://rustweek.org/">RustWeek 2025</a> ended. Everything went smoothly, so big props to the organisers, volunteers*, the audio and video crew, and staff at the venue. Also shoutout to the people who designed and organized the stickers, they're really really great, and also to the excellent barista coffee ☕.</p>
+<p><img src="/img/stickers_rustweek.jpg" alt="A small sample of stickers at RustWeek" /></p>
+<p>The day ended for me by attending the live recording of the <a href="https://corrode.dev/podcast">Rust in Production</a> podcast in which Matthias Endler interviewed Niko Matsakis about his experiences of building Rust over the past 10 years, and by attending the live recording of another podcast titled 'Accessibility and Rust' (which if I recall correctly will be published on the <a href="https://rustacean-station.org">Rustacean Station</a>). In this podcast <a href="https://github.com/luukvanderduim">Luuk van der Duim</a> was joined by <a href="https://github.com/mwcampbell">Matt Campbell</a> and <a href="https://github.com/DataTriny">Arnold Loubriat</a> to talk about their experience of working on libraries and tooling to make graphical user interfaces (GUI's) more accessible. Both sessions were excellent. I wanted to take a moment to say a few words about the second one, which really spoke to me.</p>
+<p>During the podcast Matt and Arnold give some insight into how they "see" graphical computer programs, and also how they often can't because of shortcomings or lack of accessibility in programs. From a software engineering point of view, I have a feeling, we often shove accessibility features under the rug because of a perceived lack of business need, cost or complexity, so I'm happy there are people working on lowering the barrier.</p>
+<p>This talk also addressed another possible reason (amplified by the audience after the recording session), that for many developers who don't use assistive technologies like screenreaders, it's opaque how to build software that is accessible. On top of that, there is also the question of how to test whether you did it right, given you're not a regular user of assistive technologies.</p>
+<p><a href="https://github.com/AccessKit/accesskit">AccessKit</a> tries to help solve the first question, and has amongst others, been used to improve accessibility support for <a href="https://github.com/slint-ui/slint/blob/9b176ffb17fcdd33b2e16c70f07d7083228bdab2/internal/backends/winit/accesskit.rs#L97">Slint</a>, a GUI toolkit**.</p>
+<p>For the second question, I hope people will support their work and perhaps provide funding to them (or others) to develop a general test suite or framework which can be used by implementers of accessibility libraries***. In the mean time, I found that there is an <a href="https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Accessibility">introduction</a> on the topic over at MDN, which has a particular focus on accessibility for webpages, but also includes a more general introduction.</p>
+<p>Matt will give a talk about <a href="https://gribnau.dev/posts/rustweek-accessibility-and-rust-podcast/AccessKit">AccessKit</a> tomorrow at <a href="https://time.is/compare/1025_14_May_2025_in_Utrecht">10:25</a> local time (main track). RustWeek has a <a href="https://rustweek.org/live/wednesday/">livestream</a> if you want to follow along online. Recordings of talks will be published online at a later moment.</p>
+<p><em>* Disclaimer: I also volunteered, props go to the other volunteers 😉.</em> <br>
+<em>** I'm not involved with Slint in any way</em> <br>
+<em>*** I may be ignorant of the existence of such a test suite; sorry!</em></p>
+</article>
+
+  
+    
+  
+  <ul class="tags">
+    
+      <li><a href='https://gribnau.dev/tags/accessibility'>accessibility</a></li>
+    
+      <li><a href='https://gribnau.dev/tags/accesskit'>accesskit</a></li>
+    
+      <li><a href='https://gribnau.dev/tags/rust'>rust</a></li>
+    
+      <li><a href='https://gribnau.dev/tags/rustweek25'>rustweek25</a></li>
+    
+  </ul>
+  
+  
+    
+</section>
+</article>
+    <footer>
+        <div class="social">
+            <ul>
+                
+                <li>
+                    <a href="https://github.com/foresterre"
+                       title="Github" rel="me"><i class="icon-github"></i></a>
+                </li>
+                
+                
+                <li>
+                    <a href="https://www.linkedin.com/in/martijn-gribnau"
+                       title="Linkedin" rel="me"><i class="icon-linkedin"></i></a>
+                </li>
+                
+                <li>
+                    <a href="https://gribnau.dev/atom.xml"
+                       title="Don&#x27;t panic, impl Things"><i class="icon-rss"></i></a>
+                </li>
+            </ul>
+        </div>
+        <p> © Martijn Gribnau 2026
+
+        
+        <br>Powered by <a target="_blank" href="https://getzola.org/">Zola</a>. Theme based on <a target="_blank" href="https://github.com/jimmyff/zola-inky">Inky</a>.
+        </p>
+    </footer>
+
+    <!--<link href="https://fonts.googleapis.com/css2?family=Andada+Pro&display=swap&family=Playfair+Display" rel="stylesheet">-->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://unpkg.com/lucide-static@latest/font/lucide.css" />
+</body>
+</html>

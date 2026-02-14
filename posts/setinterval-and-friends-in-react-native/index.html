@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en" prefix="og: https://ogp.me/ns#">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="X-UA-Compatible"
+      content="IE=edge">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0" />
+<meta name="description"
+      content="A blog by Martijn Gribnau" />
+<meta name="keywords"
+      content="foresterre, rust, cargo-msrv, msrv, software engineering" /> 
+
+<title>
+  A tale of setInterval and useEffect in React Native // Don&#x27;t panic, impl Things</title>
+<meta
+  property="og:title"
+  content="Don&#x27;t panic, impl Things | A tale of setInterval and useEffect in React Native"
+/>
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://gribnau.dev/posts/setinterval-and-friends-in-react-native/" />
+<meta property="og:description" content="A blog by Martijn Gribnau" />
+
+
+<link rel="alternate"
+          type="application/rss+xml"
+          title="Don&#x27;t panic, impl Things"
+          href="https://gribnau.dev/atom.xml">
+    <link rel="stylesheet"
+          href="https://gribnau.dev/base.css">
+
+</head>
+
+<body>
+    <header>
+    <div class="top">
+        <div class="avatar">
+			<a href="/">
+                <img alt="Don&#x27;t panic, impl Things" title="Don&#x27;t panic, impl Things" src="https://gribnau.dev/processed_images/ava.b334fba4086c009a.png" srcset="https://gribnau.dev/processed_images/ava.df7a2100a2f090a4.png 64w, https://gribnau.dev/processed_images/ava.b334fba4086c009a.png 128w, https://gribnau.dev/processed_images/ava.b00c0c1742b92e66.png 256w" class="" />
+
+			</a>
+		</div>
+	    <div class="details">
+            <a class="site-name"
+            href="/">
+                <h1>Don&#x27;t panic, impl Things</h1>
+            </a>
+            <div class="site-description">
+                <p>A blog by Martijn Gribnau</p>
+            </div>
+        </div>
+
+        </div>
+        <nav>
+            <div class="links">
+            <a 
+                href="https://gribnau.dev/ " alt="Home"><span class="name">Home</span></a>
+            <a 
+                href="https://gribnau.dev/posts/ " alt="Posts"><span class="name">Posts</span></a>
+            <a 
+                href="https://gribnau.dev/tags/ " alt="Tags"><span class="name">Tags</span></a>
+            <a 
+                href="https://gribnau.dev/search/ " alt="Search"><span class="name">Search</span></a>
+            <a 
+                href="https://github.com/foresterre " alt="GitHub↗"><span class="name">GitHub↗</span></a>
+            </div>
+
+        </nav>
+    </header>
+    <article>
+    
+
+<section class="post">
+  <div class="post-header">
+    <div class="meta">
+      <div class="date">
+        <span class="day">19</span>
+        <span class="rest">Apr 24</span>
+      </div>
+    </div>
+
+    <div class="matter">
+      <h1 class="title">A tale of setInterval and useEffect in React Native </h1>
+    </div>
+  </div>
+    
+  <article><p>At work, I've been building a new <a href="https://reactnative.dev">React Native</a> app.  Initially, I wanted this app to be as simple
+as possible, to allow for quick iterative cycles.</p>
+<p>Now this app needs to refetch a certain resource from the server in regular intervals. I have to admit: I briefly considered
+to use <a href="https://tanstack.com/query/v3/docs/framework/react/react-native">React Query</a>, but decided it wasn't quite time
+for that yet. Simple first. Complex later.</p>
+<p>I looked at the React Native
+docs in an attempt for figure out what the canonical way of doing this was. The docs told me: "hey, you can use
+the <code>Timers</code> module which contains <code>setInterval</code> and <code>clearInterval</code>". Just what I needed!</p>
+<p><code>setInterval</code> executes a callback after a given milliseconds delay. It doesn't have the option to
+immediately fire, however. Luckily it's not hard to work around this: for example by
+just executing the function provided in the callback first.</p>
+<p>As an alternative, <a href="https://developer.mozilla.org/en-US/docs/Web/API/setInterval#ensure_that_execution_duration_is_shorter_than_interval_frequency">MDN</a>
+suggested that you could also use <code>setTimeout</code>, although in my case, the execution duration is shorter than the interval
+frequency, so I figured everything should be fine 🤞.</p>
+<p>To give an idea of what the code looked like:</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">export default function </span><span style="color:#8fa1b3;">MyComponent</span><span>(): React.JSX.Element {
+</span><span>    </span><span style="color:#8fa1b3;">useEffect</span><span>(() </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>        </span><span style="color:#96b5b4;">setInterval</span><span>(() </span><span style="color:#b48ead;">=&gt; </span><span>void </span><span style="color:#8fa1b3;">fetchResource</span><span>());
+</span><span>    }, []);
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">async function </span><span style="color:#8fa1b3;">fetchResource</span><span>() {
+</span><span>    </span><span style="color:#b48ead;">try </span><span>{
+</span><span>        </span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">result </span><span>= </span><span style="color:#b48ead;">await </span><span style="color:#bf616a;">client</span><span>.</span><span style="color:#bf616a;">resource</span><span>.</span><span style="color:#8fa1b3;">fetch</span><span>();
+</span><span>        </span><span style="color:#8fa1b3;">setOk</span><span>(</span><span style="color:#bf616a;">result</span><span>);
+</span><span>    } </span><span style="color:#b48ead;">catch </span><span>(</span><span style="color:#bf616a;">error</span><span>: unknown) {
+</span><span>        </span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">error </span><span>= </span><span style="color:#bf616a;">ResourceErrorParser</span><span>.</span><span style="color:#8fa1b3;">parseError</span><span>(</span><span style="color:#bf616a;">error</span><span>);
+</span><span>        </span><span style="color:#8fa1b3;">setError</span><span>(</span><span style="color:#bf616a;">error</span><span>);
+</span><span>    }
+</span><span>} 
+</span></code></pre>
+<p>Now one of the most useful features of React Native, is its ability to live inspect changes you just made.
+Running the <a href="https://metrobundler.dev">Metro</a> development server in combination with a debug build of the app gives you
+live updates out of the box. For me, that's simply running <code>npm run start</code> to start Metro and in a second
+terminal tab <code>npm run android</code> to build a debug build of the app and install it on a device (or emulator).</p>
+<p>Now, changes made to components or other code can be updated, and the changes can be observed on the app without
+rebuilding. Great!</p>
+<p>One day, I was checking the logs in the Metro terminal app, and I there seemed to be a few too many fetches to the backend.
+Normally, it should refetch the resource every 10 seconds or so (or immediately after certain actions), now it was
+making requests to fetch the resource tens of times per second. Whoops.</p>
+<p>So what happened? The callback in <code>useEffect</code> was being rerendered after each change in the code. And as a result, the
+<code>setInterval</code> function was being rerun as well. On repeat. Oops 😅.</p>
+<p>Luckily, it can be fixed! As it turns out, <code>setInterval</code> can return a clean up function, which runs when the component
+unmounts (or when the props get updated and the dependencies provided to the <code>useEffect</code> have been changed, or even every rerender
+if no dependency array is provided):</p>
+<pre data-lang="typescript" style="background-color:#2b303b;color:#c0c5ce;" class="language-typescript "><code class="language-typescript" data-lang="typescript"><span style="color:#b48ead;">type </span><span>Id = ReturnType&lt;typeof setInterval&gt;;
+</span><span>
+</span><span style="color:#65737e;">// elsewhere:
+</span><span style="color:#b48ead;">export default function </span><span style="color:#8fa1b3;">OtherComponent</span><span>(): React.JSX.Element {
+</span><span>    </span><span style="color:#b48ead;">const </span><span>[</span><span style="color:#bf616a;">refetchId</span><span>, </span><span style="color:#bf616a;">setRefetchId</span><span>] = </span><span style="color:#8fa1b3;">useState</span><span>&lt;Id | undefined&gt;(</span><span style="color:#d08770;">undefined</span><span>);
+</span><span>    
+</span><span>    </span><span style="color:#b48ead;">return </span><span>&lt;MyComponent id={</span><span style="color:#bf616a;">refreshId</span><span>} setId={</span><span style="color:#bf616a;">setRefetchId</span><span>} onClear={() =&gt; </span><span style="color:#8fa1b3;">setRefetchId</span><span>(</span><span style="color:#bf616a;">undefined</span><span>)} /&gt;;
+</span><span>}
+</span><span> 
+</span><span>
+</span><span style="color:#b48ead;">export default function </span><span style="color:#8fa1b3;">MyComponent</span><span>(</span><span style="color:#bf616a;">props</span><span>: { </span><span style="color:#bf616a;">id</span><span>?: Id; </span><span style="color:#8fa1b3;">setId</span><span>: (</span><span style="color:#bf616a;">id</span><span>: Id) </span><span style="color:#b48ead;">=&gt; </span><span>void; </span><span style="color:#8fa1b3;">onClear</span><span>: () </span><span style="color:#b48ead;">=&gt; </span><span>void;  }): React.JSX.Element {
+</span><span>    </span><span style="color:#8fa1b3;">useEffect</span><span>(() </span><span style="color:#b48ead;">=&gt; </span><span>{
+</span><span>        </span><span style="color:#b48ead;">const </span><span style="color:#bf616a;">id </span><span>= </span><span style="color:#96b5b4;">setInterval</span><span>(() </span><span style="color:#b48ead;">=&gt; </span><span>void </span><span style="color:#8fa1b3;">fetchResource</span><span>());
+</span><span>        </span><span style="color:#bf616a;">props</span><span>.</span><span style="color:#8fa1b3;">setId</span><span>(</span><span style="color:#bf616a;">id</span><span>);
+</span><span>        
+</span><span>        </span><span style="color:#b48ead;">return </span><span>() </span><span style="color:#b48ead;">=&gt; </span><span>({
+</span><span>            </span><span style="color:#8fa1b3;">if </span><span>(</span><span style="color:#bf616a;">id</span><span>) {
+</span><span>                </span><span style="color:#96b5b4;">clearInterval</span><span>(</span><span style="color:#bf616a;">id</span><span>);        
+</span><span>            }
+</span><span>        });
+</span><span>    }, []);
+</span><span>}
+</span></code></pre>
+<p>Note that the dependency array can be empty, since we only want to disable the fetch task if the component is unmounted.
+Otherwise it can just do its thing and fetch the resource at each specific interval. And you know what. That's good
+enough for me, ... at least for now.</p>
+<p><em>Wishlist: I wish there was a way to see all active useIntervals and useTimeouts: if you know a way (without storing the
+id with some state management utility): please <a href="https://gribnau.dev/posts/setinterval-and-friends-in-react-native/(https://github.com/foresterre/foresterre.github.io/discussions)">let me know</a> 🙏</em></p>
+<p><em>I did end up extending the functionality ever so slightly: I added the option to toggle refreshing altogether and changed when refetches happen,
+to reschedule the interval when a manual refresh happened (which happens after certain actions) 😅.</em></p>
+<h1 id="feedback-discussion">Feedback &amp; discussion</h1>
+<p>Feedback is most welcome. Feel free to discuss at <a href="https://github.com/foresterre/foresterre.github.io/discussions">GitHub</a>.</p>
+</article>
+
+  
+    
+  
+  <ul class="tags">
+    
+      <li><a href='https://gribnau.dev/tags/react-native'>react-native</a></li>
+    
+      <li><a href='https://gribnau.dev/tags/javascript'>javascript</a></li>
+    
+      <li><a href='https://gribnau.dev/tags/typescript'>typescript</a></li>
+    
+  </ul>
+  
+  
+    
+</section>
+</article>
+    <footer>
+        <div class="social">
+            <ul>
+                
+                <li>
+                    <a href="https://github.com/foresterre"
+                       title="Github" rel="me"><i class="icon-github"></i></a>
+                </li>
+                
+                
+                <li>
+                    <a href="https://www.linkedin.com/in/martijn-gribnau"
+                       title="Linkedin" rel="me"><i class="icon-linkedin"></i></a>
+                </li>
+                
+                <li>
+                    <a href="https://gribnau.dev/atom.xml"
+                       title="Don&#x27;t panic, impl Things"><i class="icon-rss"></i></a>
+                </li>
+            </ul>
+        </div>
+        <p> © Martijn Gribnau 2026
+
+        
+        <br>Powered by <a target="_blank" href="https://getzola.org/">Zola</a>. Theme based on <a target="_blank" href="https://github.com/jimmyff/zola-inky">Inky</a>.
+        </p>
+    </footer>
+
+    <!--<link href="https://fonts.googleapis.com/css2?family=Andada+Pro&display=swap&family=Playfair+Display" rel="stylesheet">-->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://unpkg.com/lucide-static@latest/font/lucide.css" />
+</body>
+</html>

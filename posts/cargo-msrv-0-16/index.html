@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en" prefix="og: https://ogp.me/ns#">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="X-UA-Compatible"
+      content="IE=edge">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0" />
+<meta name="description"
+      content="A blog by Martijn Gribnau" />
+<meta name="keywords"
+      content="foresterre, rust, cargo-msrv, msrv, software engineering" /> 
+
+<title>
+  A few cargo-msrv 0.16 release highlights // Don&#x27;t panic, impl Things</title>
+<meta
+  property="og:title"
+  content="Don&#x27;t panic, impl Things | A few cargo-msrv 0.16 release highlights"
+/>
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://gribnau.dev/posts/cargo-msrv-0-16/" />
+<meta property="og:description" content="A blog by Martijn Gribnau" />
+
+
+<link rel="alternate"
+          type="application/rss+xml"
+          title="Don&#x27;t panic, impl Things"
+          href="https://gribnau.dev/atom.xml">
+    <link rel="stylesheet"
+          href="https://gribnau.dev/base.css">
+
+</head>
+
+<body>
+    <header>
+    <div class="top">
+        <div class="avatar">
+			<a href="/">
+                <img alt="Don&#x27;t panic, impl Things" title="Don&#x27;t panic, impl Things" src="https://gribnau.dev/processed_images/ava.b334fba4086c009a.png" srcset="https://gribnau.dev/processed_images/ava.df7a2100a2f090a4.png 64w, https://gribnau.dev/processed_images/ava.b334fba4086c009a.png 128w, https://gribnau.dev/processed_images/ava.b00c0c1742b92e66.png 256w" class="" />
+
+			</a>
+		</div>
+	    <div class="details">
+            <a class="site-name"
+            href="/">
+                <h1>Don&#x27;t panic, impl Things</h1>
+            </a>
+            <div class="site-description">
+                <p>A blog by Martijn Gribnau</p>
+            </div>
+        </div>
+
+        </div>
+        <nav>
+            <div class="links">
+            <a 
+                href="https://gribnau.dev/ " alt="Home"><span class="name">Home</span></a>
+            <a 
+                href="https://gribnau.dev/posts/ " alt="Posts"><span class="name">Posts</span></a>
+            <a 
+                href="https://gribnau.dev/tags/ " alt="Tags"><span class="name">Tags</span></a>
+            <a 
+                href="https://gribnau.dev/search/ " alt="Search"><span class="name">Search</span></a>
+            <a 
+                href="https://github.com/foresterre " alt="GitHub↗"><span class="name">GitHub↗</span></a>
+            </div>
+
+        </nav>
+    </header>
+    <article>
+    
+
+<section class="post">
+  <div class="post-header">
+    <div class="meta">
+      <div class="date">
+        <span class="day">09</span>
+        <span class="rest">Oct 24</span>
+      </div>
+    </div>
+
+    <div class="matter">
+      <h1 class="title">A few cargo-msrv 0.16 release highlights </h1>
+    </div>
+  </div>
+    
+  <article><p>A quick tour through some of the <a href="https://github.com/foresterre/cargo-msrv/releases/tag/v0.16.0"><code>cargo msrv 0.16.0</code></a> highlights.</p>
+<h2 id="what-is-cargo-msrv">What is <a href="https://github.com/foresterre/cargo-msrv"><code>cargo-msrv</code></a>?</h2>
+<p><code>cargo-msrv</code> is a <a href="https://crates.io/categories/development-tools::cargo-plugins">cargo plugin</a> which helps you
+"Find the minimum supported Rust version (MSRV) for your project".</p>
+<p>Aside from finding the MSRV, it has additional tools baked in, such as listing the MSRV's
+of dependencies and verifying your (new) code against a given MSRV.</p>
+<p>Find out more <a href="https://github.com/foresterre/cargo-msrv">here</a> 😉.</p>
+<h2 id="the-tour">The tour</h2>
+<p>The remainder of this post can also be found in the <code>cargo-msrv</code> <a href="https://foresterre.github.io/cargo-msrv/releases/v0.15_v0.16_highlights.html">book</a>.</p>
+<h3 id="the-noticeable-one-cargo-msrv-find">The noticeable one - cargo msrv find</h3>
+<p>The tagline of <code>cargo-msrv</code> is "Find the minimum supported Rust version (MSRV) for your project".
+Previously, one could achieve this by running <code>cargo msrv</code>. If you want to do the same in 0.16, you instead
+should run <code>cargo msrv find</code>. The top level  <code>cargo msrv</code> action is no more.</p>
+<p>There are two primary reasons to move this action to a subcommand instead of keeping it at the top level:</p>
+<ol>
+<li>Consistency: <code>cargo msrv</code> can do more than that tagline, and placing all actions on the subcommand level signals that
+they're equals.</li>
+<li>Unsupported CLI flags and options: When actions are placed on two layers, and one of these layers is below the other,
+then the bottom layer inherits its flags and options, even though they do not always overlap. For example, the set of
+CLI flags and options of <code>cargo msrv find</code> and <code>cargo msrv list</code> are not identical. <code>cargo msrv find</code> for example has
+an option called <code>--release-source</code> which should be present for <code>cargo msrv find</code> but not for <code>cargo msrv list</code>. If
+<code>cargo msrv find</code> would still be run as <code>cargo msrv</code>, you could also invoke this option for <code>cargo msrv list</code>, like
+so: <code>cargo msrv --release-source rust-dist list</code>. However, contextually, the <code>--release-source</code> option does not make
+sense for <code>cargo msrv list</code>, so previously it was ignored. By making <code>cargo msrv find</code> a subcommand like
+<code>cargo msrv list</code>, the flags and options which are not shared between all actions can be put solely below their own
+subcommand.</li>
+</ol>
+<p>A consequence of (2) is that some unnecessary options and flags have been removed from the top level, and so this is a
+breaking change, not just for <code>cargo msrv find</code> but also for <code>cargo msrv list</code>.</p>
+<p>Minor reasons for this change include that I can now talk about <code>cargo msrv find</code> as "<code>cargo msrv find</code>" instead of
+<code>cargo msrv (find)</code> or "the top level command". Plus, it addressed some difficulties around the code which does CLI
+parsing, about which I wrote in <a href="https://gribnau.dev/posts/puzzle-sharing-declarative-args-between-top-level-and-subcommand">this</a>
+previous post. I'm glad I opted to go this route instead though 😅.</p>
+<h3 id="the-ui-part-1-output-format-options">The UI part 1: output format options</h3>
+<p>The way the UI is rendered has been updated. Internally, it is now easier to add and maintain different output formats.</p>
+<p><code>cargo-msrv</code> now supports 3 output formats:</p>
+<ul>
+<li>human (the default one, intended for the human eye)</li>
+<li>json (intended for machine readability)</li>
+<li>minimal (*new*, it was requested for environments where people only care about success/failure, such as CI)</li>
+</ul>
+<h3 id="the-ui-part-2-cargo-msrv-find-and-verify-human-output">The UI part 2: <code>cargo msrv find</code> and <code>verify</code> "human" output</h3>
+<p>As they say, "a picture is a thousand words":</p>
+<p><strong>Previously...</strong></p>
+<p><a href="https://asciinema.org/a/465459"><img src="https://asciinema.org/a/465459.svg" alt="asciicast" /></a></p>
+<p><strong>New...</strong></p>
+<p><a href="https://asciinema.org/a/JGyYmk7LNJvfDrc2oMQEt0SFF"><img src="https://asciinema.org/a/JGyYmk7LNJvfDrc2oMQEt0SFF.svg" alt="asciicast" /></a></p>
+<p>I'll be iterating the UI further in the future. Constructive feedback is more than welcome!</p>
+<h3 id="cargo-msrv-find-write-msrv"><code>cargo msrv find --write-msrv</code></h3>
+<p>This option will write the MSRV to your Cargo manifest:</p>
+<p><a href="https://asciinema.org/a/679863?t=47"><img src="https://asciinema.org/a/679863.svg" alt="asciicast" /></a></p>
+<h3 id="cargo-msrv-find-min-and-max"><code>cargo msrv find --min</code> and <code>--max</code></h3>
+<p>The <code>--min</code> and <code>--max</code> options would previously only take three component semver versions like "1.2.3" or editions. It
+is common to specify the MSRV in a two component version like "1.2", so these are now also supported.</p>
+<h3 id="cargo-msrv-verify-rust-version"><code>cargo msrv verify --rust-version</code></h3>
+<p><code>cargo msrv verify</code> can be used to check whether your project is compatible with its MSRV. The MSRV is usually read from
+the Cargo manifest (<code>Cargo.toml</code>). Sometimes it can be useful to provide it manually instead. That's where this option
+comes in handy.</p>
+<p>It should be noted that <code>cargo-msrv</code> does, at present, not unset any value you may have specified in the
+Cargo manifest. So if you have a Cargo manifest with <code>rust-version = "1.56.0"</code> and supply the <code>--rust-version</code> option
+with the value <code>1.55.0</code>, the cargo project will (if the default options are used) fail to compile, and as a consequence
+<code>cargo-msrv</code> will report that your crate is not compatible with the specified MSRV.</p>
+<h3 id="fetching-the-rust-releases-index">Fetching the rust releases index</h3>
+<p>The rust releases index, the thing we use to figure out which Rust versions exist, are now only fetched when a
+subcommand needs it (currently <code>cargo msrv find</code> and <code>cargo msrv verify</code>).</p>
+<h3 id="the-changelog">The changelog</h3>
+<p>The complete changelog can be found <a href="https://github.com/foresterre/cargo-msrv/blob/v0.16.0/CHANGELOG.md">here</a>.</p>
+<h2 id="thanks">Thanks!</h2>
+<p>Thanks to all contributors, whether you submitted a <a href="https://github.com/foresterre/cargo-msrv/pulls">PR</a> or reported
+an <a href="https://github.com/foresterre/cargo-msrv/issues">issue</a>, or contributed in some other way.</p>
+<p>Some of your issues and PR's really made my day! 💛</p>
+</article>
+
+  
+    
+  
+  <ul class="tags">
+    
+      <li><a href='https://gribnau.dev/tags/rust'>Rust</a></li>
+    
+      <li><a href='https://gribnau.dev/tags/cargo-msrv'>cargo-msrv</a></li>
+    
+      <li><a href='https://gribnau.dev/tags/release'>release</a></li>
+    
+  </ul>
+  
+  
+    
+</section>
+</article>
+    <footer>
+        <div class="social">
+            <ul>
+                
+                <li>
+                    <a href="https://github.com/foresterre"
+                       title="Github" rel="me"><i class="icon-github"></i></a>
+                </li>
+                
+                
+                <li>
+                    <a href="https://www.linkedin.com/in/martijn-gribnau"
+                       title="Linkedin" rel="me"><i class="icon-linkedin"></i></a>
+                </li>
+                
+                <li>
+                    <a href="https://gribnau.dev/atom.xml"
+                       title="Don&#x27;t panic, impl Things"><i class="icon-rss"></i></a>
+                </li>
+            </ul>
+        </div>
+        <p> © Martijn Gribnau 2026
+
+        
+        <br>Powered by <a target="_blank" href="https://getzola.org/">Zola</a>. Theme based on <a target="_blank" href="https://github.com/jimmyff/zola-inky">Inky</a>.
+        </p>
+    </footer>
+
+    <!--<link href="https://fonts.googleapis.com/css2?family=Andada+Pro&display=swap&family=Playfair+Display" rel="stylesheet">-->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://unpkg.com/lucide-static@latest/font/lucide.css" />
+</body>
+</html>
