@@ -20,7 +20,7 @@ And to highlight one more part (you can read the full opinion in the link above)
 
 > "This is not to say AI doesn't have problems. It has huge ones, power usage chief among them, but also the way irresponsible usage is creating slop PRs (not to mention the way it's being inserted in places it doesn't belong, and the ways it will be abused by governments)."
 
-The first thg I thought was; arguably especially with all the agentic programming going on, "it's not that the AI will do the work for me" sounds very much like the AI doing _the_ work, or at least, some of _the_ work. Is that good or bad? Hard to judge.
+The first thing I thought was; arguably especially with all the agentic programming going on, "it's not that the AI will do the work for me" sounds very much like the AI doing _the_ work, or at least, some of _the_ work. Is that good or bad? Hard to judge.
 
 But this is a point which made me think, namely about _senders_ and _receivers_<sup>1</sup>. That is, _senders_ are the people writing the code and making PR's. The _receivers_ are the people reviewing the code. So far, I feel that AI could be empowering primarily for _senders_, but is relatively more likely to be disempowering for the _receivers_ (not for all of course).
 
