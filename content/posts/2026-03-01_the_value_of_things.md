@@ -6,9 +6,11 @@ date = 2026-03-01
 tags = ["ai", "llm", "values"]
 +++
 
-I've been playing with LLM's over the past few years, also to not miss out if I'm honest. I've both used AI via chats, and let LLM's program agentically. My feelings are mixed. One day I will write a more detailed opinion, but hey, with all this hype, there are enough opinions<sup>1</sup>. 
+I've been playing with LLM's over the past few years; probably in part was just a fear of missing out. 
 
-One thought keeps repeating;
+I've both used AI via chats, and let LLM's program agentically. My feelings are mixed. One day I will write a more detailed opinion, but hey, with all this hype, there are enough opinions<sup>1</sup>. 
+
+One thought keeps repeating though;
 
 I reminisce about this lesson from one of my favorite books as a child<sup>2</sup>:
 
