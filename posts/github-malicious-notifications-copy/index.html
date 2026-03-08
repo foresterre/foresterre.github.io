@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en" prefix="og: https://ogp.me/ns#">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="X-UA-Compatible"
+      content="IE=edge">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0" />
+<meta name="description"
+      content="A blog by Martijn Gribnau" />
+<meta name="keywords"
+      content="foresterre, rust, cargo-msrv, msrv, software engineering" /> 
+
+<title>
+  Github&#x27;s malicious notification problem // Don&#x27;t panic, impl Things</title>
+<meta
+  property="og:title"
+  content="Don&#x27;t panic, impl Things | Github&#x27;s malicious notification problem"
+/>
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://gribnau.dev/posts/github-malicious-notifications-copy/" />
+<meta property="og:description" content="A blog by Martijn Gribnau" />
+
+
+<link rel="alternate"
+          type="application/rss+xml"
+          title="Don&#x27;t panic, impl Things"
+          href="https://gribnau.dev/atom.xml">
+    <link rel="stylesheet"
+          href="https://gribnau.dev/base.css">
+
+</head>
+
+<body>
+    <header>
+    <div class="top">
+        <div class="avatar">
+			<a href="/">
+                <img alt="Don&#x27;t panic, impl Things" title="Don&#x27;t panic, impl Things" src="https://gribnau.dev/processed_images/ava.b334fba4086c009a.png" srcset="https://gribnau.dev/processed_images/ava.df7a2100a2f090a4.png 64w, https://gribnau.dev/processed_images/ava.b334fba4086c009a.png 128w, https://gribnau.dev/processed_images/ava.b00c0c1742b92e66.png 256w" class="" />
+
+			</a>
+		</div>
+	    <div class="details">
+            <a class="site-name"
+            href="/">
+                <h1>Don&#x27;t panic, impl Things</h1>
+            </a>
+            <div class="site-description">
+                <p>A blog by Martijn Gribnau</p>
+            </div>
+        </div>
+
+        </div>
+        <nav>
+            <div class="links">
+            <a 
+                href="https://gribnau.dev/ " alt="Home"><span class="name">Home</span></a>
+            <a 
+                href="https://gribnau.dev/posts/ " alt="Posts"><span class="name">Posts</span></a>
+            <a 
+                href="https://gribnau.dev/tags/ " alt="Tags"><span class="name">Tags</span></a>
+            <a 
+                href="https://gribnau.dev/search/ " alt="Search"><span class="name">Search</span></a>
+            <a 
+                href="https://github.com/foresterre " alt="GitHub↗"><span class="name">GitHub↗</span></a>
+            </div>
+
+        </nav>
+    </header>
+    <article>
+    
+
+<section class="post">
+  <div class="post-header">
+    <div class="meta">
+      <div class="date">
+        <span class="day">04</span>
+        <span class="rest">Nov 25</span>
+      </div>
+    </div>
+
+    <div class="matter">
+      <h1 class="title">Github&#x27;s malicious notification problem </h1>
+    </div>
+  </div>
+    
+  <article><p>In the past four days or so, I've had notifications popping up for repositories which I didn't subscribe to myself.</p>
+<p>At first I thought the notification bubble just wouldn't disappear because of a little bug in <a href="https://github.com/refined-github/refined-github">Refined GitHub</a>, but on closer inspection (and disabling the extension to be sure), it turned out it wasn't so.</p>
+<p>This is what it looks like in my notifications list:</p>
+<p><img src="/img/github_malicious_notifications_unread.png" alt="List of unread malicious notifications on GitHub" /></p>
+<p>And because these notification aren't marked as read, the notification bubble at the top consistently suggests there's something new:</p>
+<p><img src="/img/github_malicious_notifications_icon.png" alt="Notification bubble due to malicious undismissable notifications on GitHub" /></p>
+<p>I wrote "aren't marked as read", but in reality the right word would be "can't". That is, the first image also shows that once you filter on the repository, while the bubble suggests there is one notification, according to the UI, there is none.</p>
+<h2 id="how">How</h2>
+<p>In GitHub you can tag someone by using <code>@username</code> syntax, which is useful in good faith situations. I presume spammers created some issues in their repository and started tagging lots of users.</p>
+<p>Presumably the repositories and accounts were removed by GitHub staff as manually navigating to the repository on GitHub, shows 404 pages.</p>
+<p><img src="/img/github_malicious_notifications_repo_404.png" alt="Removed repositories used by the spammers" /></p>
+<p>I'm sad that the notifications weren't removed too, and we now have to resort to alternative methods to remove the notifications.</p>
+<p>... Further searching suggests that this issue was initially <a href="https://github.com/orgs/community/discussions/6874">reported</a> on 28th of October, 2021, so it isn't a new problem.</p>
+<h2 id="workarounds">Workarounds</h2>
+<p><a href="https://github.com/orgs/community/discussions/174283">As</a> <a href="https://github.com/orgs/community/discussions/178439">it</a> turns out, I wasn't quite the only one who was affected by these spammers. In my searching, I found many community threads reporting the same issue, and asking for solutions to remove the "ghost" notifications.</p>
+<p>For example, in <a href="https://github.com/orgs/community/discussions/174246#discussioncomment-14471133">this</a> community thread, someone suggested to mark the notification as <em>read</em> using the GitHub API, which can be done using GitHub's own <code>gh</code> CLI tool (replace the <code>last_read_at</code> date as required):</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">gh</span><span> api notifications</span><span style="color:#bf616a;"> -X</span><span> PUT</span><span style="color:#bf616a;"> -F</span><span> last_read_at=2025-11-04T00:00:00Z
+</span></code></pre>
+<p>However, you should know that it doesn't quite remove the malicious notifications from your notifications dashboard:</p>
+<p><img src="/img/github_malicious_notifications_read.png" alt="List of read malicious notifications on GitHub" /></p>
+<p>Apparently, that can be done with the API too. I've adapted the invocation from <a href="https://github.com/orgs/community/discussions/178439">this</a> thread, to match on the repository owner (instead of the notification subject title), and added a flag to paginate the notifications in case you have more than one page like me:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">gh</span><span> api notifications</span><span style="color:#96b5b4;">\?</span><span>all=true | </span><span style="color:#bf616a;">jq -r </span><span>&#39;</span><span style="color:#a3be8c;">.[] | select(.repository.owner.login | test(&quot;(kamino-network|gitcoincom|ycombiinator|paradigm-notification)&quot;; &quot;i&quot;)) | .id</span><span>&#39; \
+</span><span>| </span><span style="color:#bf616a;">xargs -L1 -I</span><span>{} gh api</span><span style="color:#bf616a;"> --method</span><span> DELETE \
+</span><span style="color:#bf616a;">  -H </span><span>&quot;</span><span style="color:#a3be8c;">Accept: application/vnd.github+json</span><span>&quot; \
+</span><span style="color:#bf616a;">  -H </span><span>&quot;</span><span style="color:#a3be8c;">X-GitHub-Api-Version: 2022-11-28</span><span>&quot; \
+</span><span>  /notifications/threads/{}
+</span></code></pre>
+<p>Step by step explained in case you too want to adapt the query (I did use the <code>gh</code> CLI, but you can send HTTP requests directly too).</p>
+<p>First we get all notifications by walking through all pages:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">gh</span><span> api notifications</span><span style="color:#96b5b4;">\?</span><span>all=true</span><span style="color:#bf616a;"> --paginate</span><span>`
+</span></code></pre>
+<p>Then we use <code>jq</code> to query the JSON response from the GitHub API and filter specifically on the spam GitHub account names <code>kamino-network</code>, <code>ycombiinator</code>, <code>gitcoincom</code>, and <code>paradigm-notification</code>. Return the <code>.id</code> of the notification if it's a match.</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">jq -r </span><span>&#39;</span><span style="color:#a3be8c;">.[] | select(.repository.owner.login | test(&quot;(kamino-network|ycombiinator|gitcoincom|paradigm-notification)&quot;)) | .id</span><span>&#39;
+</span></code></pre>
+<p>Combined so far with output:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">gh</span><span> api notifications</span><span style="color:#96b5b4;">\?</span><span>all=true</span><span style="color:#bf616a;"> --paginate </span><span>| </span><span style="color:#bf616a;">jq -r </span><span>&#39;</span><span style="color:#a3be8c;">.[] | select(.repository.owner.login | test(&quot;(kamino-network|ycombiinator|gitcoincom|paradigm-notification)&quot;)) | .id</span><span>&#39;
+</span><span>
+</span><span style="color:#bf616a;">19167019306
+</span><span style="color:#bf616a;">19143656043
+</span><span style="color:#bf616a;">19133393664
+</span><span style="color:#bf616a;">19073885018
+</span></code></pre>
+<p>Now we want to remove each of these notifications. To just remove one we can just substitute one of these id's:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">gh</span><span> api</span><span style="color:#bf616a;"> --method</span><span> DELETE \
+</span><span style="color:#bf616a;">  -H </span><span>&quot;</span><span style="color:#a3be8c;">Accept: application/vnd.github+json</span><span>&quot; \
+</span><span style="color:#bf616a;">  -H </span><span>&quot;</span><span style="color:#a3be8c;">X-GitHub-Api-Version: 2022-11-28</span><span>&quot; \
+</span><span>  /notifications/threads/19167019306
+</span></code></pre>
+<p>We can use <code>xargs</code> to do this for all id's, resulting in the suggested query:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">gh</span><span> api notifications</span><span style="color:#96b5b4;">\?</span><span>all=true | </span><span style="color:#bf616a;">jq -r </span><span>&#39;</span><span style="color:#a3be8c;">.[] | select(.repository.owner.login | test(&quot;(kamino-network|gitcoincom|ycombiinator|paradigm-notification)&quot;; &quot;i&quot;)) | .id</span><span>&#39; \
+</span><span>| </span><span style="color:#bf616a;">xargs -L1 -I</span><span>{} gh api</span><span style="color:#bf616a;"> --method</span><span> DELETE \
+</span><span style="color:#bf616a;">  -H </span><span>&quot;</span><span style="color:#a3be8c;">Accept: application/vnd.github+json</span><span>&quot; \
+</span><span style="color:#bf616a;">  -H </span><span>&quot;</span><span style="color:#a3be8c;">X-GitHub-Api-Version: 2022-11-28</span><span>&quot; \
+</span><span>  /notifications/threads/{}
+</span></code></pre>
+<p><img src="/img/github_malicious_notifications_removed.png" alt="List of read malicious notifications on GitHub" /></p>
+<p>Tada!</p>
+</article>
+
+  
+    
+  
+  <ul class="tags">
+    
+      <li><a href='https://gribnau.dev/tags/github'>github</a></li>
+    
+  </ul>
+  
+  
+    
+</section>
+</article>
+    <footer>
+        <div class="social">
+            <ul>
+                
+                <li>
+                    <a href="https://github.com/foresterre"
+                       title="Github" rel="me"><i class="icon-github"></i></a>
+                </li>
+                
+                
+                <li>
+                    <a href="https://www.linkedin.com/in/martijn-gribnau"
+                       title="Linkedin" rel="me"><i class="icon-linkedin"></i></a>
+                </li>
+                
+                <li>
+                    <a href="https://gribnau.dev/atom.xml"
+                       title="Don&#x27;t panic, impl Things"><i class="icon-rss"></i></a>
+                </li>
+            </ul>
+        </div>
+        <p> © Martijn Gribnau 2026
+
+        
+        <br>Powered by <a target="_blank" href="https://getzola.org/">Zola</a>. Theme based on <a target="_blank" href="https://github.com/jimmyff/zola-inky">Inky</a>.
+        </p>
+    </footer>
+
+    <!--<link href="https://fonts.googleapis.com/css2?family=Andada+Pro&display=swap&family=Playfair+Display" rel="stylesheet">-->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://unpkg.com/lucide-static@latest/font/lucide.css" />
+</body>
+</html>

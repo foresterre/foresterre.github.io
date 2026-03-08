@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en" prefix="og: https://ogp.me/ns#">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="X-UA-Compatible"
+      content="IE=edge">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0" />
+<meta name="description"
+      content="A blog by Martijn Gribnau" />
+<meta name="keywords"
+      content="foresterre, rust, cargo-msrv, msrv, software engineering" /> 
+
+<title>
+  Where are the security advisories of the recently compromised NPM packages? // Don&#x27;t panic, impl Things</title>
+<meta
+  property="og:title"
+  content="Don&#x27;t panic, impl Things | Where are the security advisories of the recently compromised NPM packages?"
+/>
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://gribnau.dev/posts/finding-security-advisories/" />
+<meta property="og:description" content="A blog by Martijn Gribnau" />
+
+
+<link rel="alternate"
+          type="application/rss+xml"
+          title="Don&#x27;t panic, impl Things"
+          href="https://gribnau.dev/atom.xml">
+    <link rel="stylesheet"
+          href="https://gribnau.dev/base.css">
+
+</head>
+
+<body>
+    <header>
+    <div class="top">
+        <div class="avatar">
+			<a href="/">
+                <img alt="Don&#x27;t panic, impl Things" title="Don&#x27;t panic, impl Things" src="https://gribnau.dev/processed_images/ava.b334fba4086c009a.png" srcset="https://gribnau.dev/processed_images/ava.df7a2100a2f090a4.png 64w, https://gribnau.dev/processed_images/ava.b334fba4086c009a.png 128w, https://gribnau.dev/processed_images/ava.b00c0c1742b92e66.png 256w" class="" />
+
+			</a>
+		</div>
+	    <div class="details">
+            <a class="site-name"
+            href="/">
+                <h1>Don&#x27;t panic, impl Things</h1>
+            </a>
+            <div class="site-description">
+                <p>A blog by Martijn Gribnau</p>
+            </div>
+        </div>
+
+        </div>
+        <nav>
+            <div class="links">
+            <a 
+                href="https://gribnau.dev/ " alt="Home"><span class="name">Home</span></a>
+            <a 
+                href="https://gribnau.dev/posts/ " alt="Posts"><span class="name">Posts</span></a>
+            <a 
+                href="https://gribnau.dev/tags/ " alt="Tags"><span class="name">Tags</span></a>
+            <a 
+                href="https://gribnau.dev/search/ " alt="Search"><span class="name">Search</span></a>
+            <a 
+                href="https://github.com/foresterre " alt="GitHub↗"><span class="name">GitHub↗</span></a>
+            </div>
+
+        </nav>
+    </header>
+    <article>
+    
+
+<section class="post">
+  <div class="post-header">
+    <div class="meta">
+      <div class="date">
+        <span class="day">13</span>
+        <span class="rest">Sep 25</span>
+      </div>
+    </div>
+
+    <div class="matter">
+      <h1 class="title">Where are the security advisories of the recently compromised NPM packages? </h1>
+    </div>
+  </div>
+    
+  <article><p>Four days ago, <a href="https://www.aikido.dev/blog/npm-debug-and-chalk-packages-compromised">news</a> came in that several packages on NPM were compromised; later it turned out to that it wasn't just one NPM account that was compromised by the (it seems) the same phishing attack, but multiple. The compromised accounts published new package versions containing malware which intercepted network traffic and replaced crypto wallet addresses with alternative malicious addresses. Various popular packages were affected, such as <code>chalk</code> and <code>debug-js</code> via <a href="https://www.npmjs.com/~qix">Qix</a>'s NPM account, and <code>duckdb</code> via the <a href="https://www.npmjs.com/~duckdb_admin">duckdb_admin</a> NPM account.</p>
+<p>The malware and compromised accounts (at least the one's we know of) was fairly quickly detected and actions were taken over the next few days to prevent the malicious NPM packages from being installed by downstream users. Props to all involved in the effort, and the open communication!</p>
+<h2 id="finding-the-security-advisories">Finding the security advisories</h2>
+<p>Now yesterday, I wanted to find the security advisories for the affected packages for a report at my day job. This turned out to be not as easy as I expected. Simply searching for, e.g. <a href="https://github.com/advisories?query=chalk">chalk</a> on the GitHub Advisory Database page gave me four results, <a href="https://github.com/prebid/Prebid.js/security/advisories/GHSA-jwq7-6j4r-2f92">three</a> <a href="https://github.com/advisories/GHSA-m662-56rj-8fmm">of</a> <a href="https://github.com/advisories/GHSA-w62p-hx95-gf2c">which</a> were sort of related, but none of them was the security issue in Chalk itself. I thought for a moment they maybe would have issued only a "top level" kind of advisory linked to e.g. the <code>debug</code> package, since that repo was used as a central location to file most of the <a href="https://github.com/debug-js/debug/issues/1005#issuecomment-3266885191">responses</a>, but <a href="https://github.com/advisories?page=1&amp;query=debug">no luck</a> (this sometimes happens when there is a CVE which links multiple packages, like in the case of the compromised <a href="https://github.com/advisories/GHSA-w62p-hx95-gf2c">DuckDB</a> packages. Changing the type to <a href="https://github.com/advisories?query=type%3Aunreviewed%20chalk">unreviewed</a> in case they would be filtered out by default gave even less results (0).</p>
+<p><img src="/img/security-advisories-chalk.png" alt="Result of searching for &#39;chalk&#39; on GitHub&#39;s security advisory page" /></p>
+<p>Then I tried searching via the repo's themselves, for example <a href="https://github.com/chalk/chalk/security/advisories">chalk</a> and <a href="https://github.com/debug-js/debug/security/advisories">debug</a>. These seem to be exclusive to information posed by the maintainers, which in this case opted to use different channels as there is nothing there.</p>
+<p>However, good news! They do exist! I have no idea how I should have found them without going through GitHub's own <a href="https://github.com/github/advisory-database">advisory-database</a> repo though, which is not exactly setup to be searched by humans directly. This repo also hosts <a href="https://github.com/github/advisory-database/issues/6099">these</a> <a href="https://github.com/github/advisory-database/issues/6103">two</a> related issues, which both contain partial lists with links to the specific advisories.</p>
+<p>As examples, here are the advisories for:</p>
+<ol>
+<li><a href="https://github.com/advisories/GHSA-2v46-p5h4-248w">chalk</a>, and</li>
+<li><a href="https://github.com/advisories/GHSA-8mgj-vmr8-frr6">debug</a></li>
+</ol>
+<p>If I have to guess, then I would guess the advisories only show up after package maintainers have approved it from a security dashboard; but I am not sure.</p>
+<p>Now, another reason why the search may be so difficult, is that there doesn't seem to be a CVE for most packages (I couldn't find one, for example <a href="https://nvd.nist.gov/vuln/search#/nvd/home?keyword=chalk&amp;resultType=records">chalk</a> again). DuckDB however does have <a href="https://nvd.nist.gov/vuln/search#/nvd/home?keyword=duckdb&amp;resultType=records">one</a>, and prebid-js <a href="https://nvd.nist.gov/vuln/detail/CVE-2025-59038">has</a> <a href="https://nvd.nist.gov/vuln/detail/CVE-2025-59039">two</a>.</p>
+<p>I'm unfamiliar with the process and can see that there are pratical limitations, not only because there are many parties involved and distributed over the world, but also because there are many different places where relevant info is posted, and a reasonable way to link from a root page may not be that obvious.</p>
+<p>Still, I feel that the way the information is published, presented and made searchable can be improved, for example by giving maintainers a more central way to publish status updates (i.e. written text) for multiple packages at once.</p>
+<p>Next time I would go directly to the <code>github/advisory-database</code> repository, as it <del>is unclear to me why some bits of information are not shown from the Advisories page</del>. While writing the post I found that GitHub's security advisories <a href="https://docs.github.com/en/code-security/security-advisories/working-with-global-security-advisories-from-the-github-advisory-database/about-the-github-advisory-database#malware-advisories">documentation</a> are probably hidden under explicit use of the <code>type:malware</code> tag by default, because "most of the vulnerabilities cannot be resolved by downstream users". This is, I assume, also why DuckDB's advisory does show up; it is not tagged under malware (but posted to DuckDB's <a href="https://github.com/duckdb/duckdb-node/security/advisories/GHSA-w62p-hx95-gf2c">duckdb-node</a> repo, and also has a CVE, i.e. CVE-2025-59037).</p>
+<p>I don't know yet whether hiding malware typed advisories by default is a practice I like. I definitely don't like that I this is non-obvious from the advisories page itself.</p>
+<p>Still, most of my critique stands: finding the right information fast is difficult, and the way advisories are posted is different per package.</p>
+<h2 id="when-npm-deletes-packages">When NPM deletes packages</h2>
+<p>The second thing I felt can be improved is the way [npmjs.org] removes affected packages. I consider it a good practice to remove the packages to reduce amount of affected downstream users. However, from the website, it is not clear why the package was removed (or whether it existed ever).</p>
+<p>Take for example <a href="https://www.npmjs.com/package/chalk?activeTab=versions">chalk</a>.</p>
+<p>The NPM website currently lists the following version history (I'll only list the last few packages):</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>Version Downloads (Last 7 Days) Published
+</span><span>5.6.2 5,188,950 4 days ago
+</span><span>5.6.0 8,711,608 a month ago
+</span><span>5.5.0 1,769,950 a month ago
+</span><span>5.4.1 12,873,396  9 months ago
+</span><span>5.4.0 64,837  9 months ago
+</span></code></pre>
+<p>NB: It doesn't matter whether you tick the "show deprecated versions" box.</p>
+<p>From this page, you have no idea that 5.6.1 was ever published and subsequently removed.</p>
+<p>I think it would be an improvement to show the version, and mark it explicitly as "removed", so users are not left guessing. That would help you in your search to find context about why it was removed. More information like related advisories would be a bonus.</p>
+<p>Luckily, you will find the reason for the removal reported through the CLI, which is a good thing. However, if you use e.g. renovate bot (the open source version), you could have merged a PR to update the package without ever having installed the package yourself (and subsequently not have seen the notice), perhaps even because the PR was created before the infected package was noticed by anyone. It is that easy to end up with a deployed release affected with malware.</p>
+<p>My critiques for both these issues are quite the same: the way information is presented when it is critical is not yet where it could be. Of course there are many vendors which offer scanners for packages and package ecosystems, which maybe offer some central way to access information about the compromise. Still, sometimes you also need more specific or end-use information, if possible from the source. I hope that the future will bring better tooling or presentations to quickly assess vulnerability situations, even before a post-mortem took place.</p>
+</article>
+
+  
+    
+  
+  <ul class="tags">
+    
+      <li><a href='https://gribnau.dev/tags/security-advisory'>security-advisory</a></li>
+    
+      <li><a href='https://gribnau.dev/tags/npm'>npm</a></li>
+    
+  </ul>
+  
+  
+    
+</section>
+</article>
+    <footer>
+        <div class="social">
+            <ul>
+                
+                <li>
+                    <a href="https://github.com/foresterre"
+                       title="Github" rel="me"><i class="icon-github"></i></a>
+                </li>
+                
+                
+                <li>
+                    <a href="https://www.linkedin.com/in/martijn-gribnau"
+                       title="Linkedin" rel="me"><i class="icon-linkedin"></i></a>
+                </li>
+                
+                <li>
+                    <a href="https://gribnau.dev/atom.xml"
+                       title="Don&#x27;t panic, impl Things"><i class="icon-rss"></i></a>
+                </li>
+            </ul>
+        </div>
+        <p> © Martijn Gribnau 2026
+
+        
+        <br>Powered by <a target="_blank" href="https://getzola.org/">Zola</a>. Theme based on <a target="_blank" href="https://github.com/jimmyff/zola-inky">Inky</a>.
+        </p>
+    </footer>
+
+    <!--<link href="https://fonts.googleapis.com/css2?family=Andada+Pro&display=swap&family=Playfair+Display" rel="stylesheet">-->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://unpkg.com/lucide-static@latest/font/lucide.css" />
+</body>
+</html>

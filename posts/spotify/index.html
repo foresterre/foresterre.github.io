@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en" prefix="og: https://ogp.me/ns#">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="X-UA-Compatible"
+      content="IE=edge">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0" />
+<meta name="description"
+      content="A blog by Martijn Gribnau" />
+<meta name="keywords"
+      content="foresterre, rust, cargo-msrv, msrv, software engineering" /> 
+
+<title>
+  How I use Spotify // Don&#x27;t panic, impl Things</title>
+<meta
+  property="og:title"
+  content="Don&#x27;t panic, impl Things | How I use Spotify"
+/>
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://gribnau.dev/posts/spotify/" />
+<meta property="og:description" content="A blog by Martijn Gribnau" />
+
+
+<link rel="alternate"
+          type="application/rss+xml"
+          title="Don&#x27;t panic, impl Things"
+          href="https://gribnau.dev/atom.xml">
+    <link rel="stylesheet"
+          href="https://gribnau.dev/base.css">
+
+</head>
+
+<body>
+    <header>
+    <div class="top">
+        <div class="avatar">
+			<a href="/">
+                <img alt="Don&#x27;t panic, impl Things" title="Don&#x27;t panic, impl Things" src="https://gribnau.dev/processed_images/ava.b334fba4086c009a.png" srcset="https://gribnau.dev/processed_images/ava.df7a2100a2f090a4.png 64w, https://gribnau.dev/processed_images/ava.b334fba4086c009a.png 128w, https://gribnau.dev/processed_images/ava.b00c0c1742b92e66.png 256w" class="" />
+
+			</a>
+		</div>
+	    <div class="details">
+            <a class="site-name"
+            href="/">
+                <h1>Don&#x27;t panic, impl Things</h1>
+            </a>
+            <div class="site-description">
+                <p>A blog by Martijn Gribnau</p>
+            </div>
+        </div>
+
+        </div>
+        <nav>
+            <div class="links">
+            <a 
+                href="https://gribnau.dev/ " alt="Home"><span class="name">Home</span></a>
+            <a 
+                href="https://gribnau.dev/posts/ " alt="Posts"><span class="name">Posts</span></a>
+            <a 
+                href="https://gribnau.dev/tags/ " alt="Tags"><span class="name">Tags</span></a>
+            <a 
+                href="https://gribnau.dev/search/ " alt="Search"><span class="name">Search</span></a>
+            <a 
+                href="https://github.com/foresterre " alt="GitHub↗"><span class="name">GitHub↗</span></a>
+            </div>
+
+        </nav>
+    </header>
+    <article>
+    
+
+<section class="post">
+  <div class="post-header">
+    <div class="meta">
+      <div class="date">
+        <span class="day">18</span>
+        <span class="rest">Jan 26</span>
+      </div>
+    </div>
+
+    <div class="matter">
+      <h1 class="title">How I use Spotify </h1>
+    </div>
+  </div>
+    
+  <article><p>I've been a Spotify subscriber for over 11 years. Over the years I've tried several of the other music apps, but  Spotify stuck. It is however not an app without its pain points. On occasion I've been using the venerable <a href="https://spicetify.app/">Spicetify</a> to fix issues, like when Spotify tried to go above and beyond in promoting podcasts.Spicetify did have its disadvantages however and one is that it broke on almost every Spotify release (the Spicetify author was very fast in fixing Spicetify, but I kept needing to update my extensions too and had no desire to keep that up in the end).</p>
+<h2 id="how-i-use-spotify">How I use Spotify</h2>
+<p>One thing I've been doing since 2014 is to create a "monthly playlist" every month. During the month I add songs I've come to like (or come back to) to this playlist. I listen to this playlist a lot during the current month. When a new month arrives, I create a new playlist, and the cycle continues. This way I can re-listen to songs while they do not become to repetitive. I tend to start disliking songs I've heard too much after that (like the ones I use for my alarm clock haha). These playlists also tend to stay manageable; a playlist has between 100 and 200 songs at the end of the month.</p>
+<p>Each monthly playlist is sorted in a yearly folder, e.g. "2026 • Monthly". I've recently added another level and placed the 2014 to 2019 folders in a "201X • Monthly" folder, mostly because having many top level playlists becomes a hassle on mobile.</p>
+<p>For some special occasions, or moods I also create playlists, which I put in a folder called "Trove". These playlists are more situational, and I tend to listen to these less.</p>
+<p>I have some assorted folders like "Subscribed" for playlists I didn't create myself, Spotify mixes I like, and the yearly "your top songs" list.</p>
+<p>Finally, I have three folders for favorites; from "kind of favorite" to "favorite" to "favorite of favorites". All very subjective, and mood dependent, I suppose.</p>
+<p>I always, always, use custom sort order where I can. I'm used to the consistent ordering and want nothing else.</p>
+<p><img src="/img/spotify_playlists.jpg" alt="Spotify playlists" /></p>
+<h2 id="the-good-parts">The good parts</h2>
+<h3 id="global-music-library">Global music library</h3>
+<p>Spotify is pretty great in this regard. It has an almost perfect library. Songs are rarely removed, unlike for example film centric platforms. Songs are also usually available worldwide, and not as much fenced by region (afaik), unlike say e-book or audiobook platforms.</p>
+<h3 id="audio-quality">Audio quality</h3>
+<p>Disclaimer: I'm not an audiophile. I've been streaming Spotify on "Very high" and more recently sometimes on "Lossless" too; I've can't complain about the quality. It's good.</p>
+<h3 id="built-in-lyrics">Built-in lyrics</h3>
+<p>This is a keeper. When actively listening to music (as opposed to in the background), I like to understand what is being sung. It was gone for some long years. I hope it will stay this time around. I never quite understood why a third party service is necessary for it either. The line synchronization is nice I suppose, but hardly necessary.</p>
+<h3 id="when-consistency-works">When consistency works</h3>
+<p>Despite some UI refreshes and a migration of the user interface to React, the Spotify user interface has been recognizably the same in years. Commonality and consistency is a great perk in the toolbox of the power user. Spotify may not have brought anything new to the table, with respect to the interface, but I would pose that that's a good thing. I couldn't stand the Play Music interface for example, when I tried it a few years ago.</p>
+<p>The base layout has everything you need. A list of playlists on the left. A list of (sometimes grouped) songs on the right. It's tried and true.</p>
+<h2 id="pain-points">Pain points</h2>
+<h3 id="podcasts">Podcasts</h3>
+<p>This one is fairly common. It was the main reason to turn to Spicetify originally.</p>
+<p>I listen to podcasts almost exclusively on my phone, and for better or worse have been using the Pocket casts app for that. I'm used to it, and do not intend to use Spotify anytime soon. Spicetify allowed me to filter podcasts out of the desktop app. But as I wrote earlier I stopped using it. It wasn't a perfect solution anyhow, as it only covered my desktop use.</p>
+<p>I feel Spotify has been pushing podcasts less than they used to a few years back, and I'm glad. I considered unsubscribing several times because of how much podcasts were promoted, and interfered with my flow.</p>
+<p>In "My Library", there still is this mandatory "Your Episodes" playlist (can't be much of "my" library if I don't have the power to remove it). I wish I could remove it natively.</p>
+<p><img src="/img/spotify_your_episodes.jpg" alt="Spotify &quot;your episodes&quot;" /></p>
+<p><img src="/img/spotify_your_episodes_pin.jpg" alt="Spotify &quot;your episodes&quot; can only be pinned and unpinned" /></p>
+<p><img src="/img/spotify_your_episodes_cant_move.jpg" alt="Spotify &quot;your episodes&quot; can not be moved" /></p>
+<p>On my desktop home page, I luckily only get music recommendations. I don't even need to select the "Music" filter for that. It feels like a bug, but to me it's a feature. On mobile however I explicitly need to filter music. As a result, I don't tend to use "home" on mobile much. As a result, I mostly discover music either via the "Discover weekly" playlist or the "Go to song radio" feature.</p>
+<h3 id="add-song-to-playlist-on-mobile">"Add song to playlist" on mobile</h3>
+<p>This feature of "adding a song to a playlist" is something that I keep disliking (on mobile anyways). It's a place where I feel the app authors keep telling me they know better than I do, to which playlist I would want to add a song.</p>
+<p>The thing is, they do not permit me to browse in my custom sort order. Instead, they offer "Recently updated", "Recently added", "Alphabetical" and "Recently played". The only consistent ordering is "Alphabetic", which is approximately the reverse of my custom structure (older years for monthly playlists come first - while I want to add it to a more recent one). Arguably "Recently updated" works well for my workflow, but I value consistent ordering even more.</p>
+<p><img src="/img/spotify_add_to_playlist_sort.jpg" alt="add song to playlist sorting options" /></p>
+<p>In my library I can thankfully use a custom order:</p>
+<p><img src="/img/spotify_library_sort.jpg" alt="library sorting options" /></p>
+<p>In addition to the sorting order, the "add to playlist" dialogs also have this odd feature where each folder with playlist in it, is virtualized (like a symlink) in the top level. As a result, you can navigate to playlists in deeper folders via their parents, or directly. But for someone who has a ton of playlists, and someone who added all these folders to create order, this feature just adds chaos.</p>
+<p>For example, this is what I see from my library:</p>
+<p><img src="/img/spotify_add_to_playlist_library.jpg" alt="Playlists in my library" /></p>
+<p>But "add to library" shows these deeper level folders at the top-level too:</p>
+<p><img src="/img/spotify_add_to_playlist_virt.jpg" alt="Folders virtualized to the top level" /></p>
+<p><a href="/video/spotify_add_to_playlist_virtual_folders.mp4">This</a> video shows both (watch the folder titles).</p>
+<h3 id="when-keyboard-shortcuts-don-t-match-the-highlighted-action">When keyboard shortcuts don't match the highlighted action</h3>
+<p>With my playlist heavy workflow, I use the "add song to playlist" flow a lot. Spotify warns you when you add a duplicate (but doesn't block you). This is a great feature.</p>
+<p><img src="/img/spotify_add_double.jpg" alt="Add duplicate song via menus" /></p>
+<p><img src="/img/spotify_add_double_warning.jpg" alt="Duplicate warning" /></p>
+<p>However, what do you expect to happen if you press "Enter", when "Don't add" is highlighted?</p>
+<p><img src="/img/spotify_add_double_result.jpg" alt="Duplicate result on enter: added to playlist" /></p>
+<p>Exactly.</p>
+<h3 id="when-desktop-and-mobile-don-t-match">When desktop and mobile don't match</h3>
+<p>Spotify on desktop, and Spotify on mobile look share much of the visual design elements. I think the designers did a good job there. But as always, the devil is in the details.</p>
+<p>It is the features, or lack thereof where pain points arise. Spotify on desktop is usually a more powerful platform. This is understandable since the mouse and the large screen allow for more precise interactions than touch and a portrait mode phone screen.</p>
+<p>Still, after all these years, I still can't create new folders on mobile. It sucks that I need to open my desktop app for that.</p>
+<h2 id="final-words">Final words</h2>
+<p>I get it. I'm unlikely to be the average Spotify user. I've more than 300 playlists, rarely listen directly to albums or artists, and use this odd playlist centric workflow. Still, I have this hope, the hope of a long time subscriber, that one day the Spotify UI designers will recognize the power of user agency in app workflows and appreciate consist ordering more, like I do.</p>
+</article>
+
+  
+    
+  
+  <ul class="tags">
+    
+      <li><a href='https://gribnau.dev/tags/spotify'>spotify</a></li>
+    
+  </ul>
+  
+  
+    
+</section>
+</article>
+    <footer>
+        <div class="social">
+            <ul>
+                
+                <li>
+                    <a href="https://github.com/foresterre"
+                       title="Github" rel="me"><i class="icon-github"></i></a>
+                </li>
+                
+                
+                <li>
+                    <a href="https://www.linkedin.com/in/martijn-gribnau"
+                       title="Linkedin" rel="me"><i class="icon-linkedin"></i></a>
+                </li>
+                
+                <li>
+                    <a href="https://gribnau.dev/atom.xml"
+                       title="Don&#x27;t panic, impl Things"><i class="icon-rss"></i></a>
+                </li>
+            </ul>
+        </div>
+        <p> © Martijn Gribnau 2026
+
+        
+        <br>Powered by <a target="_blank" href="https://getzola.org/">Zola</a>. Theme based on <a target="_blank" href="https://github.com/jimmyff/zola-inky">Inky</a>.
+        </p>
+    </footer>
+
+    <!--<link href="https://fonts.googleapis.com/css2?family=Andada+Pro&display=swap&family=Playfair+Display" rel="stylesheet">-->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://unpkg.com/lucide-static@latest/font/lucide.css" />
+</body>
+</html>

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en" prefix="og: https://ogp.me/ns#">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="X-UA-Compatible"
+      content="IE=edge">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0" />
+<meta name="description"
+      content="A blog by Martijn Gribnau" />
+<meta name="keywords"
+      content="foresterre, rust, cargo-msrv, msrv, software engineering" /> 
+
+<title>
+  Grammar checking from the CLI with Harper // Don&#x27;t panic, impl Things</title>
+<meta
+  property="og:title"
+  content="Don&#x27;t panic, impl Things | Grammar checking from the CLI with Harper"
+/>
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://gribnau.dev/posts/harper-cli/" />
+<meta property="og:description" content="A blog by Martijn Gribnau" />
+
+
+<link rel="alternate"
+          type="application/rss+xml"
+          title="Don&#x27;t panic, impl Things"
+          href="https://gribnau.dev/atom.xml">
+    <link rel="stylesheet"
+          href="https://gribnau.dev/base.css">
+
+</head>
+
+<body>
+    <header>
+    <div class="top">
+        <div class="avatar">
+			<a href="/">
+                <img alt="Don&#x27;t panic, impl Things" title="Don&#x27;t panic, impl Things" src="https://gribnau.dev/processed_images/ava.b334fba4086c009a.png" srcset="https://gribnau.dev/processed_images/ava.df7a2100a2f090a4.png 64w, https://gribnau.dev/processed_images/ava.b334fba4086c009a.png 128w, https://gribnau.dev/processed_images/ava.b00c0c1742b92e66.png 256w" class="" />
+
+			</a>
+		</div>
+	    <div class="details">
+            <a class="site-name"
+            href="/">
+                <h1>Don&#x27;t panic, impl Things</h1>
+            </a>
+            <div class="site-description">
+                <p>A blog by Martijn Gribnau</p>
+            </div>
+        </div>
+
+        </div>
+        <nav>
+            <div class="links">
+            <a 
+                href="https://gribnau.dev/ " alt="Home"><span class="name">Home</span></a>
+            <a 
+                href="https://gribnau.dev/posts/ " alt="Posts"><span class="name">Posts</span></a>
+            <a 
+                href="https://gribnau.dev/tags/ " alt="Tags"><span class="name">Tags</span></a>
+            <a 
+                href="https://gribnau.dev/search/ " alt="Search"><span class="name">Search</span></a>
+            <a 
+                href="https://github.com/foresterre " alt="GitHub↗"><span class="name">GitHub↗</span></a>
+            </div>
+
+        </nav>
+    </header>
+    <article>
+    
+
+<section class="post">
+  <div class="post-header">
+    <div class="meta">
+      <div class="date">
+        <span class="day">17</span>
+        <span class="rest">Aug 25</span>
+      </div>
+    </div>
+
+    <div class="matter">
+      <h1 class="title">Grammar checking from the CLI with Harper </h1>
+    </div>
+  </div>
+    
+  <article><p>A few months ago I learned of the existence of <a href="https://writewithharper.com">Harper</a>, which describes itself as a lightweight, offline, grammar checker. Both the website and GitHub <a href="https://github.com/automattic/harper">repository</a> are a bit sparse on how to use it, but they do link to all sorts of <a href="https://writewithharper.com/docs/integrations/language-server">integrations</a>, which I think all use the Harper language server. There is also <a href="https://writewithharper.com/docs/harperjs/introduction">harper.js</a>, mostly for web applications and browser extensions.</p>
+<p>While the language server (or <code>harper.js</code>) is great for extensive editor use, I sometimes just want to quickly check a file for spelling and grammatical issues. As it turns out, this is already possible by using the <code>harper-cli</code> tool.</p>
+<p>This CLI is not documented on the documentation website, probably, as I found out later, because it is still listed as an <a href="https://github.com/Automattic/harper/tree/c37fa1a437279ed8449f75a80178c55f29e4df80/harper-cli">experimental</a> frontend. I'm glad it exists though; it saved me from even considering how to use the LSP from the command line directly, and from installing and using one of the integrations.</p>
+<h2 id="installing-it">Installing it</h2>
+<p>Installing it is easy! If you have <a href="https://www.rust-lang.org/">Rust</a> and <a href="https://doc.rust-lang.org/cargo/">Cargo</a> installed, you can install it from source by running <code>cargo install --locked --git https://github.com/Automattic/harper.git harper-cli</code>.</p>
+<p>On Windows I also found out you can install it using <a href="https://scoop.sh/">scoop</a>. I was delighted to see that <code>scoop install harper</code> didn't just install the language server binary, but also <code>harper-cli</code>.</p>
+<h2 id="using-it">Using it</h2>
+<p>The current version (<code>0.1.0</code>), shows the following help page when running <code>harper-cli --help</code>:</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>A debugging tool for the Harper grammar checker
+</span><span>
+</span><span>Usage: harper-cli.exe &lt;COMMAND&gt;
+</span><span>
+</span><span>Commands:
+</span><span>  lint                   Lint a provided document
+</span><span>  parse                  Parse a provided document and print the detected symbols
+</span><span>  spans                  Parse a provided document and show the spans of the detected tokens
+</span><span>  annotate-tokens        Parse a provided document and annotate its tokens
+</span><span>  metadata               Get the metadata associated with a particular word
+</span><span>  forms                  Get all the forms of a word using the affixes
+</span><span>  words                  Emit a decompressed, line-separated list of the words in Harper&#39;s dictionary
+</span><span>  summarize-lint-record  Summarize a lint record
+</span><span>  config                 Print the default config with descriptions
+</span><span>  mine-words             Print a list of all the words in a document, sorted by frequency
+</span><span>  core-version           Print harper-core version
+</span><span>  rename-flag            Rename a flag in the dictionary and affixes
+</span><span>  compounds              Emit a decompressed, line-separated list of the compounds in Harper&#39;s dictionary. As long as there&#39;s either an open or hyphenated spelling
+</span><span>  case-variants          Emit a decompressed, line-separated list of the words in Harper&#39;s dictionary which occur in more than one lettercase variant
+</span><span>  nominal-phrases        Provided a sentence or phrase, emit a list of each noun phrase contained within
+</span><span>  help                   Print this message or the help of the given subcommand(s)
+</span><span>
+</span><span>Options:
+</span><span>  -h, --help     Print help
+</span><span>  -V, --version  Print version
+</span></code></pre>
+<p>For my use case, the most simple command sufficed:</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>$ harper-cli lint .\content\posts\2025-05-15_thank_you_all_for_ten_years_of_stable_rust.md
+</span></code></pre>
+<p>That gave me the following result:</p>
+<p><img src="/img/harper-cli.png" alt="Result of harper-cli output showing some grammatical errors" /></p>
+<p>What a delightful way to check for flagrant spelling errors in markdown files. Thanks Harper authors!</p>
+</article>
+
+  
+    
+  
+  <ul class="tags">
+    
+      <li><a href='https://gribnau.dev/tags/harper'>harper</a></li>
+    
+      <li><a href='https://gribnau.dev/tags/spell-check'>spell-check</a></li>
+    
+  </ul>
+  
+  
+    
+</section>
+</article>
+    <footer>
+        <div class="social">
+            <ul>
+                
+                <li>
+                    <a href="https://github.com/foresterre"
+                       title="Github" rel="me"><i class="icon-github"></i></a>
+                </li>
+                
+                
+                <li>
+                    <a href="https://www.linkedin.com/in/martijn-gribnau"
+                       title="Linkedin" rel="me"><i class="icon-linkedin"></i></a>
+                </li>
+                
+                <li>
+                    <a href="https://gribnau.dev/atom.xml"
+                       title="Don&#x27;t panic, impl Things"><i class="icon-rss"></i></a>
+                </li>
+            </ul>
+        </div>
+        <p> © Martijn Gribnau 2026
+
+        
+        <br>Powered by <a target="_blank" href="https://getzola.org/">Zola</a>. Theme based on <a target="_blank" href="https://github.com/jimmyff/zola-inky">Inky</a>.
+        </p>
+    </footer>
+
+    <!--<link href="https://fonts.googleapis.com/css2?family=Andada+Pro&display=swap&family=Playfair+Display" rel="stylesheet">-->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://unpkg.com/lucide-static@latest/font/lucide.css" />
+</body>
+</html>

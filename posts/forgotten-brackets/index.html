@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en" prefix="og: https://ogp.me/ns#">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="X-UA-Compatible"
+      content="IE=edge">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0" />
+<meta name="description"
+      content="A blog by Martijn Gribnau" />
+<meta name="keywords"
+      content="foresterre, rust, cargo-msrv, msrv, software engineering" /> 
+
+<title>
+  Orphaned markdown [brackets] // Don&#x27;t panic, impl Things</title>
+<meta
+  property="og:title"
+  content="Don&#x27;t panic, impl Things | Orphaned markdown [brackets]"
+/>
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://gribnau.dev/posts/forgotten-brackets/" />
+<meta property="og:description" content="A blog by Martijn Gribnau" />
+
+
+<link rel="alternate"
+          type="application/rss+xml"
+          title="Don&#x27;t panic, impl Things"
+          href="https://gribnau.dev/atom.xml">
+    <link rel="stylesheet"
+          href="https://gribnau.dev/base.css">
+
+</head>
+
+<body>
+    <header>
+    <div class="top">
+        <div class="avatar">
+			<a href="/">
+                <img alt="Don&#x27;t panic, impl Things" title="Don&#x27;t panic, impl Things" src="https://gribnau.dev/processed_images/ava.b334fba4086c009a.png" srcset="https://gribnau.dev/processed_images/ava.df7a2100a2f090a4.png 64w, https://gribnau.dev/processed_images/ava.b334fba4086c009a.png 128w, https://gribnau.dev/processed_images/ava.b00c0c1742b92e66.png 256w" class="" />
+
+			</a>
+		</div>
+	    <div class="details">
+            <a class="site-name"
+            href="/">
+                <h1>Don&#x27;t panic, impl Things</h1>
+            </a>
+            <div class="site-description">
+                <p>A blog by Martijn Gribnau</p>
+            </div>
+        </div>
+
+        </div>
+        <nav>
+            <div class="links">
+            <a 
+                href="https://gribnau.dev/ " alt="Home"><span class="name">Home</span></a>
+            <a 
+                href="https://gribnau.dev/posts/ " alt="Posts"><span class="name">Posts</span></a>
+            <a 
+                href="https://gribnau.dev/tags/ " alt="Tags"><span class="name">Tags</span></a>
+            <a 
+                href="https://gribnau.dev/search/ " alt="Search"><span class="name">Search</span></a>
+            <a 
+                href="https://github.com/foresterre " alt="GitHub↗"><span class="name">GitHub↗</span></a>
+            </div>
+
+        </nav>
+    </header>
+    <article>
+    
+
+<section class="post">
+  <div class="post-header">
+    <div class="meta">
+      <div class="date">
+        <span class="day">19</span>
+        <span class="rest">Apr 25</span>
+      </div>
+    </div>
+
+    <div class="matter">
+      <h1 class="title">Orphaned markdown [brackets] </h1>
+    </div>
+  </div>
+    
+  <article><p>Every project needs a changelog. And let's be honest, the work <a href="https://keepachangelog.com/en/1.1.0/">keep-a-changelog</a> did to make this a more common practice is awesome. But there is something many seem to forget: Did you ever notice [version numbers] in release titles within a <code>CHANGELOG.md</code>? These brackets were supposed to be <a href="https://www.markdownguide.org/basic-syntax/#reference-style-links">links</a>. But in reference style, you need to complete the reference elsewhere. Let's look at an example (also in the <a href="https://github.com/mullvad/mullvadvpn-app/blob/6d7b4ba7bdc497093dbd5861a8a6a4842574e6f7/CHANGELOG.md">wild</a>):</p>
+<pre data-lang="markdown" style="background-color:#2b303b;color:#c0c5ce;" class="language-markdown "><code class="language-markdown" data-lang="markdown"><span style="color:#8fa1b3;">## [0.18.3] - 2025-04-19
+</span><span>
+</span><span style="color:#bf616a;">- Lost: reference to the version number 0.18.3 somewhere
+</span></code></pre>
+<p>This snippet, produces the following output:</p>
+<hr />
+<h2 id="0-18-3-2025-04-19">[0.18.3] - 2025-04-19</h2>
+<ul>
+<li>Lost: references to version numbers</li>
+</ul>
+<hr />
+<p>However, if you scroll to the bottom of the keep-a-changelog <a href="https://raw.githubusercontent.com/olivierlacan/keep-a-changelog/refs/heads/main/CHANGELOG.md">example</a>, you can see that the version numbers in brackets, have their link completed at the bottom. And rendered, it looks like <a href="https://github.com/olivierlacan/keep-a-changelog/blob/main/CHANGELOG.md">this</a>.</p>
+<p>So how do we fix our changelog? By adding reference style links:</p>
+<pre data-lang="markdown" style="background-color:#2b303b;color:#c0c5ce;" class="language-markdown "><code class="language-markdown" data-lang="markdown"><span style="color:#8fa1b3;">## [0.18.4] - 2025-04-19
+</span><span>
+</span><span style="color:#bf616a;">- Found: references to version numbers
+</span><span style="color:#bf616a;">
+</span><span style="color:#d08770;">[0.18.4]: https://github.com/foresterre/cargo-msrv/compare/v0.18.3...v0.18.4
+</span></code></pre>
+<p>This produces the following output:</p>
+<hr />
+<h2 id="0-18-4-2025-04-19"><a href="https://github.com/foresterre/cargo-msrv/compare/v0.18.3...v0.18.4">0.18.4</a> - 2025-04-19</h2>
+<ul>
+<li>Found: references to version numbers</li>
+</ul>
+<hr />
+<h1 id="don-t-like-linking-to-the-diff">Don't like linking to the diff?</h1>
+<p>Not a problem. Use an alternative like a <a href="https://github.com/foresterre/cargo-msrv/releases/tag/v0.18.4">release</a> page or something else you like. Or just leave the brackets out:</p>
+<hr />
+<h2 id="0-18-5-2025-04-19">0.18.5 - 2025-04-19</h2>
+<ul>
+<li>Also good: This version number has no link</li>
+</ul>
+<hr />
+<h1 id="call-to-action">Call to action</h1>
+<p>So next time you write a changelog, please keep these digital tumbleweeds out. Complete your links, fix your [brackets]!</p>
+</article>
+
+  
+    
+  
+  <ul class="tags">
+    
+      <li><a href='https://gribnau.dev/tags/keep-a-changelog'>keep-a-changelog</a></li>
+    
+      <li><a href='https://gribnau.dev/tags/markdown'>markdown</a></li>
+    
+  </ul>
+  
+  
+    
+</section>
+</article>
+    <footer>
+        <div class="social">
+            <ul>
+                
+                <li>
+                    <a href="https://github.com/foresterre"
+                       title="Github" rel="me"><i class="icon-github"></i></a>
+                </li>
+                
+                
+                <li>
+                    <a href="https://www.linkedin.com/in/martijn-gribnau"
+                       title="Linkedin" rel="me"><i class="icon-linkedin"></i></a>
+                </li>
+                
+                <li>
+                    <a href="https://gribnau.dev/atom.xml"
+                       title="Don&#x27;t panic, impl Things"><i class="icon-rss"></i></a>
+                </li>
+            </ul>
+        </div>
+        <p> © Martijn Gribnau 2026
+
+        
+        <br>Powered by <a target="_blank" href="https://getzola.org/">Zola</a>. Theme based on <a target="_blank" href="https://github.com/jimmyff/zola-inky">Inky</a>.
+        </p>
+    </footer>
+
+    <!--<link href="https://fonts.googleapis.com/css2?family=Andada+Pro&display=swap&family=Playfair+Display" rel="stylesheet">-->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://unpkg.com/lucide-static@latest/font/lucide.css" />
+</body>
+</html>
