@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}{{ taxonomy.name | capitalize }} | {{ config.title }}{% endblock title %}
+
+{% block content %}
+<h1 class="page-title">{{ taxonomy.name }}</h1>
+<ol class="sheet-index">
+  {%- for term in terms %}
+  <li>
+    <a href="{{ term.permalink | safe }}">
+      <span class="t">#{{ term.name }}</span>
+      <span class="leader" aria-hidden="true"></span>
+      <span class="count">{{ term.pages | length }}</span>
+    </a>
+  </li>
+  {%- endfor %}
+</ol>
+{% endblock content %}

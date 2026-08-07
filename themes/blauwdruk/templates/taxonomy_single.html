@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}#{{ term.name }} | {{ config.title }}{% endblock title %}
+
+{% block content %}
+<h1 class="page-title">#{{ term.name }}</h1>
+<ol class="sheet-index">
+  {%- for page in term.pages %}
+  <li>
+    <a href="{{ page.permalink | safe }}">
+      <span class="t">{{ page.title }}</span>
+      <span class="leader" aria-hidden="true"></span>
+      {% if page.date %}<time datetime="{{ page.date }}">{{ page.date | date(format="%Y-%m-%d") }}</time>{% endif %}
+    </a>
+  </li>
+  {%- endfor %}
+</ol>
+{% endblock content %}

@@ -1,5 +1,5 @@
 +++
-title = "Puzzle: Sharing declarative args between top level and subcommand using Clap"
+title = "Sharing declarative args between top level and subcommand using Clap"
 date = 2024-06-25
 
 [taxonomies]

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}{{ section.title }} | {{ config.title }}{% endblock title %}
+
+{% block content %}
+<h1 class="page-title">{{ section.title }}</h1>
+{% if section.content %}<div class="intro prose">{{ section.content | safe }}</div>{% endif %}
+{%- for year, posts in section.pages | group_by(attribute="year") %}
+<h2 class="archive-year">{{ year }}</h2>
+<ul class="archive">
+  {%- for post in posts %}
+  <li>
+    <time datetime="{{ post.date }}">{{ post.date | date(format="%m-%d") }}</time>
+    <a href="{{ post.permalink | safe }}">{{ post.title }}</a>
+    {%- if post.taxonomies.tags %}
+    <span class="tags">
+      {%- for tag in post.taxonomies.tags %}
+      <a href="{{ get_taxonomy_url(kind="tags", name=tag) | safe }}">#{{ tag }}</a>
+      {%- endfor %}
+    </span>
+    {%- endif %}
+  </li>
+  {%- endfor %}
+</ul>
+{%- endfor %}
+{% endblock content %}

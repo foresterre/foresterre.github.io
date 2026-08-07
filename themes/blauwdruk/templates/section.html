@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}{{ section.title }} | {{ config.title }}{% endblock title %}
+
+{% block content %}
+<h1 class="page-title">{{ section.title }}</h1>
+{% if section.content %}<div class="intro prose">{{ section.content | safe }}</div>{% endif %}
+{% if paginator %}{% set pages = paginator.pages %}{% else %}{% set pages = section.pages %}{% endif %}
+<ol class="sheet-index">
+  {%- for page in pages %}
+  <li>
+    <a href="{{ page.permalink | safe }}">
+      <span class="t">{{ page.title }}</span>
+      <span class="leader" aria-hidden="true"></span>
+      {% if page.date %}<time datetime="{{ page.date }}">{{ page.date | date(format="%Y-%m-%d") }}</time>{% endif %}
+    </a>
+  </li>
+  {%- endfor %}
+</ol>
+{% if paginator %}
+<nav class="pagination">
+  <span>{% if paginator.previous %}<a href="{{ paginator.previous | safe }}">Newer</a>{% endif %}</span>
+  <span class="page-no">Sheet {{ paginator.current_index }} of {{ paginator.number_pagers }}</span>
+  <span>{% if paginator.next %}<a href="{{ paginator.next | safe }}">Older</a>{% endif %}</span>
+</nav>
+{% endif %}
+{% endblock content %}
