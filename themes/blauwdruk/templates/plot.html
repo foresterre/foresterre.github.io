@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page.title }} | {{ config.title }}{% endblock title %}
+
+{% block content %}
+{% set gallery = get_section(path=page.ancestors | last) %}
+<article>
+  <h1 class="page-title">{{ page.title }}</h1>
+  <p class="meta">
+    {% if page.date %}<span><span class="mark">+</span> <time datetime="{{ page.date }}">{{ page.date | date(format="%Y-%m-%d") }}</time></span>{% endif %}
+    <span><a href="{{ gallery.permalink | safe }}">Back to {{ gallery.title | lower }}</a></span>
+  </p>
+  <figure class="plot-figure">
+    <img src="{{ page.permalink | safe }}{{ page.extra.image }}" alt="{{ page.extra.alt | default(value=page.title) }}">
+  </figure>
+  {% if page.content %}<div class="prose">{{ page.content | safe }}</div>{% endif %}
+  {% set e = page.extra %}
+  {% if e.pen or e.paper or e.passes or e.machine %}
+  <div class="specblock">
+    {% if e.pen %}<div><span class="label">Pen</span>{{ e.pen }}</div>{% endif %}
+    {% if e.paper %}<div><span class="label">Paper</span>{{ e.paper }}</div>{% endif %}
+    {% if e.passes %}<div><span class="label">Passes</span>{{ e.passes }}</div>{% endif %}
+    {% if e.machine %}<div><span class="label">Machine</span>{{ e.machine }}</div>{% endif %}
+  </div>
+  {% endif %}
+</article>
+{% endblock content %}

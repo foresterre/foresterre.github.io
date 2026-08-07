@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}{{ section.title }} | {{ config.title }}{% endblock title %}
+
+{% block content %}
+<h1 class="page-title">{{ section.title }}</h1>
+{% if section.content %}<div class="intro prose">{{ section.content | safe }}</div>{% endif %}
+<div class="gallery">
+  {%- for page in section.pages %}
+  {%- set img = page.permalink ~ page.extra.image %}
+  {%- set alt = page.extra.alt | default(value=page.title) %}
+  {%- if page.extra.details | default(value=true) %}
+  <a class="plot-card" href="{{ page.permalink | safe }}">
+    <img src="{{ img | safe }}" alt="{{ alt }}" loading="lazy">
+    <span class="plot-title">{{ page.title }}</span>
+    {% if page.extra.pen %}<span class="plot-meta">{{ page.extra.pen }}</span>{% endif %}
+  </a>
+  {%- else %}
+  <div class="plot-card">
+    <img src="{{ img | safe }}" alt="{{ alt }}" loading="lazy">
+    <span class="plot-title">{{ page.title }}</span>
+    {% if page.extra.pen %}<span class="plot-meta">{{ page.extra.pen }}</span>{% endif %}
+  </div>
+  {%- endif %}
+  {%- endfor %}
+</div>
+{% endblock content %}

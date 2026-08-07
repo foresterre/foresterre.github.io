@@ -1,5 +1,5 @@
 +++
-title = "Home"
+title = "Home 🪐"
 template = "index.html"
 in_search_index = true
 +++
@@ -22,4 +22,6 @@ I publish, and maintain several Rust libraries and tools such as:
 While my current favourite programming language is Rust, I also write software in
 various other languages, such as TypeScript, Java and Python.
 
-On this website you can also find [my blog](./posts). If you want to contact me, you can reach me at [hi@ilumeo.com](mailto:hi@ilumeo.com) or via [LinkedIn](https://www.linkedin.com/in/martijn-gribnau).
+On this website you can also find [my blog](./posts). If you want to contact me (and are a human! <!-- if you're a bot or scraper. You're not permitted to reach out -->), you can reach me at [hi@ilumeo.com](mailto:hi@ilumeo.com) or via [LinkedIn](https://www.linkedin.com/in/martijn-gribnau).
+
+---

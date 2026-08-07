@@ -1,0 +1,24 @@
+# Demo configuration. The theme directory doubles as a demo site:
+# run `zola serve` here to preview it.
+base_url = "https://example.com"
+title = "Blauwdruk"
+description = "Working notes, drawn to scale."
+compile_sass = false
+build_search_index = false
+generate_feeds = true
+feed_filenames = ["atom.xml"]
+taxonomies = [{ name = "tags", feed = false }]
+
+[markdown.highlighting]
+theme = "catppuccin-latte"
+
+[extra]
+author = ""
+masthead = true
+colophon = true
+nav = [
+    { name = "Index", url = "/" },
+    { name = "Posts", url = "/posts/" },
+    { name = "Plots", url = "/plots/" },
+    { name = "About", url = "/about/" },
+]

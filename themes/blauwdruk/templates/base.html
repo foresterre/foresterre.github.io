@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="{{ config.default_language | default(value="en") }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>{% block title %}{{ config.title }}{% endblock title %}</title>
+{% if config.description %}<meta name="description" content="{{ config.description }}">{% endif %}
+<link rel="stylesheet" href="{{ get_url(path="style.css") | safe }}">
+{% if config.generate_feeds %}<link rel="alternate" type="application/atom+xml" title="{{ config.title }}" href="{{ get_url(path="atom.xml") | safe }}">{% endif %}
+</head>
+<body>
+<main class="sheet">
+  <header class="titlebar">
+    <a class="site-name" href="{{ get_url(path="/") | safe }}">{{ config.title }}</a>
+    {% if config.extra.nav %}
+    <nav>
+      {%- for item in config.extra.nav %}
+      <a href="{{ item.url | safe }}">{{ item.name }}</a>
+      {%- endfor %}
+    </nav>
+    {% endif %}
+  </header>
+  {% block content %}{% endblock content %}
+  {% if config.extra.colophon | default(value=true) %}
+  <div class="colophon">{% include "partials/colophon.html" %}</div>
+  {% endif %}
+  <footer class="titleblock">
+    <div><span class="label">Project</span>{{ config.title }}</div>
+    <div><span class="label">Drawn by</span>{{ config.extra.author | default(value="Anonymous") }}</div>
+    <div><span class="label">Feed</span>{% if config.generate_feeds %}<a href="{{ get_url(path="atom.xml") | safe }}">Atom</a>{% else %}None{% endif %}</div>
+  </footer>
+</main>
+</body>
+</html>
