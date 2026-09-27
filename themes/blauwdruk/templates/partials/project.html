@@ -1,0 +1,20 @@
+{#- Requires `project` ({ name, owner?, description?, featured? }) and `github_username` in scope -#}
+{%- set owner = project.owner | default(value=github_username) %}
+{%- set full_name = owner ~ "/" ~ project.name %}
+{%- set featured = project.featured | default(value=false) %}
+<li class="project{% if featured %} featured{% endif %}" data-repo="{{ full_name }}">
+  {%- if featured %}
+  <div class="project-head">
+    <a class="project-name" href="https://github.com/{{ full_name }}">{{ project.name }}</a>
+    <span class="project-badge">Featured</span>
+  </div>
+  {%- else %}
+  <a class="project-name" href="https://github.com/{{ full_name }}">{{ project.name }}</a>
+  {%- endif %}
+  <p class="project-desc">{{ project.description | default(value="") }}</p>
+  <dl class="project-details" hidden>
+    <div><dt>Stars</dt><dd data-field="stars"></dd></div>
+    <div><dt>Updated</dt><dd><time data-field="updated"></time></dd></div>
+    <div><dt>Language</dt><dd data-field="language"></dd></div>
+  </dl>
+</li>

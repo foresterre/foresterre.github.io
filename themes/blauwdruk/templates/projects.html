@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}{{ section.title }} | {{ config.title }}{% endblock title %}
+
+{% block content %}
+{%- set blauwdruk = config.extra.blauwdruk %}
+{%- set github_username = blauwdruk.github_username | default(value="") %}
+{%- set active_projects = blauwdruk.active_projects | default(value=[]) %}
+{%- set passive_projects = blauwdruk.passive_projects | default(value=[]) %}
+{%- set archived_projects = blauwdruk.archived_projects | default(value=[]) %}
+{%- set fun_projects = blauwdruk.fun_projects | default(value=[]) %}
+<h1 class="page-title">{{ section.title }}</h1>
+{% if section.content %}<div class="intro prose">{{ section.content | safe }}</div>{% endif %}
+<div class="projects-page" data-github-user="{{ github_username }}">
+  <p class="projects-status" aria-live="polite"></p>
+  {%- if active_projects %}
+  <h2 class="projects-heading">Actively developed</h2>
+  <ul class="projects">
+    {%- for project in active_projects %}
+    {%- if project.featured | default(value=false) %}{% include "partials/project.html" %}{% endif %}
+    {%- endfor %}
+    {%- for project in active_projects %}
+    {%- if not (project.featured | default(value=false)) %}{% include "partials/project.html" %}{% endif %}
+    {%- endfor %}
+  </ul>
+  {%- endif %}
+  {%- if passive_projects %}
+  <h2 class="projects-heading">Passively maintained or experimental</h2>
+  <ul class="projects-passive">
+    {%- for project in passive_projects %}
+    {%- set ghpath = project.owner | default(value=github_username) ~ "/" ~ project.name %}
+    <li><a href="https://github.com/{{ ghpath }}">{{ project.name }}</a></li>
+    {%- endfor %}
+  </ul>
+  {%- endif %}
+  {%- if archived_projects %}
+  <h2 class="projects-heading">Archived</h2>
+  <ul class="projects-passive archived">
+    {%- for project in archived_projects %}
+    {%- set ghpath = project.owner | default(value=github_username) ~ "/" ~ project.name %}
+    <li><a href="https://github.com/{{ ghpath }}">{{ project.name }}</a></li>
+    {%- endfor %}
+  </ul>
+  {%- endif %}
+  {%- if fun_projects %}
+  <h2 class="projects-heading">Fun <span class="fun-icon" aria-hidden="true"></span></h2>
+  <ul class="projects-passive archived">
+    {%- for project in fun_projects %}
+    {%- set ghpath = project.owner | default(value=github_username) ~ "/" ~ project.name %}
+    <li><a href="https://github.com/{{ ghpath }}">{{ project.name }}</a></li>
+    {%- endfor %}
+  </ul>
+  {%- endif %}
+</div>
+<script type="module" src="{{ get_url(path="projects.js") | safe }}"></script>
+{% endblock content %}

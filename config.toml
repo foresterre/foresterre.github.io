@@ -78,16 +78,65 @@ colophon = true
 menu = [
     { name = "Index", url = "/" },
     { name = "Writing", url = "/posts/" },
+    { name = "Projects", url = "/projects/" },
     { name = "GitHub⤴", url = "https://github.com/foresterre" },
 ]
 
-menu_links = [
-    { url = "$BASE_URL/", name = "Home" },
-    { url = "$BASE_URL/posts/", name = "Posts" },
-    # { url = "$BASE_URL/gallery/", name = "Gallery" },
-    { url = "$BASE_URL/tags/", name = "Tags" },
-    { url = "$BASE_URL/search/", name = "Search" },
-    { url = "https://github.com/foresterre", name = "GitHub↗" },
+github_username = "foresterre"
+
+active_projects = [
+    { name = "cargo-msrv", featured = true },
+    { name = "rust-releases", featured = true },
+    { name = "yare", featured = true },
+    { name = "imagineer", featured = true },
+    { name = "parameterized" },
+    { name = "bisector" },
+    { name = "busybar-rust" },
+    { name = "storyteller" },
+]
+
+passive_projects = [
+    { name = "cargo-api" },
+    { name = "cargo-features" },
+    { name = "commondir" },
+    { name = "fallback-if" },
+    { name = "faraday" },
+    { name = "flammkuchen" },
+    { name = "greenhouse" },
+    { name = "intersection" },
+    { name = "miniview" },
+    { name = "peekmore" },
+    { name = "phenomenon" },
+    { name = "rust-toolchain-file" },
+    { name = "sif" },
+    { name = "version-number" },
+]
+
+archived_projects = [
+    { name = "cargo-publish-workspace" },
+    { name = "combostew" },
+    { name = "exit-with-code" },
+    { name = "jsonlines" },
+    { name = "machinarium_saver" },
+    { name = "reddold" },
+    { name = "stew" },
+
+]
+
+fun_projects = [
+    { name = "advent-of-code-2017"},
+    { name = "advent-of-code-2018"},
+    { name = "advent-of-code-2019"},
+    { name = "advent-of-code-2020"},
+    { name = "advent-of-code-2021"},
+    { name = "advent-of-code-2022"},
+    { name = "advent-of-code-2023"},
+    { name = "advent-of-code-2024"},
+    { name = "advent-of-code-2025"},
+    { name = "linearsort" },
+    { name = "reading-list" },
+    { name = "random_challenges" },
+    { name = "remarkable-articles" },
 ]
 
 [extra.waystation]
