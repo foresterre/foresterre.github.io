@@ -418,7 +418,7 @@ a:hover {
   justify-content: space-between;
   align-items: baseline;
   gap: 1rem;
-  margin-top: 2.5rem;
+  margin-top: 1rem;
   font-family: var(--mono);
   font-size: 0.8rem;
   letter-spacing: 0.06em;
@@ -622,7 +622,8 @@ a.plot-card:hover {
   display: none;
 }
 
-.projects-heading {
+.projects-heading,
+.home-heading {
   font-family: var(--mono);
   font-size: 0.95rem;
   font-weight: 600;
