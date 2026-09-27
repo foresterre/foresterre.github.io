@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>What&#39;s new in Yare 3.0.0 (A lean parameterized testing macro for Rust) | Don&#39;t panic, impl Things</title>
+<meta name="description" content="match x { &quot;Martijn Gribnau&quot; =&gt; blog!(), _ =&gt; open!(&quot;github.com/foresterre&quot;) } ">
+<script>
+  // Runs before the first paint, so a remembered theme does not flash the system theme first
+  const THEME_KEY = "foresterre:blauwdruk:theme";
+  try {
+    const theme = localStorage.getItem(THEME_KEY);
+    if (theme === "light" || theme === "dark") document.documentElement.dataset.theme = theme;
+  } catch {}
+</script>
+<link rel="stylesheet" href="https://gribnau.dev/style.css">
+<link rel="alternate" type="application/atom+xml" title="Don&#39;t panic, impl Things" href="https://gribnau.dev/atom.xml">
+</head>
+<body>
+<main class="sheet">
+  <header class="titlebar">
+    <div class="titlebar-start">
+      <fieldset class="theme-switch" hidden>
+  <legend class="visually-hidden">Color theme</legend>
+  <svg viewBox="0 0 44 40" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1"><path class="construction" d="M22 7V33M7 33L29.5 20M37 33L14.5 20"/><path class="edge" d="M22 7L37 33H7Z" stroke-linejoin="round"/><g class="glyph system"><circle class="knockout" cx="22" cy="7" r="5.2"/><circle cx="22" cy="7" r="3.4"/><path d="M22 3.6A3.4 3.4 0 0 0 22 10.4Z" fill="currentColor"/></g><g class="glyph light"><circle class="knockout" cx="7" cy="33" r="5.2"/><circle cx="7" cy="33" r="2"/><path d="M10.3 33L11.6 33M9.33 35.33L10.25 36.25M7 36.3L7 37.6M4.67 35.33L3.75 36.25M3.7 33L2.4 33M4.67 30.67L3.75 29.75M7 29.7L7 28.4M9.33 30.67L10.25 29.75" stroke-linecap="round"/></g><g class="glyph dark"><circle class="knockout" cx="37" cy="33" r="5.2"/><path d="M37.62 28.6A3.8 3.8 0 1 0 41.45 33.46A3.1 3.1 0 0 1 37.62 28.6Z"/></g><circle class="indicator" cx="22" cy="7" r="6.7"/></g></svg>
+  <input type="radio" name="theme" value="system" aria-label="System theme" title="System theme">
+  <input type="radio" name="theme" value="light" aria-label="Light theme" title="Light theme">
+  <input type="radio" name="theme" value="dark" aria-label="Dark theme" title="Dark theme">
+</fieldset>
+<script>
+  (function () {
+    const root = document.documentElement;
+    const themeSwitch = document.querySelector(".theme-switch");
+    const radios = themeSwitch.querySelectorAll("input");
+
+    function apply(theme) {
+      if (theme === "light" || theme === "dark") {
+        root.dataset.theme = theme;
+      } else {
+        theme = "system";
+        delete root.dataset.theme;
+      }
+      radios.forEach((radio) => (radio.checked = radio.value === theme));
+    }
+
+    themeSwitch.addEventListener("change", (event) => {
+      const theme = event.target.value;
+      apply(theme);
+      try {
+        if (theme === "system") {
+          localStorage.removeItem(THEME_KEY);
+        } else {
+          localStorage.setItem(THEME_KEY, theme);
+        }
+      } catch {
+        console.warn("[blauwdruk] Unable to set theme in localstorage");
+      }
+    });
+
+    // Keeps other open tabs in sync when the theme changes in one of them
+    window.addEventListener("storage", (event) => {
+      if (event.key === THEME_KEY || event.key === null) apply(event.newValue);
+    });
+
+    apply(root.dataset.theme);
+    themeSwitch.hidden = false;
+  })();
+</script>
+
+      <a class="site-name" href="https://gribnau.dev">Don&#39;t panic, impl Things</a>
+    </div>
+    
+    <nav>
+      <a href="/">Index</a>
+      <a href="/posts/">Writing</a>
+      <a href="/projects/">Projects</a>
+      <a href="https://github.com/foresterre">GitHub⤴</a>
+    </nav>
+    
+  </header>
+  
+<article>
+  <h1 class="page-title">What&#39;s new in Yare 3.0.0 (A lean parameterized testing macro for Rust)</h1>
+  
+  <p class="meta">
+    <span><span class="mark">+</span> <time datetime="2024-03-08">2024-03-08</time></span>
+    <span>4 min read</span>
+    <span>
+      <a href="https://gribnau.dev/tags/rust/">#Rust</a>
+      <a href="https://gribnau.dev/tags/testing/">#testing</a>
+      <a href="https://gribnau.dev/tags/yare/">#yare</a>
+    </span>
+    <span class="human">All content is written by a human (unless stated otherwise)</span>
+  </p>
+  
+  <div class="prose"><h1 id="what-is-yare">What is Yare?</h1>
+<p><a rel="external" href="https://github.com/foresterre/yare">Yare</a> is a lean parameterized testing macro for Rust.</p>
+<p>This practically means that when using <code>#[yare::parameterized]</code>, it is easier to write a test scenario,
+which can be tested against multiple different inputs. Each set of inputs is a separate test case.</p>
+<p>For example:</p>
+<pre class="giallo" style="color: #BABED8; background-color: #0F111A;" ><code data-lang="rust"><span class="giallo-l"><span style="color: #F78C6C;">use</span><span style="color: #FFCB6B;"> yare</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">parameterized</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>parameterized</span><span style="color: #89DDFF;">(</span></span>
+<span class="giallo-l"><span>    apple </span><span style="color: #89DDFF;">= {</span><span style="color: #FFCB6B;"> Fruit</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">Apple</span><span style="color: #89DDFF;">, &quot;</span><span style="color: #C3E88D;">apple</span><span style="color: #89DDFF;">&quot; },</span></span>
+<span class="giallo-l"><span>    pear </span><span style="color: #89DDFF;">= {</span><span style="color: #FFCB6B;"> Fruit</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">Pear</span><span style="color: #89DDFF;">, &quot;</span><span style="color: #C3E88D;">pear</span><span style="color: #89DDFF;">&quot; },</span></span>
+<span class="giallo-l"><span>    blackberry </span><span style="color: #89DDFF;">= {</span><span style="color: #FFCB6B;"> Fruit</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">Bramble</span><span style="color: #89DDFF;">(</span><span style="color: #FFCB6B;">BrambleFruit</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">Blackberry</span><span style="color: #89DDFF;">), &quot;</span><span style="color: #C3E88D;">blackberry</span><span style="color: #89DDFF;">&quot; },</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">)]</span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">fn</span><span style="color: #82AAFF;"> a_fruity_test</span><span style="color: #89DDFF;">(</span><span>fruit</span><span style="color: #89DDFF;">:</span><span style="color: #FFCB6B;"> Fruit</span><span style="color: #89DDFF;">,</span><span> name</span><span style="color: #89DDFF;">: &amp;</span><span style="color: #FFCB6B;">str</span><span style="color: #89DDFF;">) {</span></span>
+<span class="giallo-l"><span style="color: #82AAFF;">    assert_eq!</span><span style="color: #89DDFF;">(</span><span>fruit</span><span style="color: #89DDFF;">.</span><span style="color: #82AAFF;">name_of</span><span style="color: #89DDFF;">(),</span><span> name</span><span style="color: #89DDFF;">)</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">}</span></span></code></pre>
+<p>The above scenario will generate 3 test cases: <code>apple</code>, <code>pear</code> and <code>blackberry</code>, while it was only necessary to specify the
+scenario once.</p>
+<p>As you might imagine, if your add more tests, the removal of duplicated test cases does not only save
+writing (and maintenance!) time, but makes it also easier to keep scenarios the same for a large set of inputs (especially
+while refactoring code, changes to test scenarios may sneak in, which should also have applied to equivalent inputs).</p>
+<h1 id="what-s-new-in-3-0-0">What's new in 3.0.0</h1>
+<h2 id="custom-test-macro-e-g-tokio-test">Custom test macro (e.g. tokio::test)</h2>
+<p>Prior to 3.0.0, Yare would always generate test cases with the Rust built in <code>#[test]</code> attribute. While it is exceptionally
+useful to have this macro built in, at times you may want to use a different macro because the built-in one doesn't support
+a feature you need.</p>
+<p>A common example is the <code>tokio::test</code> macro, when using the <a rel="external" href="https://github.com/tokio-rs/tokio">tokio</a>
+asynchronous runtime. While you could create your own <a rel="external" href="https://docs.rs/tokio/latest/tokio/runtime/struct.Runtime.html#method.spawn">Runtime</a>
+and spawn futures onto this runtime for your test cases, it is perhaps not as elegant as using the <a rel="external" href="https://docs.rs/tokio/latest/tokio/attr.test.html">tokio::test</a>
+macro.</p>
+<p>With this use case in mind, Yare can now be used with user specified test macro's. If none is specified, the Rust built-in
+<code>#[test]</code> will be used.</p>
+<p><strong>Example</strong></p>
+<pre class="giallo" style="color: #BABED8; background-color: #0F111A;" ><code data-lang="rust"><span class="giallo-l"><span style="color: #F78C6C;">use</span><span style="color: #FFCB6B;"> yare</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">parameterized</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>parameterized</span><span style="color: #89DDFF;">(</span></span>
+<span class="giallo-l"><span>    zero_wait </span><span style="color: #89DDFF;">= {</span><span> 0</span><span style="color: #89DDFF;">,</span><span> 0 </span><span style="color: #89DDFF;">},</span></span>
+<span class="giallo-l"><span>    show_paused </span><span style="color: #89DDFF;">= {</span><span> 500</span><span style="color: #89DDFF;">,</span><span> 0 </span><span style="color: #89DDFF;">},</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">)]</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>test_macro</span><span style="color: #89DDFF;">(</span><span>tokio</span><span style="color: #89DDFF;">::</span><span>test</span><span style="color: #89DDFF;">(</span><span>start_paused </span><span style="color: #89DDFF;">=</span><span> true</span><span style="color: #89DDFF;">))]</span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">async fn</span><span style="color: #82AAFF;"> test</span><span style="color: #89DDFF;">(</span><span>wait</span><span style="color: #89DDFF;">:</span><span style="color: #FFCB6B;"> u64</span><span style="color: #89DDFF;">,</span><span> time_elapsed</span><span style="color: #89DDFF;">:</span><span style="color: #FFCB6B;"> u128</span><span style="color: #89DDFF;">) {</span></span>
+<span class="giallo-l"><span style="color: #C792EA;">    let</span><span> start</span><span style="color: #89DDFF;"> =</span><span style="color: #FFCB6B;"> std</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">time</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">Instant</span><span style="color: #89DDFF;">::</span><span style="color: #82AAFF;">now</span><span style="color: #89DDFF;">();</span></span>
+<span class="giallo-l"><span style="color: #FFCB6B;">    tokio</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">time</span><span style="color: #89DDFF;">::</span><span style="color: #82AAFF;">sleep</span><span style="color: #89DDFF;">(</span><span style="color: #FFCB6B;">tokio</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">time</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">Duration</span><span style="color: #89DDFF;">::</span><span style="color: #82AAFF;">from_millis</span><span style="color: #89DDFF;">(</span><span>wait</span><span style="color: #89DDFF;">)).</span><span style="color: #89DDFF;font-style: italic;">await</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #82AAFF;">    assert_eq!</span><span style="color: #89DDFF;">(</span><span>time_elapsed</span><span style="color: #89DDFF;">,</span><span> start</span><span style="color: #89DDFF;">.</span><span style="color: #82AAFF;">elapsed</span><span style="color: #89DDFF;">().</span><span style="color: #82AAFF;">as_millis</span><span style="color: #89DDFF;">());</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">// to use `start_paused = true`, enable the test-util feature for your tokio dependency</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">// example inspired by: https://tokio.rs/tokio/topics/testing</span></span></code></pre><h3 id="how-does-it-work">How does it work?</h3>
+<p>To make this work, the <code>#[parameterized(...)]</code> attribute in Yare parses all attributes placed after it (all attributes must be placed on top of the
+test function):</p>
+<pre class="giallo" style="color: #BABED8; background-color: #0F111A;" ><code data-lang="rust"><span class="giallo-l"><span style="color: #F78C6C;">use</span><span style="color: #FFCB6B;"> syn</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">parse</span><span style="color: #89DDFF;">::{</span><span style="color: #FFCB6B;">Parse</span><span style="color: #89DDFF;">,</span><span style="color: #FFCB6B;"> ParseStream</span><span style="color: #89DDFF;">,</span><span style="color: #FFCB6B;"> Result</span><span style="color: #89DDFF;">};</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C792EA;">enum</span><span style="color: #FFCB6B;"> Attribute</span><span style="color: #89DDFF;"> {</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    /// A regular attribute, which isn&#39;t named &quot;test_macro&quot;</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    /// NB: Attribute and syn::Attribute are not the same!</span></span>
+<span class="giallo-l"><span style="color: #82AAFF;">    Normal</span><span style="color: #89DDFF;">(</span><span style="color: #FFCB6B;">syn</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">Attribute</span><span style="color: #89DDFF;">),</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    // An attribute named &quot;test_macro&quot;</span></span>
+<span class="giallo-l"><span style="color: #82AAFF;">    TestMacro</span><span style="color: #89DDFF;">(</span><span style="color: #FFCB6B;">syn</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">Meta</span><span style="color: #89DDFF;">),</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F78C6C;">pub</span><span style="color: #C792EA;"> struct</span><span style="color: #FFCB6B;"> TestFn</span><span style="color: #89DDFF;"> {</span></span>
+<span class="giallo-l"><span>    attributes</span><span style="color: #89DDFF;">:</span><span style="color: #FFCB6B;"> Vec</span><span style="color: #89DDFF;">&lt;</span><span style="color: #FFCB6B;">Attribute</span><span style="color: #89DDFF;">&gt;,</span></span>
+<span class="giallo-l"><span>    fun</span><span style="color: #89DDFF;">:</span><span style="color: #FFCB6B;"> syn</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">ItemFn</span><span style="color: #89DDFF;">,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F78C6C;">impl</span><span style="color: #FFCB6B;"> Parse</span><span style="color: #89DDFF;font-style: italic;"> for</span><span style="color: #FFCB6B;"> TestFn</span><span style="color: #89DDFF;"> {</span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">    fn</span><span style="color: #82AAFF;"> parse</span><span style="color: #89DDFF;">(</span><span>input</span><span style="color: #89DDFF;">:</span><span style="color: #FFCB6B;"> ParseStream</span><span style="color: #89DDFF;">) -&gt;</span><span style="color: #FFCB6B;"> Result</span><span style="color: #89DDFF;">&lt;</span><span>Self</span><span style="color: #89DDFF;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #FFCB6B;">        Ok</span><span style="color: #89DDFF;">(</span><span style="color: #FFCB6B;">TestFn</span><span style="color: #89DDFF;"> {</span></span>
+<span class="giallo-l"><span>            attributes</span><span style="color: #89DDFF;">:</span><span> input</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">                .</span><span style="color: #82AAFF;">call</span><span style="color: #89DDFF;">(</span><span style="color: #FFCB6B;">syn</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">Attribute</span><span style="color: #89DDFF;">::</span><span>parse_outer</span><span style="color: #89DDFF;">)?</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">                .</span><span style="color: #82AAFF;">into_iter</span><span style="color: #89DDFF;">()</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">                .</span><span style="color: #82AAFF;">map</span><span style="color: #89DDFF;">(|</span><span>attr</span><span style="color: #89DDFF;">| {</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;font-style: italic;">                    if</span><span> attr</span><span style="color: #89DDFF;">.</span><span style="color: #82AAFF;">path</span><span style="color: #89DDFF;">().</span><span style="color: #82AAFF;">is_ident</span><span style="color: #89DDFF;">(&quot;</span><span style="color: #C3E88D;">test_macro</span><span style="color: #89DDFF;">&quot;) {</span></span>
+<span class="giallo-l"><span>                        attr</span><span style="color: #89DDFF;">.</span><span style="color: #82AAFF;">parse_args</span><span style="color: #89DDFF;">::&lt;</span><span style="color: #FFCB6B;">syn</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">Meta</span><span style="color: #89DDFF;">&gt;().</span><span style="color: #82AAFF;">map</span><span style="color: #89DDFF;">(</span><span style="color: #FFCB6B;">Attribute</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">TestMacro</span><span style="color: #89DDFF;">)</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">                    }</span><span style="color: #89DDFF;font-style: italic;"> else</span><span style="color: #89DDFF;"> {</span></span>
+<span class="giallo-l"><span style="color: #FFCB6B;">                        Ok</span><span style="color: #89DDFF;">(</span><span style="color: #FFCB6B;">Attribute</span><span style="color: #89DDFF;">::</span><span style="color: #82AAFF;">Normal</span><span style="color: #89DDFF;">(</span><span>attr</span><span style="color: #89DDFF;">))</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">                    }</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">                })</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">                .</span><span style="color: #82AAFF;">collect</span><span style="color: #89DDFF;">::&lt;</span><span style="color: #FFCB6B;">Result</span><span style="color: #89DDFF;">&lt;</span><span style="color: #FFCB6B;">Vec</span><span style="color: #89DDFF;">&lt;</span><span>_</span><span style="color: #89DDFF;">&gt;&gt;&gt;()?,</span></span>
+<span class="giallo-l"><span>            fun</span><span style="color: #89DDFF;">:</span><span> input</span><span style="color: #89DDFF;">.</span><span style="color: #82AAFF;">parse</span><span style="color: #89DDFF;">()?,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">        })</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    }</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">}</span></span></code></pre>
+<p>So for the following Rust source code:</p>
+<pre class="giallo" style="color: #BABED8; background-color: #0F111A;" ><code data-lang="rust"><span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>parameterized</span><span style="color: #89DDFF;">(</span></span>
+<span class="giallo-l"><span>    red </span><span style="color: #89DDFF;">= {</span><span style="color: #FFCB6B;"> FunctionColor</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">Red</span><span style="color: #89DDFF;"> },</span></span>
+<span class="giallo-l"><span>    blue </span><span style="color: #89DDFF;">= {</span><span style="color: #FFCB6B;"> FunctionColor</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">Blue</span><span style="color: #89DDFF;"> },</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">)]</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>test_macro</span><span style="color: #89DDFF;">(</span><span>function_color</span><span style="color: #89DDFF;">::</span><span>test_macro</span><span style="color: #89DDFF;">)]</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>should_panic</span><span style="color: #89DDFF;">]</span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">fn</span><span style="color: #82AAFF;"> test</span><span style="color: #89DDFF;">(</span><span>color</span><span style="color: #89DDFF;">:</span><span style="color: #FFCB6B;"> FunctionColor</span><span style="color: #89DDFF;">) {</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    // ...</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">}</span></span></code></pre>
+<p>We end up with 1 test_macro attribute and 1 "normal" attribute (i.e. not test_macro):</p>
+<pre class="giallo" style="color: #BABED8; background-color: #0F111A;" ><code data-lang="rust"><span class="giallo-l"><span style="color: #82AAFF;">vec!</span><span style="color: #89DDFF;">[</span></span>
+<span class="giallo-l"><span style="color: #FFCB6B;">    Attribute</span><span style="color: #89DDFF;">::</span><span style="color: #82AAFF;">TestMacro</span><span style="color: #89DDFF;">(</span><span style="color: #FFCB6B;">syn</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">Meta</span><span style="color: #89DDFF;">::</span><span style="color: #82AAFF;">parse</span><span style="color: #89DDFF;">(&quot;</span><span style="color: #C3E88D;">test_macro(function_color::test_macro)</span><span style="color: #89DDFF;">&quot;)),</span><span style="color: #464B5D;font-style: italic;"> // hypothetically, if a &amp;str would be a syn::ParseStream</span></span>
+<span class="giallo-l"><span style="color: #FFCB6B;">    Attribute</span><span style="color: #89DDFF;">::</span><span style="color: #82AAFF;">Normal</span><span style="color: #89DDFF;">(</span><span style="color: #FFCB6B;">syn</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">Attribute</span><span style="color: #89DDFF;">::</span><span style="color: #82AAFF;">parse</span><span style="color: #89DDFF;">(&quot;</span><span style="color: #C3E88D;">#[should_panic]</span><span style="color: #89DDFF;">&quot;)),</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">];</span></span></code></pre>
+<p>In the code generation phase, we can obtain these separately from <code>TestFn</code>:</p>
+<pre class="giallo" style="color: #BABED8; background-color: #0F111A;" ><code data-lang="rust"><span class="giallo-l"><span style="color: #F78C6C;">impl</span><span style="color: #FFCB6B;"> TestFn</span><span style="color: #89DDFF;"> {</span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">    pub fn</span><span style="color: #82AAFF;"> attributes</span><span style="color: #89DDFF;">(&amp;</span><span>self</span><span style="color: #89DDFF;">) -&gt;</span><span style="color: #FFCB6B;"> Vec</span><span style="color: #89DDFF;">&lt;</span><span>syn</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">Attribute</span><span style="color: #89DDFF;">&gt; {</span></span>
+<span class="giallo-l"><span>        self</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">            .</span><span>attributes</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">            .</span><span style="color: #82AAFF;">iter</span><span style="color: #89DDFF;">()</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">            .</span><span style="color: #82AAFF;">filter_map</span><span style="color: #89DDFF;">(</span><span style="color: #FFCB6B;">Attribute</span><span style="color: #89DDFF;">::</span><span>to_normal</span><span style="color: #89DDFF;">)</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">            .</span><span style="color: #82AAFF;">collect</span><span style="color: #89DDFF;">()</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F78C6C;">    pub fn</span><span style="color: #82AAFF;"> test_macro_attribute</span><span style="color: #89DDFF;">(&amp;</span><span>self</span><span style="color: #89DDFF;">) -&gt;</span><span style="color: #FFCB6B;"> syn</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">Meta</span><span style="color: #89DDFF;"> {</span></span>
+<span class="giallo-l"><span>        self</span><span style="color: #89DDFF;">.</span><span>attributes</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">            .</span><span style="color: #82AAFF;">iter</span><span style="color: #89DDFF;">()</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">            .</span><span style="color: #82AAFF;">find_map</span><span style="color: #89DDFF;">(</span><span style="color: #FFCB6B;">Attribute</span><span style="color: #89DDFF;">::</span><span>to_test_macro</span><span style="color: #89DDFF;">)</span><span style="color: #464B5D;font-style: italic;"> // NB: We elsewhere asserted that there&#39;s at most one of these. </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">            .</span><span style="color: #82AAFF;">unwrap_or_else</span><span style="color: #89DDFF;">(|| {</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">                // A definition for the default #[test] macro</span></span>
+<span class="giallo-l"><span style="color: #FFCB6B;">                syn</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">Meta</span><span style="color: #89DDFF;">::</span><span style="color: #82AAFF;">Path</span><span style="color: #89DDFF;">(</span><span style="color: #FFCB6B;">syn</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">Path</span><span style="color: #89DDFF;">::</span><span style="color: #82AAFF;">from</span><span style="color: #89DDFF;">(</span><span style="color: #FFCB6B;">syn</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">Ident</span><span style="color: #89DDFF;">::</span><span style="color: #82AAFF;">new</span><span style="color: #89DDFF;">(</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">                    &quot;</span><span style="color: #C3E88D;">test</span><span style="color: #89DDFF;">&quot;,</span></span>
+<span class="giallo-l"><span style="color: #FFCB6B;">                    proc_macro2</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">Span</span><span style="color: #89DDFF;">::</span><span style="color: #82AAFF;">call_site</span><span style="color: #89DDFF;">(),</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">                )))</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">            })</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    }</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">}</span></span></code></pre>
+<p>And finally during generation itself:</p>
+<pre class="giallo" style="color: #BABED8; background-color: #0F111A;" ><code data-lang="rust"><span class="giallo-l"><span style="color: #F78C6C;">impl</span><span style="color: #FFCB6B;"> TestCase</span><span style="color: #89DDFF;"> {</span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">    pub fn</span><span style="color: #82AAFF;"> to_token_stream</span><span style="color: #89DDFF;">(&amp;</span><span>self</span><span style="color: #89DDFF;">,</span><span> test_fn</span><span style="color: #89DDFF;">: &amp;</span><span style="color: #FFCB6B;">TestFn</span><span style="color: #89DDFF;">) -&gt;</span><span style="color: #FFCB6B;"> Result</span><span style="color: #89DDFF;">&lt;</span><span>proc_macro2</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">TokenStream</span><span style="color: #89DDFF;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #C792EA;">        let</span><span> test_meta</span><span style="color: #89DDFF;"> =</span><span> test_fn</span><span style="color: #89DDFF;">.</span><span style="color: #82AAFF;">test_macro_attribute</span><span style="color: #89DDFF;">();</span></span>
+<span class="giallo-l"><span style="color: #C792EA;">        let</span><span> attributes</span><span style="color: #89DDFF;"> =</span><span> test_fn</span><span style="color: #89DDFF;">.</span><span style="color: #82AAFF;">attributes</span><span style="color: #89DDFF;">();</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">        // Many other things omitted...</span></span>
+<span class="giallo-l"><span>        </span></span>
+<span class="giallo-l"><span style="color: #FFCB6B;">        Ok</span><span style="color: #89DDFF;">(</span><span style="color: #FFCB6B;">quote</span><span style="color: #89DDFF;">::</span><span style="color: #82AAFF;">quote!</span><span style="color: #89DDFF;"> {</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">            #[</span><span>#test_meta</span><span style="color: #89DDFF;">]</span><span style="color: #464B5D;font-style: italic;">   // &lt;-- Our custom macro attribute, or #[test] if none was specified</span></span>
+<span class="giallo-l"><span>            #</span><span style="color: #89DDFF;">(</span><span>#attributes</span><span style="color: #89DDFF;">)*</span><span style="color: #464B5D;font-style: italic;"> // &lt;-- The &quot;normal&quot; attributes, reproduced</span></span>
+<span class="giallo-l"><span>            #visibility #constness #asyncness #unsafety #abi</span><span style="color: #F78C6C;"> fn</span><span> #</span><span style="color: #82AAFF;">identifier</span><span style="color: #89DDFF;">()</span><span> #return_type</span><span style="color: #89DDFF;"> {</span></span>
+<span class="giallo-l"><span>                #bindings</span></span>
+<span class="giallo-l"><span>                #body</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">            }</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">        })</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    }</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">}</span></span></code></pre>
+<p>When the code generation phase of the macro has been completed, the parameterized test function will have been substituted by two separate test functions:</p>
+<pre class="giallo" style="color: #BABED8; background-color: #0F111A;" ><code data-lang="rust"><span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>function_color</span><span style="color: #89DDFF;">::</span><span>test_macro</span><span style="color: #89DDFF;">]</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>should_panic</span><span style="color: #89DDFF;">]</span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">fn</span><span style="color: #82AAFF;"> red</span><span style="color: #89DDFF;">() {</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    // ...</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>function_color</span><span style="color: #89DDFF;">::</span><span>test_macro</span><span style="color: #89DDFF;">]</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>should_panic</span><span style="color: #89DDFF;">]</span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">fn</span><span style="color: #82AAFF;"> blue</span><span style="color: #89DDFF;">() {</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    // ...</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">}</span></span></code></pre><h3 id="gotchas-to-be-aware-of">Gotchas to be aware of</h3>
+<p><strong>The <code>#[test_macro(...)]</code> attribute must be placed after <code>#[parameterized]</code></strong></p>
+<p>Like all macro's, <code>yare::parameterized</code> can only parse the available scope. Since <code>yare::parameterized</code> is supposed
+to be placed on top of functions, we can access our own attribute (which we use to parse the test case identifier and arguments for test cases)
+and the function underneath (used to specify the parameters and test scenario in the function body).</p>
+<p>While <code>yare::parameterized</code> does have access to attributes placed after it, the ones which come before it, are inaccessible.</p>
+<p>Subsequently, <code>yare::parameterized</code> can only recognize placements of <code>#[test_macro(...)]</code> which come after it.</p>
+<p>So, the following is ok:</p>
+<pre class="giallo" style="color: #BABED8; background-color: #0F111A;" ><code data-lang="rust"><span class="giallo-l"><span style="color: #F78C6C;">use</span><span style="color: #FFCB6B;"> yare</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">parameterized</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>parameterized</span><span style="color: #89DDFF;">(</span></span>
+<span class="giallo-l"><span>    wow </span><span style="color: #89DDFF;">= { &quot;</span><span style="color: #C3E88D;">wow!</span><span style="color: #89DDFF;">&quot; },</span></span>
+<span class="giallo-l"><span>    whew </span><span style="color: #89DDFF;">= { &quot;</span><span style="color: #C3E88D;">whew!</span><span style="color: #89DDFF;">&quot; },</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">)]</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>test_macro</span><span style="color: #89DDFF;">(</span><span>tokio</span><span style="color: #89DDFF;">::</span><span>test</span><span style="color: #89DDFF;">)]</span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">async fn</span><span style="color: #82AAFF;"> test</span><span style="color: #89DDFF;">(</span><span>sample</span><span style="color: #89DDFF;">: &amp;</span><span style="color: #FFCB6B;">str</span><span style="color: #89DDFF;">) {</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    // ...</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">}</span></span></code></pre>
+<p>While this doesn't work:</p>
+<pre class="giallo" style="color: #BABED8; background-color: #0F111A;" ><code data-lang="rust"><span class="giallo-l"><span style="color: #F78C6C;">use</span><span style="color: #FFCB6B;"> yare</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">parameterized</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>test_macro</span><span style="color: #89DDFF;">(</span><span>tokio</span><span style="color: #89DDFF;">::</span><span>test</span><span style="color: #89DDFF;">)]</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>parameterized</span><span style="color: #89DDFF;">(</span></span>
+<span class="giallo-l"><span>    wow </span><span style="color: #89DDFF;">= { &quot;</span><span style="color: #C3E88D;">wow!</span><span style="color: #89DDFF;">&quot; },</span></span>
+<span class="giallo-l"><span>    whew </span><span style="color: #89DDFF;">= { &quot;</span><span style="color: #C3E88D;">whew!</span><span style="color: #89DDFF;">&quot; },</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">)]</span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">async fn</span><span style="color: #82AAFF;"> test</span><span style="color: #89DDFF;">(</span><span>sample</span><span style="color: #89DDFF;">: &amp;</span><span style="color: #FFCB6B;">str</span><span style="color: #89DDFF;">) {</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    // ...</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">}</span></span></code></pre>
+<p><strong>One <code>#[test_macro(...)]</code> per parameterized test function</strong></p>
+<p>Yare currently accepts one <code>#[test_macro(...)]</code> for a parameterized test function. The following is not allowed and will return an error:</p>
+<pre class="giallo" style="color: #BABED8; background-color: #0F111A;" ><code data-lang="rust"><span class="giallo-l"><span style="color: #F78C6C;">use</span><span style="color: #FFCB6B;"> yare</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">parameterized</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>parameterized</span><span style="color: #89DDFF;">(</span></span>
+<span class="giallo-l"><span>    wow </span><span style="color: #89DDFF;">= { &quot;</span><span style="color: #C3E88D;">wow!</span><span style="color: #89DDFF;">&quot; },</span></span>
+<span class="giallo-l"><span>    whew </span><span style="color: #89DDFF;">= { &quot;</span><span style="color: #C3E88D;">whew!</span><span style="color: #89DDFF;">&quot; },</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">)]</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>test_macro</span><span style="color: #89DDFF;">(</span><span>tokio</span><span style="color: #89DDFF;">::</span><span>test</span><span style="color: #89DDFF;">)]</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>test_macro</span><span style="color: #89DDFF;">(</span><span>tokio</span><span style="color: #89DDFF;">::</span><span>test</span><span style="color: #89DDFF;">(</span><span>start_paused </span><span style="color: #89DDFF;">=</span><span> true</span><span style="color: #89DDFF;">))]</span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">async fn</span><span style="color: #82AAFF;"> test</span><span style="color: #89DDFF;">(</span><span>sample</span><span style="color: #89DDFF;">: &amp;</span><span style="color: #FFCB6B;">str</span><span style="color: #89DDFF;">) {</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    // ...</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">}</span></span></code></pre>
+<p>Returned error:</p>
+<pre class="giallo" style="color: #BABED8; background-color: #0F111A;" ><code data-lang="plain"><span class="giallo-l"><span>error: Expected at most 1 #[test_macro(...)] attribute, but 2 were given</span></span>
+<span class="giallo-l"><span>--&gt; tests/fail/multiple_test_macro_attributes.rs:8:14</span></span>
+<span class="giallo-l"><span>  |</span></span>
+<span class="giallo-l"><span>8 | #[test_macro(tokio::test(start_paused = true))]</span></span>
+<span class="giallo-l"><span>  |              ^^^^^</span></span></code></pre>
+<p>The reason is that it's unclear what should happen when multiple <code>#[test_macro(...)]</code> attributes are present.
+Should the first one be used by  <code>#[parameterized(...)]</code>, and subsequent be left in place? Or would that just be
+confusing, if only because the test author will need to keep track of which macro uses which attributes.</p>
+<p><strong>Renaming attributes</strong></p>
+<p>Yare's parameterized attribute can be used with a different name if you would like, by rebinding the target import
+part under a local name:</p>
+<pre class="giallo" style="color: #BABED8; background-color: #0F111A;" ><code data-lang="rust"><span class="giallo-l"><span style="color: #F78C6C;">use</span><span style="color: #FFCB6B;"> yare</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">parameterized </span><span style="color: #F78C6C;">as</span><span style="color: #FFCB6B;"> test_macro_for_twitchcraft_and_lizardry</span><span style="color: #89DDFF;">;</span><span style="color: #464B5D;font-style: italic;"> // &lt;-- Rebinding!</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>test_macro_for_twitchcraft_and_lizardry</span><span style="color: #89DDFF;">(                             &lt;--</span><span style="color: #FFCB6B;"> Usage</span></span>
+<span class="giallo-l"><span>    gryffinroar </span><span style="color: #89DDFF;">= { &quot;</span><span style="color: #C3E88D;">Gryffinroar</span><span style="color: #89DDFF;">&quot; },</span></span>
+<span class="giallo-l"><span>    hufflefluff </span><span style="color: #89DDFF;">= { &quot;</span><span style="color: #C3E88D;">Hufflefluff</span><span style="color: #89DDFF;">&quot; },</span></span>
+<span class="giallo-l"><span>    ravenpaw </span><span style="color: #89DDFF;">= { &quot;</span><span style="color: #C3E88D;">Ravenpaw</span><span style="color: #89DDFF;">&quot; },</span></span>
+<span class="giallo-l"><span>    slytherfin </span><span style="color: #89DDFF;">= { &quot;</span><span style="color: #C3E88D;">Slytherfin</span><span style="color: #89DDFF;">&quot; },</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">)]</span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">fn</span><span style="color: #82AAFF;"> houses</span><span style="color: #89DDFF;">(</span><span>name</span><span style="color: #89DDFF;">: &amp;</span><span style="color: #FFCB6B;">str</span><span style="color: #89DDFF;">) {</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    // ...</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">}</span></span></code></pre>
+<p>However, since the <code>#[test_macro(...)]</code> is parsed by <code>yare::parameterized</code>, it cannot be renamed.</p>
+<h2 id="extended-function-qualifier-support">Extended function qualifier support</h2>
+<p>Previously, when Yare was still written to support mostly just the built-in <code>#[test]</code> macro, it wasn't so useful to
+support the function qualifiers: <code>const</code>, <code>async</code>, <code>unsafe</code> and <code>extern</code>. Firstly, because half of these aren't even
+supported by <code>#[test]</code>. For the ones that are, namely <code>const</code> and <code>extern</code>, the I deemed the usefulness to be limited.
+For example: with <code>const</code> you can't use the commonly used <code>assert_eq!</code> since the <code>PartialEq</code> trait is not marked as <code>const</code>. And regarding <code>extern</code>, I've never seen anyone call unit test functions over FFI (but if you do, I would like to know, it does sound fun 😅).</p>
+<p>However, with custom test macro's, you want at least support for <code>async</code> and maybe for <code>unsafe</code>. Adding the other two is hardly more work, so I also added <code>const</code> and <code>extern</code> for completeness.</p>
+<p>NB: when specifying one ore more qualifiers in the function definition of your test function, the underlying test macro (whether <code>#[test]</code> or a custom macro <code>#[test_macro(x)]</code>) must also support the specified qualifiers.</p>
+<p><strong>Example</strong></p>
+<pre class="giallo" style="color: #BABED8; background-color: #0F111A;" ><code data-lang="rust"><span class="giallo-l"><span style="color: #F78C6C;">use</span><span style="color: #FFCB6B;"> yare</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">parameterized</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">// NB: The underlying test macro also must support these qualifiers. For example, the default `#[test]` doesn&#39;t support async and unsafe.</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>parameterized</span><span style="color: #89DDFF;">(</span></span>
+<span class="giallo-l"><span>    purple </span><span style="color: #89DDFF;">= { &amp;[</span><span>128</span><span style="color: #89DDFF;">,</span><span> 0</span><span style="color: #89DDFF;">,</span><span> 128</span><span style="color: #89DDFF;">] },</span></span>
+<span class="giallo-l"><span>    orange</span><span style="color: #89DDFF;"> = { &amp;[</span><span style="color: #F78C6C;">255</span><span style="color: #89DDFF;">,</span><span style="color: #F78C6C;"> 127</span><span style="color: #89DDFF;">,</span><span style="color: #F78C6C;"> 0</span><span style="color: #89DDFF;">] },</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">)]</span></span>
+<span class="giallo-l"><span style="color: #C792EA;">const extern</span><span style="color: #89DDFF;"> &quot;</span><span style="color: #C3E88D;">C</span><span style="color: #89DDFF;">&quot;</span><span style="color: #F78C6C;"> fn</span><span style="color: #82AAFF;"> has_reds</span><span style="color: #89DDFF;">(</span><span>streamed_color</span><span style="color: #89DDFF;">: &amp;[</span><span style="color: #FFCB6B;">u8</span><span style="color: #89DDFF;">]) {</span></span>
+<span class="giallo-l"><span style="color: #82AAFF;">    assert!</span><span style="color: #89DDFF;">(</span><span>streamed_color</span><span style="color: #89DDFF;">.</span><span style="color: #82AAFF;">first</span><span style="color: #89DDFF;">().</span><span style="color: #82AAFF;">is_some</span><span style="color: #89DDFF;">());</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">}</span></span></code></pre><h1 id="ideas-feedback-and-bug-reports-for-yare">Ideas, feedback and bug reports for Yare</h1>
+<p>Ideas, feedback and bug reports are most welcome. Feel free to open an issue on <a rel="external" href="https://github.com/foresterre/yare/issues">GitHub</a>.</p>
+<h1 id="discuss-this-post">Discuss this post</h1>
+<p>Discuss on <a rel="external" href="https://reddit.com/r/rust/comments/1b9ijs6/yare_v300_a_lean_parameterized_testing_macro_for/">Reddit</a>.</p>
+</div>
+</article>
+
+  
+  <div class="colophon"><svg class="clock" viewBox="0 0 480 40" aria-hidden="true"><defs><linearGradient id="clock-l"><stop offset="0" stop-color="currentColor" stop-opacity="0"/><stop offset=".75" stop-color="currentColor"/></linearGradient><linearGradient id="clock-r"><stop offset=".25" stop-color="currentColor"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/></linearGradient></defs><rect x="20" y="19.5" width="188" height="1" fill="url(#clock-l)"/><rect x="272" y="19.5" width="188" height="1" fill="url(#clock-r)"/><g fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M216.5 16.5L220 20L216.5 23.5L213 20Z"/><path d="M263.5 16.5L267 20L263.5 23.5L260 20Z"/><circle cx="240" cy="20" r="13.5"/><path d="M240 7.5V9.5M252.5 20H250.5M240 32.5V30.5M227.5 20H229.5"/><path id="clock-hour" d="M240 20V14" transform="rotate(300 240 20)"/><path id="clock-minute" d="M240 20V11" transform="rotate(60 240 20)"/></g><path id="clock-second" d="M240 22.5V8.5" style="stroke: var(--grey)" stroke-width=".6" stroke-linecap="round"/><circle cx="240" cy="20" r="1.3" fill="currentColor"/></svg>
+<script>
+  (function () {
+    // This human also must have some fun. Haha. Time for bed :D.
+    const hour = document.getElementById("clock-hour");
+    const minute = document.getElementById("clock-minute");
+    const second = document.getElementById("clock-second");
+    function tick() {
+      const now = new Date();
+      const seconds = now.getSeconds();
+      const minutes = now.getMinutes() + seconds / 60;
+      const hours = (now.getHours() % 12) + minutes / 60;
+
+      const hourAngle = hours * 30;
+      const minuteAngle = minutes * 6;
+      const secondAngle = seconds * 6;
+
+      hour.setAttribute("transform", `rotate(${hourAngle} 240 20)`);
+      minute.setAttribute("transform", `rotate(${minuteAngle} 240 20)`);
+      second.setAttribute("transform", `rotate(${secondAngle} 240 20)`);
+    }
+    tick();
+    setInterval(tick, 1000);
+  })();
+</script>
+</div>
+  
+  <footer class="titleblock">
+    <div><span class="label">Project</span>Don&#39;t panic, impl Things</div>
+    <div><span class="label">By</span>© Martijn Gribnau</div>
+    <div><span class="label">Feed</span><a href="https://gribnau.dev/atom.xml">Atom</a></div>
+  </footer>
+</main>
+</body>
+</html>

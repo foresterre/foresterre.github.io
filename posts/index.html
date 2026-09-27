@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Posts | Don&#39;t panic, impl Things</title>
+<meta name="description" content="match x { &quot;Martijn Gribnau&quot; =&gt; blog!(), _ =&gt; open!(&quot;github.com/foresterre&quot;) } ">
+<script>
+  // Runs before the first paint, so a remembered theme does not flash the system theme first
+  const THEME_KEY = "foresterre:blauwdruk:theme";
+  try {
+    const theme = localStorage.getItem(THEME_KEY);
+    if (theme === "light" || theme === "dark") document.documentElement.dataset.theme = theme;
+  } catch {}
+</script>
+<link rel="stylesheet" href="https://gribnau.dev/style.css">
+<link rel="alternate" type="application/atom+xml" title="Don&#39;t panic, impl Things" href="https://gribnau.dev/atom.xml">
+</head>
+<body>
+<main class="sheet">
+  <header class="titlebar">
+    <div class="titlebar-start">
+      <fieldset class="theme-switch" hidden>
+  <legend class="visually-hidden">Color theme</legend>
+  <svg viewBox="0 0 44 40" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1"><path class="construction" d="M22 7V33M7 33L29.5 20M37 33L14.5 20"/><path class="edge" d="M22 7L37 33H7Z" stroke-linejoin="round"/><g class="glyph system"><circle class="knockout" cx="22" cy="7" r="5.2"/><circle cx="22" cy="7" r="3.4"/><path d="M22 3.6A3.4 3.4 0 0 0 22 10.4Z" fill="currentColor"/></g><g class="glyph light"><circle class="knockout" cx="7" cy="33" r="5.2"/><circle cx="7" cy="33" r="2"/><path d="M10.3 33L11.6 33M9.33 35.33L10.25 36.25M7 36.3L7 37.6M4.67 35.33L3.75 36.25M3.7 33L2.4 33M4.67 30.67L3.75 29.75M7 29.7L7 28.4M9.33 30.67L10.25 29.75" stroke-linecap="round"/></g><g class="glyph dark"><circle class="knockout" cx="37" cy="33" r="5.2"/><path d="M37.62 28.6A3.8 3.8 0 1 0 41.45 33.46A3.1 3.1 0 0 1 37.62 28.6Z"/></g><circle class="indicator" cx="22" cy="7" r="6.7"/></g></svg>
+  <input type="radio" name="theme" value="system" aria-label="System theme" title="System theme">
+  <input type="radio" name="theme" value="light" aria-label="Light theme" title="Light theme">
+  <input type="radio" name="theme" value="dark" aria-label="Dark theme" title="Dark theme">
+</fieldset>
+<script>
+  (function () {
+    const root = document.documentElement;
+    const themeSwitch = document.querySelector(".theme-switch");
+    const radios = themeSwitch.querySelectorAll("input");
+
+    function apply(theme) {
+      if (theme === "light" || theme === "dark") {
+        root.dataset.theme = theme;
+      } else {
+        theme = "system";
+        delete root.dataset.theme;
+      }
+      radios.forEach((radio) => (radio.checked = radio.value === theme));
+    }
+
+    themeSwitch.addEventListener("change", (event) => {
+      const theme = event.target.value;
+      apply(theme);
+      try {
+        if (theme === "system") {
+          localStorage.removeItem(THEME_KEY);
+        } else {
+          localStorage.setItem(THEME_KEY, theme);
+        }
+      } catch {
+        console.warn("[blauwdruk] Unable to set theme in localstorage");
+      }
+    });
+
+    // Keeps other open tabs in sync when the theme changes in one of them
+    window.addEventListener("storage", (event) => {
+      if (event.key === THEME_KEY || event.key === null) apply(event.newValue);
+    });
+
+    apply(root.dataset.theme);
+    themeSwitch.hidden = false;
+  })();
+</script>
+
+      <a class="site-name" href="https://gribnau.dev">Don&#39;t panic, impl Things</a>
+    </div>
+    
+    <nav>
+      <a href="/">Index</a>
+      <a href="/posts/">Writing</a>
+      <a href="/projects/">Projects</a>
+      <a href="https://github.com/foresterre">GitHub⤴</a>
+    </nav>
+    
+  </header>
+  
+<h1 class="page-title">Posts</h1>
+
+<h2 class="archive-year">2026</h2>
+<ul class="archive">
+  <li>
+    <time datetime="2026-08-07">08-07</time>
+    <a href="https://gribnau.dev/posts/industrial-revolution/">The Industrial Revolution &amp; LLM&#39;s</a>
+    <span class="tags">
+      <a href="https://gribnau.dev/tags/ai/">#ai</a>
+      <a href="https://gribnau.dev/tags/llm/">#llm</a>
+      <a href="https://gribnau.dev/tags/values/">#values</a>
+    </span>
+  </li>
+  <li>
+    <time datetime="2026-03-08">03-08</time>
+    <a href="https://gribnau.dev/posts/builders-and-craftspeople/">The Middle Ground</a>
+    <span class="tags">
+      <a href="https://gribnau.dev/tags/ai/">#ai</a>
+      <a href="https://gribnau.dev/tags/llm/">#llm</a>
+      <a href="https://gribnau.dev/tags/values/">#values</a>
+    </span>
+  </li>
+  <li>
+    <time datetime="2026-03-01">03-01</time>
+    <a href="https://gribnau.dev/posts/the-value-of-things/">The Value of Things</a>
+    <span class="tags">
+      <a href="https://gribnau.dev/tags/ai/">#ai</a>
+      <a href="https://gribnau.dev/tags/llm/">#llm</a>
+      <a href="https://gribnau.dev/tags/values/">#values</a>
+    </span>
+  </li>
+  <li>
+    <time datetime="2026-03-01">03-01</time>
+    <a href="https://gribnau.dev/posts/ai-and-empowerment/">Notes on AI and empowerment</a>
+    <span class="tags">
+      <a href="https://gribnau.dev/tags/ai/">#ai</a>
+      <a href="https://gribnau.dev/tags/llm/">#llm</a>
+    </span>
+  </li>
+  <li>
+    <time datetime="2026-01-18">01-18</time>
+    <a href="https://gribnau.dev/posts/spotify/">How I use Spotify</a>
+    <span class="tags">
+      <a href="https://gribnau.dev/tags/spotify/">#spotify</a>
+    </span>
+  </li>
+</ul>
+<h2 class="archive-year">2025</h2>
+<ul class="archive">
+  <li>
+    <time datetime="2025-11-04">11-04</time>
+    <a href="https://gribnau.dev/posts/github-malicious-notifications-copy/">Github&#39;s malicious notification problem</a>
+    <span class="tags">
+      <a href="https://gribnau.dev/tags/github/">#github</a>
+    </span>
+  </li>
+  <li>
+    <time datetime="2025-09-13">09-13</time>
+    <a href="https://gribnau.dev/posts/finding-security-advisories/">Where are the security advisories of the recently compromised NPM packages?</a>
+    <span class="tags">
+      <a href="https://gribnau.dev/tags/security-advisory/">#security-advisory</a>
+      <a href="https://gribnau.dev/tags/npm/">#npm</a>
+    </span>
+  </li>
+  <li>
+    <time datetime="2025-08-17">08-17</time>
+    <a href="https://gribnau.dev/posts/harper-cli/">Grammar checking from the CLI with Harper</a>
+    <span class="tags">
+      <a href="https://gribnau.dev/tags/harper/">#harper</a>
+      <a href="https://gribnau.dev/tags/spell-check/">#spell-check</a>
+    </span>
+  </li>
+  <li>
+    <time datetime="2025-05-15">05-15</time>
+    <a href="https://gribnau.dev/posts/thank-you-all-for-ten-years-of-stable-rust/">Thank you all for 10 years of (stable) Rust</a>
+    <span class="tags">
+      <a href="https://gribnau.dev/tags/rust/">#rust</a>
+      <a href="https://gribnau.dev/tags/rust-10-years/">#rust-10-years</a>
+      <a href="https://gribnau.dev/tags/rustweek25/">#rustweek25</a>
+      <a href="https://gribnau.dev/tags/crab/">#🦀</a>
+    </span>
+  </li>
+  <li>
+    <time datetime="2025-05-13">05-13</time>
+    <a href="https://gribnau.dev/posts/rustweek-accessibility-and-rust-podcast/">Accessibility and Rust podcast at RustWeek</a>
+    <span class="tags">
+      <a href="https://gribnau.dev/tags/accessibility/">#accessibility</a>
+      <a href="https://gribnau.dev/tags/accesskit/">#accesskit</a>
+      <a href="https://gribnau.dev/tags/rust/">#rust</a>
+      <a href="https://gribnau.dev/tags/rustweek25/">#rustweek25</a>
+    </span>
+  </li>
+  <li>
+    <time datetime="2025-04-19">04-19</time>
+    <a href="https://gribnau.dev/posts/forgotten-brackets/">Orphaned markdown [brackets]</a>
+    <span class="tags">
+      <a href="https://gribnau.dev/tags/keep-a-changelog/">#keep-a-changelog</a>
+      <a href="https://gribnau.dev/tags/markdown/">#markdown</a>
+    </span>
+  </li>
+  <li>
+    <time datetime="2025-02-27">02-27</time>
+    <a href="https://gribnau.dev/posts/rust-slides/">A sneak peek Into::&lt;Rust&gt; (slide deck, 2022)</a>
+    <span class="tags">
+      <a href="https://gribnau.dev/tags/rust/">#Rust</a>
+      <a href="https://gribnau.dev/tags/slide-deck/">#slide-deck</a>
+      <a href="https://gribnau.dev/tags/talk/">#talk</a>
+    </span>
+  </li>
+</ul>
+<h2 class="archive-year">2024</h2>
+<ul class="archive">
+  <li>
+    <time datetime="2024-10-09">10-09</time>
+    <a href="https://gribnau.dev/posts/cargo-msrv-0-16/">A few cargo-msrv 0.16 release highlights</a>
+    <span class="tags">
+      <a href="https://gribnau.dev/tags/rust/">#Rust</a>
+      <a href="https://gribnau.dev/tags/cargo-msrv/">#cargo-msrv</a>
+      <a href="https://gribnau.dev/tags/release/">#release</a>
+    </span>
+  </li>
+  <li>
+    <time datetime="2024-06-25">06-25</time>
+    <a href="https://gribnau.dev/posts/puzzle-sharing-declarative-args-between-top-level-and-subcommand/">Sharing declarative args between top level and subcommand using Clap</a>
+    <span class="tags">
+      <a href="https://gribnau.dev/tags/rust/">#Rust</a>
+      <a href="https://gribnau.dev/tags/cargo-msrv/">#cargo-msrv</a>
+      <a href="https://gribnau.dev/tags/msrv/">#msrv</a>
+      <a href="https://gribnau.dev/tags/clap/">#clap</a>
+      <a href="https://gribnau.dev/tags/side-quest/">#side-quest</a>
+    </span>
+  </li>
+  <li>
+    <time datetime="2024-04-19">04-19</time>
+    <a href="https://gribnau.dev/posts/setinterval-and-friends-in-react-native/">A tale of setInterval and useEffect in React Native</a>
+    <span class="tags">
+      <a href="https://gribnau.dev/tags/react-native/">#react-native</a>
+      <a href="https://gribnau.dev/tags/javascript/">#javascript</a>
+      <a href="https://gribnau.dev/tags/typescript/">#typescript</a>
+    </span>
+  </li>
+  <li>
+    <time datetime="2024-03-08">03-08</time>
+    <a href="https://gribnau.dev/posts/parameterized-macro-yare-v3/">What&#39;s new in Yare 3.0.0 (A lean parameterized testing macro for Rust)</a>
+    <span class="tags">
+      <a href="https://gribnau.dev/tags/rust/">#Rust</a>
+      <a href="https://gribnau.dev/tags/testing/">#testing</a>
+      <a href="https://gribnau.dev/tags/yare/">#yare</a>
+    </span>
+  </li>
+</ul>
+<h2 class="archive-year">2023</h2>
+<ul class="archive">
+  <li>
+    <time datetime="2023-04-24">04-24</time>
+    <a href="https://gribnau.dev/posts/todo-macro-rust/">Using the todo! macro to prototype your API in Rust</a>
+    <span class="tags">
+      <a href="https://gribnau.dev/tags/rust/">#Rust</a>
+      <a href="https://gribnau.dev/tags/macro/">#macro</a>
+      <a href="https://gribnau.dev/tags/api-design/">#API design</a>
+    </span>
+  </li>
+</ul>
+
+  
+  <div class="colophon"><svg class="clock" viewBox="0 0 480 40" aria-hidden="true"><defs><linearGradient id="clock-l"><stop offset="0" stop-color="currentColor" stop-opacity="0"/><stop offset=".75" stop-color="currentColor"/></linearGradient><linearGradient id="clock-r"><stop offset=".25" stop-color="currentColor"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/></linearGradient></defs><rect x="20" y="19.5" width="188" height="1" fill="url(#clock-l)"/><rect x="272" y="19.5" width="188" height="1" fill="url(#clock-r)"/><g fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M216.5 16.5L220 20L216.5 23.5L213 20Z"/><path d="M263.5 16.5L267 20L263.5 23.5L260 20Z"/><circle cx="240" cy="20" r="13.5"/><path d="M240 7.5V9.5M252.5 20H250.5M240 32.5V30.5M227.5 20H229.5"/><path id="clock-hour" d="M240 20V14" transform="rotate(300 240 20)"/><path id="clock-minute" d="M240 20V11" transform="rotate(60 240 20)"/></g><path id="clock-second" d="M240 22.5V8.5" style="stroke: var(--grey)" stroke-width=".6" stroke-linecap="round"/><circle cx="240" cy="20" r="1.3" fill="currentColor"/></svg>
+<script>
+  (function () {
+    // This human also must have some fun. Haha. Time for bed :D.
+    const hour = document.getElementById("clock-hour");
+    const minute = document.getElementById("clock-minute");
+    const second = document.getElementById("clock-second");
+    function tick() {
+      const now = new Date();
+      const seconds = now.getSeconds();
+      const minutes = now.getMinutes() + seconds / 60;
+      const hours = (now.getHours() % 12) + minutes / 60;
+
+      const hourAngle = hours * 30;
+      const minuteAngle = minutes * 6;
+      const secondAngle = seconds * 6;
+
+      hour.setAttribute("transform", `rotate(${hourAngle} 240 20)`);
+      minute.setAttribute("transform", `rotate(${minuteAngle} 240 20)`);
+      second.setAttribute("transform", `rotate(${secondAngle} 240 20)`);
+    }
+    tick();
+    setInterval(tick, 1000);
+  })();
+</script>
+</div>
+  
+  <footer class="titleblock">
+    <div><span class="label">Project</span>Don&#39;t panic, impl Things</div>
+    <div><span class="label">By</span>© Martijn Gribnau</div>
+    <div><span class="label">Feed</span><a href="https://gribnau.dev/atom.xml">Atom</a></div>
+  </footer>
+</main>
+</body>
+</html>
