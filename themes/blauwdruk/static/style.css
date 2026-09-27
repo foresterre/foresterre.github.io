@@ -569,6 +569,28 @@ a.plot-card:hover {
   border-bottom: 1px solid var(--line);
 }
 
+.svg {
+  display: block;
+  background: var(--blue);
+  -webkit-mask: var(--shape) center / contain no-repeat;
+  mask: var(--shape) center / contain no-repeat;
+}
+
+.clock {
+  --shape: url("./img/clock.svg");
+  width: min(100%, 440px);
+  aspect-ratio: 480 / 40;
+  margin: clamp(2.4rem, 7vw, 3.6rem) auto;
+}
+
+.ridgeline {
+  --shape: url("./img/ridgeline.svg");
+  mask-mode: luminance;
+  width: 100%;
+  aspect-ratio: 560 / 160;
+  margin: 0.9rem auto 0;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
