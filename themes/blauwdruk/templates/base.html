@@ -27,7 +27,7 @@
   {% endif %}
   <footer class="titleblock">
     <div><span class="label">Project</span>{{ config.title }}</div>
-    <div><span class="label">Drawn by</span>{{ config.extra.blauwdruk.author | default(value="Anonymous") }}</div>
+    <div><span class="label">By</span>© {{ config.extra.blauwdruk.author | default(value="Anonymous") }}</div>
     <div><span class="label">Feed</span>{% if config.generate_feeds %}<a href="{{ get_url(path="atom.xml") | safe }}">Atom</a>{% else %}None{% endif %}</div>
   </footer>
 </main>
