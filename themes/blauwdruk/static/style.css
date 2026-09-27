@@ -16,6 +16,9 @@
   --mono: ui-monospace, "Cascadia Mono", "JetBrains Mono", Menlo, Consolas,
     "Liberation Mono", monospace;
   --sans: system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  --cell: 1.5rem;
+  --cell-major: calc(var(--cell) * 5);
 }
 
 * {
@@ -26,28 +29,42 @@ body {
   margin: 0;
   color: var(--ink);
   background-color: var(--paper);
-  /* Graph paper in the page margin: a minor line every 24 px and a major line every 120 px */
+  /* Graph paper in the page margin: a minor line every cell and a major line every five cells */
   background-image:
     linear-gradient(var(--grid-major) 1px, transparent 1px),
     linear-gradient(90deg, var(--grid-major) 1px, transparent 1px),
     linear-gradient(var(--grid) 1px, transparent 1px),
     linear-gradient(90deg, var(--grid) 1px, transparent 1px);
   background-size:
-    120px 120px,
-    120px 120px,
-    24px 24px,
-    24px 24px;
+    var(--cell-major) var(--cell-major),
+    var(--cell-major) var(--cell-major),
+    var(--cell) var(--cell),
+    var(--cell) var(--cell);
+  /* A percentage offset is relative to (page width - tile width), so adding half a tile
+     puts a vertical line exactly on the page center, where the sheet is centered too */
+  background-position:
+    calc(50% + var(--cell-major) / 2) 0,
+    calc(50% + var(--cell-major) / 2) 0,
+    calc(50% + var(--cell) / 2) 0,
+    calc(50% + var(--cell) / 2) 0;
   font: 400 1rem/1.7 var(--sans);
   -webkit-text-size-adjust: 100%;
 }
 
 .sheet {
   position: relative;
-  max-width: 44rem;
-  margin: clamp(1.5rem, 5vw, 4rem) auto;
+  /* Whole cells on both sides of the center line, so the sheet edges land on grid lines */
+  max-width: calc(var(--cell) * 34);
+  margin: calc(var(--cell) * 3) auto;
   padding: clamp(1.25rem, 4.5vw, 3rem);
   background: var(--paper);
   border: 1px solid var(--line);
+}
+
+@media (max-width: 540px) {
+  .sheet {
+    margin-block: var(--cell);
+  }
 }
 
 .sheet::before,
