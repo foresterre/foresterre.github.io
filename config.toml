@@ -56,7 +56,6 @@ colophon = true
 nav = [
     { name = "Index", url = "/" },
     { name = "Posts", url = "/posts/" },
-    { name = "Pen Plots", url = "/plots/" },
 ]
 
 avatar = "/ava.png"
@@ -64,7 +63,6 @@ avatar = "/ava.png"
 keywords = "foresterre, rust, cargo-msrv, msrv, software engineering"
 
 search_enabled = false
-
 
 image_resizing_disabled = false
 image_format = "auto"           # "auto", "jpg", "png", "webp"
