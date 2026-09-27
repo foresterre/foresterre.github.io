@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 
 {% block content %}
-{% if config.extra.masthead | default(value=true) %}{% include "partials/masthead.html" %}{% endif %}
+{% if config.extra.blauwdruk.masthead | default(value=true) %}{% include "partials/masthead.html" %}{% endif %}
 {% if section.content %}<div class="intro prose">{{ section.content | safe }}</div>{% endif %}
 {#- The home page lists the blog section, "posts" by default. Set
     [extra] blog_section in config.toml to use another name. -#}
 {% if paginator %}
   {% set pages = paginator.pages %}
 {% else %}
-  {% set blog_path = config.extra.blog_section | default(value="posts") %}
+  {% set blog_path = config.extra.blauwdruk.blog_section | default(value="posts") %}
   {% set blog = get_section(path=blog_path ~ "/_index.md") %}
   {% set pages = blog.pages %}
 {% endif %}

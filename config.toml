@@ -50,16 +50,6 @@ include_path = false
 include_content = true
 
 [extra]
-author = "Martijn Gribnau"
-masthead = true
-colophon = true
-nav = [
-    { name = "Index", url = "/" },
-    { name = "Posts", url = "/posts/" },
-]
-
-avatar = "/ava.png"
-
 keywords = "foresterre, rust, cargo-msrv, msrv, software engineering"
 
 search_enabled = false
@@ -77,10 +67,19 @@ thumbnail_quality = 70
 thumbnail_default_size = 256
 thumbnail_sizes = [128, 256]
 
-
 link_github_username = "foresterre"
 # link_bluesky_username = ""
 link_linkedin_username = "martijn-gribnau"
+
+[extra.blauwdruk]
+author = "Martijn Gribnau"
+masthead = true
+colophon = true
+menu = [
+    { name = "Index", url = "/" },
+    { name = "Writing", url = "/posts/" },
+    { name = "GitHub⤴", url = "https://github.com/foresterre" },
+]
 
 menu_links = [
     { url = "$BASE_URL/", name = "Home" },

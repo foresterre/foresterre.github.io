@@ -12,13 +12,3 @@ taxonomies = [{ name = "tags", feed = false }]
 [markdown.highlighting]
 theme = "catppuccin-latte"
 
-[extra]
-author = ""
-masthead = true
-colophon = true
-nav = [
-    { name = "Index", url = "/" },
-    { name = "Posts", url = "/posts/" },
-    { name = "Plots", url = "/plots/" },
-    { name = "About", url = "/about/" },
-]

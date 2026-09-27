@@ -8,3 +8,13 @@ demo = ""
 [author]
 name = "Martijn Gribnau"
 homepage = "gribnau.dev"
+
+[extra.blauwdruk]
+author = ""
+masthead = false
+colophon = true
+menu = [
+    { name = "Index", url = "/" },
+    { name = "Posts", url = "/posts/" },
+    { name = "About", url = "/about/" },
+]
