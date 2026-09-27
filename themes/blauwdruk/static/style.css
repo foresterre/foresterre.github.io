@@ -275,7 +275,6 @@ a:hover {
   text-underline-offset: 4px;
 }
 
-/* Page titles */
 .page-title {
   font-family: var(--mono);
   font-size: clamp(1.25rem, 3.5vw, 1.6rem);
@@ -350,6 +349,11 @@ a:hover {
 .meta .mark {
   color: var(--blue);
 }
+
+.meta .human {
+  color: var(--muted);
+}
+
 
 /* Article body. */
 .prose {
