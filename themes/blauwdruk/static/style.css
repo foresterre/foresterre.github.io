@@ -596,7 +596,8 @@ a.plot-card:hover {
 }
 
 .clock {
-  --shape: url("./img/clock.svg");
+  display: block;
+  color: var(--blue);
   width: min(100%, 440px);
   aspect-ratio: 480 / 40;
   margin: clamp(2.4rem, 7vw, 3.6rem) auto;

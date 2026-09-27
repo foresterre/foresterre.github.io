@@ -1,1 +1,25 @@
-<span class="svg clock" aria-hidden="true"></span>
+<svg class="clock" viewBox="0 0 480 40" aria-hidden="true"><defs><linearGradient id="clock-l"><stop offset="0" stop-color="currentColor" stop-opacity="0"/><stop offset=".75" stop-color="currentColor"/></linearGradient><linearGradient id="clock-r"><stop offset=".25" stop-color="currentColor"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/></linearGradient></defs><rect x="20" y="19.5" width="188" height="1" fill="url(#clock-l)"/><rect x="272" y="19.5" width="188" height="1" fill="url(#clock-r)"/><g fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M216.5 16.5L220 20L216.5 23.5L213 20Z"/><path d="M263.5 16.5L267 20L263.5 23.5L260 20Z"/><circle cx="240" cy="20" r="13.5"/><path d="M240 7.5V9.5M252.5 20H250.5M240 32.5V30.5M227.5 20H229.5"/><path id="clock-hour" d="M240 20V14" transform="rotate(300 240 20)"/><path id="clock-minute" d="M240 20V11" transform="rotate(60 240 20)"/></g><path id="clock-second" d="M240 22.5V8.5" style="stroke: var(--grey)" stroke-width=".6" stroke-linecap="round"/><circle cx="240" cy="20" r="1.3" fill="currentColor"/></svg>
+<script>
+  (function () {
+    // This human also must have some fun. Haha. Time for bed :D.
+    const hour = document.getElementById("clock-hour");
+    const minute = document.getElementById("clock-minute");
+    const second = document.getElementById("clock-second");
+    function tick() {
+      const now = new Date();
+      const seconds = now.getSeconds();
+      const minutes = now.getMinutes() + seconds / 60;
+      const hours = (now.getHours() % 12) + minutes / 60;
+
+      const hourAngle = hours * 30;
+      const minuteAngle = minutes * 6;
+      const secondAngle = seconds * 6;
+
+      hour.setAttribute("transform", `rotate(${hourAngle} 240 20)`);
+      minute.setAttribute("transform", `rotate(${minuteAngle} 240 20)`);
+      second.setAttribute("transform", `rotate(${secondAngle} 240 20)`);
+    }
+    tick();
+    setInterval(tick, 1000);
+  })();
+</script>
