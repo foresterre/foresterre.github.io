@@ -130,7 +130,7 @@ a:hover {
   flex-wrap: wrap;
   gap: 0.5rem 1.5rem;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
   padding-bottom: 0.75rem;
   border-bottom: 3px double var(--line);
   margin-bottom: 2.25rem;
@@ -150,10 +150,10 @@ a:hover {
   color: var(--blue-deep);
 }
 
-.titlebar-end {
+.titlebar-start {
   display: flex;
   align-items: center;
-  gap: 1.25rem;
+  gap: 0.7rem;
 }
 
 .titlebar nav {

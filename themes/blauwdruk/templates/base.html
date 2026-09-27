@@ -20,17 +20,17 @@
 <body>
 <main class="sheet">
   <header class="titlebar">
-    <a class="site-name" href="{{ get_url(path="/") | safe }}">{{ config.title }}</a>
-    <div class="titlebar-end">
-      {% if config.extra.blauwdruk.menu %}
-      <nav>
-        {%- for item in config.extra.blauwdruk.menu %}
-        <a href="{{ item.url | safe }}">{{ item.name }}</a>
-        {%- endfor %}
-      </nav>
-      {% endif %}
+    <div class="titlebar-start">
       {% include "partials/theme-switch.html" %}
+      <a class="site-name" href="{{ get_url(path="/") | safe }}">{{ config.title }}</a>
     </div>
+    {% if config.extra.blauwdruk.menu %}
+    <nav>
+      {%- for item in config.extra.blauwdruk.menu %}
+      <a href="{{ item.url | safe }}">{{ item.name }}</a>
+      {%- endfor %}
+    </nav>
+    {% endif %}
   </header>
   {% block content %}{% endblock content %}
   {% if config.extra.blauwdruk.colophon | default(value=true) %}
