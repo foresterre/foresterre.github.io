@@ -22,6 +22,7 @@
 
 :root {
   --line: color-mix(in srgb, var(--blue) 38%, transparent);
+  --accent: color-mix(in srgb, var(--blue) 65%, var(--paper));
   --grid: color-mix(in srgb, var(--blue) 10%, transparent);
   --grid-major: color-mix(in srgb, var(--blue) 17%, transparent);
   --wash: color-mix(in srgb, var(--blue) 6%, var(--paper));
@@ -193,6 +194,7 @@ a:hover {
 
 .theme-switch .glyph {
   color: color-mix(in srgb, var(--muted) 60%, var(--paper));
+  transition: color 300ms ease;
 }
 
 .theme-switch .knockout {
@@ -210,6 +212,20 @@ a:hover {
 .theme-switch:has([value="light"]:hover) .glyph.light,
 .theme-switch:has([value="dark"]:hover) .glyph.dark {
   color: var(--blue-deep);
+}
+
+.theme-switch .indicator {
+  stroke: var(--accent);
+  transition: translate 300ms ease-in-out;
+}
+
+.theme-switch:has([value="light"]:checked) .indicator {
+  /* ugh, how would I do this without raw pixel values, in css? */
+  translate: -15px 26px;
+}
+
+.theme-switch:has([value="dark"]:checked) .indicator {
+  translate: 15px 26px;
 }
 
 .theme-switch input {
