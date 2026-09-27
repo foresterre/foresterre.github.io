@@ -89,3 +89,12 @@ menu_links = [
     { url = "$BASE_URL/search/", name = "Search" },
     { url = "https://github.com/foresterre", name = "GitHub↗" },
 ]
+
+[extra.waystation]
+articles_section = "posts/_index.md"
+menu = [
+    { name = "Home", path = "@/_index.md" },
+    { name = "Posts", path = "@/posts/_index.md" },
+    { name = "Tags", path = "tags/" },
+    { name = "GitHub⤴", path = "https://github.com/foresterre" },
+]

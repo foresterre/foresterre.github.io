@@ -1,0 +1,27 @@
+{% set home = get_url(path='@/_index.md') %}
+<header class="masthead">
+  {% if current_path and current_path == "/" %}
+  <h1 class="site-name"><a href="{{ home }}">{{ config.title or "Home" }}</a>{{ <ws.lantern /> }}</h1>
+  {% else %}
+  <p class="site-name"><a href="{{ home }}">{{ config.title or "Home" }}</a>{{ <ws.lantern /> }}</p>
+  {% endif %}
+  <span class="ornament divider" aria-hidden="true"></span>
+  <nav class="site-nav" aria-label="Main">
+    <ul class="sep-list">
+      {% for item in config.extra.waystation.menu %}
+      {% set resolved = item.path if item.path is starting_with(pat="http") else get_url(path=item.path) %}
+      {# get_url drops a trailing slash on plain paths like "tags/", so it is added back to avoid a redirect. #}
+      {% set url = resolved ~ "/" if item.path is ending_with(pat="/") and not resolved is ending_with(pat="/") else resolved %}
+      {% set here = current_url and current_url == url %}
+      {% set within = current_url and not here and url != home and current_url is starting_with(pat=url) %}
+      <li{% if within %} class="is-within"{% endif %}><a href="{{ url }}"{% if here %} aria-current="page"{% endif %}>{{ item.name }}</a></li>
+      {% endfor %}
+      {% if config.build_search_index %}
+      <li><button type="button" class="search-open" data-search-open aria-haspopup="dialog" aria-controls="search" aria-keyshortcuts="/" title="Search (press /)">{{ <ws.lens /> }}<span>Search</span></button></li>
+      {% endif %}
+      {% if (config.extra.waystation.color_scheme or "auto") == "auto" %}
+      <li data-scheme-item hidden><button type="button" class="scheme-toggle" data-scheme-toggle data-state="auto" aria-label="Colour scheme: system. Switch to light." title="Colour scheme: system">{{ <ws.scheme /> }}</button></li>
+      {% endif %}
+    </ul>
+  </nav>
+</header>

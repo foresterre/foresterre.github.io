@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}{{ section.title or "Articles" }} | {{ config.title or "" }}{% endblock title %}
+{% block description %}{{ section.description or config.description or "" }}{% endblock description %}
+{% block body_class %}page-index{% endblock body_class %}
+
+{% block main %}
+{% set ws = config.extra.waystation %}
+{% set pages = paginator.pages if paginator else section.pages %}
+{% set tags = get_taxonomy(kind="tags", required=false) %}
+<header class="page-head">
+  <h1>{{ section.title or "Articles" }}</h1>
+  <span class="ornament divider" aria-hidden="true"></span>
+  {% if section.content %}<div class="prose">{{ section.content | safe }}</div>{% endif %}
+</header>
+
+{% if tags and tags.items and pages %}
+<nav class="tag-filter" aria-labelledby="filter-label" data-tag-filter>
+  <span class="filter-label" id="filter-label">Filter by tag</span>
+  <ul class="sep-list">
+    <li><a href="{{ section.permalink }}" data-tag="" data-slug="" aria-current="true">All</a></li>
+    {% for t in tags.items %}
+    <li><a href="{{ t.permalink }}" data-tag="{{ t.name }}" data-slug="{{ t.slug }}">{{ t.name }}<span class="count">{{ t.pages | length }}</span></a></li>
+    {% endfor %}
+  </ul>
+  <p class="filter-status" role="status" aria-live="polite" data-filter-status></p>
+</nav>
+{% endif %}
+
+{% if pages %}
+<div data-filter-target>
+  {% for p in pages %}
+  {% if loop.first or p.year != pages[loop.index0 - 1].year %}
+  {% if not loop.first %}</ol></section>{% endif %}
+  <section class="year" aria-labelledby="year-{{ p.year or 'undated' }}" data-year>
+    <h2 class="rule-title" id="year-{{ p.year or 'undated' }}">{{ p.year or "Undated" }}</h2>
+    <ol class="entries">
+  {% endif %}
+      <li class="entry" data-tags="{{ (p.taxonomies.tags or []) | json_encode }}">
+        <span class="entry-date">{{ <ws.date value={p.date} format={ws.date_format} /> }}</span>
+        <h3 class="entry-title"><a href="{{ p.permalink }}">{{ p.title }}</a></h3>
+        {% if p.taxonomies.series %}<p class="entry-series">Part of the series <a href="{{ get_taxonomy_url(kind='series', term=p.taxonomies.series[0]) }}">{{ p.taxonomies.series[0] }}</a></p>{% endif %}
+        {{ <ws.tags tags={p.taxonomies.tags or []} label={"Tags for " ~ p.title} /> }}
+      </li>
+  {% if loop.last %}</ol></section>{% endif %}
+  {% endfor %}
+</div>
+{% if paginator and paginator.number_pagers > 1 %}
+<nav class="pager" aria-label="Pages">
+  {% if paginator.previous %}<a href="{{ paginator.previous }}" rel="prev">Newer articles</a>{% endif %}
+  <span>Page {{ paginator.current_index }} of {{ paginator.number_pagers }}</span>
+  {% if paginator.next %}<a href="{{ paginator.next }}" rel="next">Older articles</a>{% endif %}
+</nav>
+{% endif %}
+{% else %}
+<p class="empty">No articles yet. Add a Markdown file to this section to publish the first one.</p>
+{% endif %}
+{% endblock main %}

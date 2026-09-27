@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page.title }} | {{ config.title or "" }}{% endblock title %}
+{% block description %}{% if page.description %}{{ page.description }}{% elif page.summary %}{{ page.summary | striptags | truncate(length=160) }}{% else %}{{ config.description or "" }}{% endif %}{% endblock description %}
+{% block body_class %}page-article{% endblock body_class %}
+
+{% block main %}
+{% set ws = config.extra.waystation %}
+{% set numerals = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII", "XIII", "XIV", "XV", "XVI", "XVII", "XVIII", "XIX", "XX"] %}
+<article class="article">
+  <header class="page-head">
+    <ul class="article-meta sep-list">
+      {% if page.date %}<li>{{ <ws.date value={page.date} format={ws.date_format} /> }}</li>{% endif %}
+      <li>{{ page.reading_time }} minute read</li>
+    </ul>
+    <h1>{{ page.title }}</h1>
+    {% if page.description %}<p class="lede">{{ page.description | markdown(inline=true) | safe }}</p>{% endif %}
+    <span class="ornament divider" aria-hidden="true"></span>
+  </header>
+
+  {% if page.taxonomies.series %}
+  {% set series_name = page.taxonomies.series[0] %}
+  {% set series_term = get_taxonomy_term(kind="series", term=series_name) %}
+  {% set series_pages = series_term.pages[::-1] %}
+  {% set total = series_pages | length %}
+  <aside class="series-box framed" aria-labelledby="series-title">
+    {% for sp in series_pages %}{% if sp.permalink == page.permalink %}
+    <p class="series-title" id="series-title">Part {{ numerals[loop.index0] if loop.index0 < 20 else loop.index }} of {{ numerals[total - 1] if total <= 20 else total }} in the series <a href="{{ series_term.permalink }}">{{ series_term.name }}</a></p>
+    {% endif %}{% endfor %}
+    <ol class="series-parts">
+      {% for sp in series_pages %}
+      <li{% if sp.permalink == page.permalink %} class="is-here"{% endif %}>
+        <span class="num">{{ numerals[loop.index0] if loop.index0 < 20 else loop.index }}</span>
+        {% if sp.permalink == page.permalink %}<span aria-current="page">{{ sp.title }}</span>{% else %}<a href="{{ sp.permalink }}">{{ sp.title }}</a>{% endif %}
+      </li>
+      {% endfor %}
+    </ol>
+  </aside>
+  {% endif %}
+
+  <div class="prose article-body">
+    {{ page.content | safe }}
+  </div>
+  <span class="ornament tailpiece" aria-hidden="true"></span>
+
+  <footer class="article-foot">
+    {% if page.taxonomies.series %}
+    {% for sp in series_pages %}{% if sp.permalink == page.permalink and not loop.last %}
+    <p class="series-next">Next in the series: <a href="{{ series_pages[loop.index].permalink }}">{{ series_pages[loop.index].title }}</a></p>
+    {% endif %}{% endfor %}
+    {% endif %}
+
+    {% if page.taxonomies.tags %}
+    <div class="foot-group">
+      <h2 class="rule-title">Tags</h2>
+      {{ <ws.tags tags={page.taxonomies.tags} label="Tags for this article" /> }}
+    </div>
+    {% endif %}
+
+    {% set hn = page.extra.hackernews or "" %}
+    {% set lob = page.extra.lobsters or "" %}
+    {% if hn or lob %}
+    <div class="foot-group">
+      <h2 class="rule-title">Discussion</h2>
+      <ul class="discuss sep-list">
+        {% if hn %}<li><a href="{{ hn if hn is starting_with(pat='http') else 'https://news.ycombinator.com/item?id=' ~ hn }}">Discuss on Hacker News</a></li>{% endif %}
+        {% if lob %}<li><a href="{{ lob if lob is starting_with(pat='http') else 'https://lobste.rs/s/' ~ lob }}">Discuss on Lobsters</a></li>{% endif %}
+      </ul>
+    </div>
+    {% endif %}
+
+    {% if page.updated and page.updated != page.date %}
+    <p class="updated">Updated on {{ <ws.date value={page.updated} format={ws.date_format} /> }}.</p>
+    {% endif %}
+  </footer>
+</article>
+
+{% if page.higher or page.lower %}
+<nav class="neighbours" aria-label="More articles">
+  {% if page.higher %}<a class="older" href="{{ page.higher.permalink }}" rel="prev"><span class="dir">Older article</span><span class="title">{{ page.higher.title }}</span></a>{% endif %}
+  {% if page.lower %}<a class="newer" href="{{ page.lower.permalink }}" rel="next"><span class="dir">Newer article</span><span class="title">{{ page.lower.title }}</span></a>{% endif %}
+</nav>
+{% endif %}
+{% endblock main %}

@@ -1,0 +1,23 @@
+<footer class="site-footer">
+  {% if config.extra.waystation.tram %}
+  <div class="tramway" aria-hidden="true">
+    <div class="roof"></div>
+    <span class="lamp lamp-left"></span><span class="lamp-glow glow-left"></span>
+    <span class="lamp lamp-right"></span><span class="lamp-glow glow-right"></span>
+    <div class="halt">
+      {% include "waystation/halt.html" %}
+      <span class="halt-sign">{{ config.extra.waystation.station_name or config.title or "Station" }}</span>
+    </div>
+    {% include "waystation/tram.html" %}
+  </div>
+  {% endif %}
+  <div class="footer-text">
+    {% if config.extra.waystation.footer %}
+      {{ config.extra.waystation.footer | markdown | safe }}
+    {% else %}
+      <p>&copy; {{ now() | date(format="%Y") }} {{ config.author or config.title or "" }}.
+      {% if config.generate_feeds %}<a href="{{ get_url(path=config.feed_filenames[0], trailing_slash=false) }}">Subscribe to the feed</a>.{% endif %}
+      Built with <a href="https://www.getzola.org">Zola</a>.</p>
+    {% endif %}
+  </div>
+</footer>

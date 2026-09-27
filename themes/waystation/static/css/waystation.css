@@ -1,0 +1,1652 @@
+/* Waystation. Victorian ironwork for Zola. Every ornament is a mask over the metal colour, so it follows the colour scheme. */
+
+:root {
+  --paper: #f6f3ec;
+  --paper-2: #ece7dc;
+  --ink: #1e1d1b;
+  --ink-soft: #5c574f;
+  --metal: #34312d;
+  --metal-soft: #a39c8f;
+  --accent: #8a6428;
+  --glow: #f2c26b;
+
+  --font-display: "Marcellus", "Trajan Pro", "Iowan Old Style", Georgia, serif;
+  --font-caps: "Marcellus SC", "Marcellus", "Trajan Pro", Georgia, serif;
+  --font-body: "Sorts Mill Goudy", "Goudy Old Style", Garamond, Georgia, serif;
+  --font-code: "Martian Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+
+  --measure: 40rem;
+  --gutter: clamp(1.1rem, 4vw, 2rem);
+  --hair: color-mix(in srgb, var(--metal-soft) 55%, transparent);
+
+  color-scheme: light dark;
+}
+
+/* The dark scheme recalls the pale ironwork of the old kingdom at night. It is used when the system asks for it, unless the site
+   forces light, and always when the site forces dark. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-scheme="light"]) {
+    --paper: #0f1218;
+    --paper-2: #161b23;
+    --ink: #e2e5e9;
+    --ink-soft: #9ba4ae;
+    --metal: #cdd3da;
+    --metal-soft: #5f6873;
+    --accent: #c4d0d9;
+    --glow: #bfe3f0;
+  }
+}
+
+:root[data-scheme="dark"] {
+  --paper: #0f1218;
+  --paper-2: #161b23;
+  --ink: #e2e5e9;
+  --ink-soft: #9ba4ae;
+  --metal: #cdd3da;
+  --metal-soft: #5f6873;
+  --accent: #c4d0d9;
+  --glow: #bfe3f0;
+  color-scheme: dark;
+}
+
+:root[data-scheme="light"] {
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: clamp(1.125rem, 1.04rem + 0.3vw, 1.25rem);
+  line-height: 1.65;
+  font-kerning: normal;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 28%, transparent);
+  color: var(--ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.main:focus {
+  outline: none;
+}
+
+img,
+svg,
+video {
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+  text-decoration-line: underline;
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.22em;
+  transition: color 140ms ease, text-decoration-color 140ms ease;
+}
+
+a:hover {
+  color: var(--accent);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: 1.15;
+  text-wrap: balance;
+}
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -4rem;
+  z-index: 10;
+  padding: 0.4rem 0.8rem;
+  background: var(--paper);
+  border: 1px solid var(--metal);
+}
+
+.skip-link:focus {
+  top: 1rem;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Ornaments. */
+.ornament {
+  display: block;
+  background: var(--metal);
+  -webkit-mask: var(--shape) center / contain no-repeat;
+  mask: var(--shape) center / contain no-repeat;
+}
+
+.divider {
+  --shape: url("../img/ornaments/divider.svg");
+  width: min(100%, 300px);
+  aspect-ratio: 15 / 1;
+  margin: 0.9rem auto 0;
+}
+
+.clock-rule {
+  --shape: url("../img/ornaments/clock.svg");
+  width: min(100%, 440px);
+  aspect-ratio: 480 / 40;
+  margin: clamp(2.4rem, 7vw, 3.6rem) auto;
+}
+
+.tailpiece {
+  --shape: url("../img/ornaments/tailpiece.svg");
+  width: 150px;
+  aspect-ratio: 180 / 56;
+  margin: 2.8rem auto 0;
+}
+
+.fleur {
+  --shape: url("../img/ornaments/fleur.svg");
+  width: 26px;
+  height: 26px;
+  margin: 0 auto 0.3rem;
+}
+
+/* A small lozenge, used as a separator in lists of links. */
+.sep-list > li + li::before {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin: 0 0.85em;
+  vertical-align: 0.22em;
+  background: var(--metal-soft);
+  transform: rotate(45deg);
+}
+
+/* A centred title between two hairlines. Each fades out away from the title and ends in a small hollow lozenge next to it. */
+.rule-title {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 0 0 1.2rem;
+  font-family: var(--font-caps);
+  font-size: 1.05rem;
+  letter-spacing: 0.16em;
+  color: var(--ink-soft);
+}
+
+.rule-title::before,
+.rule-title::after {
+  --lozenge: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 7'%3E%3Cpath d='M3.5 .5L6.5 3.5L3.5 6.5L.5 3.5Z' fill='none' stroke='black'/%3E%3C/svg%3E");
+  content: "";
+  flex: 1;
+  height: 7px;
+  background: var(--metal);
+  -webkit-mask:
+    var(--lozenge) right center / 7px 7px no-repeat,
+    linear-gradient(90deg, transparent, #000) left center / calc(100% - 10px) 1px no-repeat;
+  mask:
+    var(--lozenge) right center / 7px 7px no-repeat,
+    linear-gradient(90deg, transparent, #000) left center / calc(100% - 10px) 1px no-repeat;
+}
+
+.rule-title::after {
+  -webkit-mask:
+    var(--lozenge) left center / 7px 7px no-repeat,
+    linear-gradient(90deg, #000, transparent) right center / calc(100% - 10px) 1px no-repeat;
+  mask:
+    var(--lozenge) left center / 7px 7px no-repeat,
+    linear-gradient(90deg, #000, transparent) right center / calc(100% - 10px) 1px no-repeat;
+}
+
+/* A box with iron corners. The overlay draws the corners and the double rule between them. */
+.framed {
+  --c: 64px;
+  position: relative;
+  padding: clamp(1.6rem, 5vw, 2.2rem) clamp(1.4rem, 5vw, 2.4rem);
+}
+
+.framed::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: var(--metal);
+  -webkit-mask:
+    url("../img/ornaments/corner-tl.svg") left top / var(--c) var(--c) no-repeat,
+    url("../img/ornaments/corner-tr.svg") right top / var(--c) var(--c) no-repeat,
+    url("../img/ornaments/corner-bl.svg") left bottom / var(--c) var(--c) no-repeat,
+    url("../img/ornaments/corner-br.svg") right bottom / var(--c) var(--c) no-repeat,
+    linear-gradient(#000 0 0) left var(--c) top 1.9px / calc(100% - 2 * var(--c)) 1.2px no-repeat,
+    linear-gradient(#000 0 0) left var(--c) top 7.1px / calc(100% - 2 * var(--c)) 0.8px no-repeat,
+    linear-gradient(#000 0 0) left var(--c) bottom 1.9px / calc(100% - 2 * var(--c)) 1.2px no-repeat,
+    linear-gradient(#000 0 0) left var(--c) bottom 7.1px / calc(100% - 2 * var(--c)) 0.8px no-repeat,
+    linear-gradient(#000 0 0) left 1.9px top var(--c) / 1.2px calc(100% - 2 * var(--c)) no-repeat,
+    linear-gradient(#000 0 0) left 7.1px top var(--c) / 0.8px calc(100% - 2 * var(--c)) no-repeat,
+    linear-gradient(#000 0 0) right 1.9px top var(--c) / 1.2px calc(100% - 2 * var(--c)) no-repeat,
+    linear-gradient(#000 0 0) right 7.1px top var(--c) / 0.8px calc(100% - 2 * var(--c)) no-repeat;
+  mask:
+    url("../img/ornaments/corner-tl.svg") left top / var(--c) var(--c) no-repeat,
+    url("../img/ornaments/corner-tr.svg") right top / var(--c) var(--c) no-repeat,
+    url("../img/ornaments/corner-bl.svg") left bottom / var(--c) var(--c) no-repeat,
+    url("../img/ornaments/corner-br.svg") right bottom / var(--c) var(--c) no-repeat,
+    linear-gradient(#000 0 0) left var(--c) top 1.9px / calc(100% - 2 * var(--c)) 1.2px no-repeat,
+    linear-gradient(#000 0 0) left var(--c) top 7.1px / calc(100% - 2 * var(--c)) 0.8px no-repeat,
+    linear-gradient(#000 0 0) left var(--c) bottom 1.9px / calc(100% - 2 * var(--c)) 1.2px no-repeat,
+    linear-gradient(#000 0 0) left var(--c) bottom 7.1px / calc(100% - 2 * var(--c)) 0.8px no-repeat,
+    linear-gradient(#000 0 0) left 1.9px top var(--c) / 1.2px calc(100% - 2 * var(--c)) no-repeat,
+    linear-gradient(#000 0 0) left 7.1px top var(--c) / 0.8px calc(100% - 2 * var(--c)) no-repeat,
+    linear-gradient(#000 0 0) right 1.9px top var(--c) / 1.2px calc(100% - 2 * var(--c)) no-repeat,
+    linear-gradient(#000 0 0) right 7.1px top var(--c) / 0.8px calc(100% - 2 * var(--c)) no-repeat;
+}
+
+.small-caps {
+  font-family: var(--font-caps);
+  letter-spacing: 0.12em;
+}
+
+/* Masthead. The site name sits above its rule, and the menu, search included, sits on one line below it. */
+.masthead {
+  width: 100%;
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: clamp(1.8rem, 5vw, 2.8rem) var(--gutter) 0;
+  text-align: center;
+}
+
+.site-name {
+  display: inline-block;
+  margin: 0;
+  font-family: var(--font-caps);
+  font-size: clamp(1.9rem, 1.4rem + 2vw, 2.6rem);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: 0.18em;
+  text-decoration: none;
+}
+
+.site-name a {
+  text-decoration: none;
+}
+
+.site-name a:hover {
+  color: var(--ink);
+}
+
+.site-name {
+  position: relative;
+}
+
+/* A small lantern hangs diagonally above the end of the site name. It lights up while a menu item is hovered or focused. */
+.lantern {
+  position: absolute;
+  left: calc(100% - 0.3rem);
+  bottom: 62%;
+  width: 1.45rem;
+  aspect-ratio: 34 / 52;
+  color: var(--metal);
+  pointer-events: none;
+}
+
+.lantern svg {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.lantern-flame {
+  fill: var(--glow);
+  fill-opacity: 0;
+  transition: fill-opacity 220ms ease;
+}
+
+/* Centred on the flame, which sits at 20, 32 in the 34 by 52 drawing. */
+.lantern-glow {
+  position: absolute;
+  left: 58.8%;
+  top: 61.5%;
+  width: 3.4rem;
+  height: 3.4rem;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--glow) 60%, transparent) 0 14%, transparent 68%);
+  opacity: 0;
+  transition: opacity 260ms ease;
+}
+
+.masthead:has(.site-nav a:hover, .site-nav a:focus-visible, .site-nav button:hover, .site-nav button:focus-visible) .lantern-flame {
+  fill-opacity: 1;
+}
+
+.masthead:has(.site-nav a:hover, .site-nav a:focus-visible, .site-nav button:hover, .site-nav button:focus-visible) .lantern-glow {
+  opacity: 1;
+  animation: lantern-flicker 2.6s ease-in-out 260ms infinite alternate;
+}
+
+@keyframes lantern-flicker {
+  0% { opacity: 1; }
+  40% { opacity: 0.82; }
+  55% { opacity: 0.95; }
+  100% { opacity: 0.86; }
+}
+
+.masthead .divider {
+  width: min(100%, 260px);
+  margin-top: 0.5rem;
+}
+
+.site-nav {
+  margin-top: 1.1rem;
+}
+
+.site-nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  row-gap: 0.4rem;
+}
+
+.site-nav a,
+.search-open {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.2rem 0;
+  font-family: var(--font-caps);
+  font-size: 1rem;
+  letter-spacing: 0.12em;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.search-open {
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.search-open:hover,
+.site-nav a:hover {
+  color: var(--accent);
+}
+
+.search-open .lens {
+  width: 0.95em;
+  height: 0.95em;
+}
+
+/*
+ * A thin lozenge around a vessel. For light and dark, the vessel is half full and the filled half turns to the other side for dark.
+ * For system, the vessel is empty and holds a small lozenge.
+ */
+.scheme-toggle {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.scheme-toggle:hover {
+  color: var(--accent);
+}
+
+.scheme-mark {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.scheme-half,
+.scheme-auto {
+  transform-origin: 12px 12px;
+  transition: transform 300ms ease, opacity 300ms ease;
+}
+
+.scheme-auto {
+  opacity: 0;
+  transform: scale(0.4);
+}
+
+.scheme-toggle[data-state="dark"] .scheme-half {
+  transform: rotate(180deg);
+}
+
+.scheme-toggle[data-state="auto"] .scheme-half {
+  opacity: 0;
+}
+
+.scheme-toggle[data-state="auto"] .scheme-auto {
+  opacity: 1;
+  transform: none;
+}
+
+/*
+ * The current page gets a hairline that fades out at both ends, with a small hollow lozenge in the middle.
+ * The line leaves a gap for the lozenge, so the lozenge stays hollow on any background.
+ */
+.site-nav a::after,
+.tag-filter a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: var(--mark-y, -0.15rem);
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent,
+    var(--metal) 22%,
+    var(--metal) calc(50% - 6px),
+    transparent calc(50% - 6px),
+    transparent calc(50% + 6px),
+    var(--metal) calc(50% + 6px),
+    var(--metal) 78%,
+    transparent);
+  opacity: 0;
+  transition: opacity 140ms ease;
+}
+
+.site-nav a::before,
+.tag-filter a::before {
+  content: "";
+  position: absolute;
+  left: calc(50% - 2.5px);
+  bottom: calc(var(--mark-y, -0.15rem) - 2px);
+  width: 5px;
+  height: 5px;
+  border: 1px solid var(--metal);
+  transform: rotate(45deg);
+  opacity: 0;
+  transition: opacity 140ms ease;
+}
+
+.site-nav a[aria-current="page"]::after,
+.site-nav a[aria-current="page"]::before {
+  opacity: 1;
+}
+
+.site-nav .is-within a::after,
+.site-nav .is-within a::before {
+  opacity: 0.4;
+}
+
+.main {
+  flex: 1 0 auto;
+  width: 100%;
+  max-width: calc(var(--measure) + 2 * var(--gutter));
+  margin: 0 auto;
+  padding: clamp(2.4rem, 7vw, 3.8rem) var(--gutter) 3rem;
+}
+
+/* Home. */
+.intro {
+  font-size: 1.12em;
+}
+
+.about {
+  margin-top: 2.4rem;
+}
+
+.about h2 {
+  margin-bottom: 0.9rem;
+  font-family: var(--font-caps);
+  font-size: 1.15rem;
+  letter-spacing: 0.16em;
+  text-align: center;
+  color: var(--ink-soft);
+}
+
+.about .prose {
+  font-size: 0.97em;
+}
+
+.recent-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.recent-list li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem 1.2rem;
+  padding: 0.7rem 0;
+  border-bottom: 1px solid var(--hair);
+}
+
+.recent-list li:first-child {
+  border-top: 1px solid var(--hair);
+}
+
+.recent-list a {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  line-height: 1.3;
+  text-decoration: none;
+}
+
+.recent-list time {
+  flex: none;
+  font-family: var(--font-caps);
+  font-size: 0.82rem;
+  letter-spacing: 0.1em;
+  color: var(--ink-soft);
+}
+
+.more {
+  margin: 1.4rem 0 0;
+  text-align: center;
+  font-family: var(--font-caps);
+  font-size: 0.95rem;
+  letter-spacing: 0.14em;
+}
+
+.empty {
+  font-style: italic;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+/* Page heads for sections, taxonomies, and articles. */
+.page-head {
+  margin-bottom: 2.6rem;
+  text-align: center;
+}
+
+.page-head h1 {
+  font-size: clamp(2.3rem, 1.7rem + 2.6vw, 3.3rem);
+  letter-spacing: 0.01em;
+}
+
+.page-head p {
+  margin: 0.8rem 0 0;
+}
+
+.page-head .prose {
+  margin-top: 1.2rem;
+  text-align: left;
+}
+
+.kicker {
+  margin: 0 0 0.6rem;
+  font-family: var(--font-caps);
+  font-size: 0.9rem;
+  letter-spacing: 0.16em;
+  color: var(--ink-soft);
+}
+
+.kicker a {
+  text-decoration: none;
+}
+
+/* Tag filter, set like the menu. */
+.tag-filter {
+  margin: -0.6rem 0 2.8rem;
+  text-align: center;
+}
+
+.filter-label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-family: var(--font-caps);
+  font-size: 0.8rem;
+  letter-spacing: 0.18em;
+  color: var(--ink-soft);
+}
+
+.tag-filter ul,
+.term-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  row-gap: 0.3rem;
+}
+
+.tag-filter a,
+.term-list a {
+  position: relative;
+  font-family: var(--font-caps);
+  font-size: 0.98rem;
+  letter-spacing: 0.1em;
+  text-decoration: none;
+}
+
+.tag-filter a {
+  --mark-y: -0.1rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+}
+
+/* Many tags make a tall block, so the filter packs them tighter than other lists of links. */
+/* A fixed line height, because the list items keep the body font size and only the links inside are smaller. */
+.tag-filter ul {
+  row-gap: 0.15rem;
+  line-height: 1.2rem;
+}
+
+.tag-filter .sep-list > li + li::before {
+  width: 4px;
+  height: 4px;
+  margin: 0 0.4em;
+}
+
+/* Without this, the raised count makes every line of tags taller. */
+.tag-filter .count {
+  line-height: 0;
+}
+
+.tag-filter a[aria-current="true"]::after,
+.tag-filter a[aria-current="true"]::before {
+  opacity: 1;
+}
+
+.count {
+  margin-left: 0.2em;
+  font-family: var(--font-body);
+  font-size: 0.72em;
+  letter-spacing: 0;
+  color: var(--ink-soft);
+  vertical-align: 0.35em;
+}
+
+.filter-status {
+  min-height: 1.6em;
+  margin: 0.8rem 0 0;
+  font-style: italic;
+  font-size: 0.92em;
+  color: var(--ink-soft);
+}
+
+/* Article index. */
+.year {
+  margin-bottom: 2.2rem;
+}
+
+.year[hidden],
+.entry[hidden] {
+  display: none;
+}
+
+.entries {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.entry {
+  padding: 0.9rem 0 1.1rem;
+}
+
+.entry + .entry {
+  border-top: 1px solid var(--hair);
+}
+
+.entry-date {
+  display: block;
+  font-family: var(--font-caps);
+  font-size: 0.82rem;
+  letter-spacing: 0.12em;
+  color: var(--ink-soft);
+}
+
+.entry-title {
+  margin: 0.15rem 0 0.35rem;
+  font-size: 1.45rem;
+  line-height: 1.25;
+}
+
+.entry-title a {
+  text-decoration: none;
+}
+
+.entry-series {
+  margin: 0 0 0.3rem;
+  font-style: italic;
+  font-size: 0.95em;
+  color: var(--ink-soft);
+}
+
+.entry-summary {
+  margin: 0.2rem 0 0.4rem;
+}
+
+.tags {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.1rem 1rem;
+}
+
+.tags a {
+  font-family: var(--font-caps);
+  font-size: 0.82rem;
+  letter-spacing: 0.12em;
+  color: var(--ink-soft);
+  text-decoration: none;
+}
+
+.tags a:hover {
+  color: var(--accent);
+}
+
+.pager {
+  display: flex;
+  justify-content: center;
+  gap: 1.6rem;
+  margin-top: 2rem;
+  font-family: var(--font-caps);
+  letter-spacing: 0.12em;
+}
+
+/* Series overview. */
+.series-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.series-list li {
+  padding: 1rem 0;
+  text-align: center;
+}
+
+.series-list li + li {
+  border-top: 1px solid var(--hair);
+}
+
+.series-list h2 {
+  font-size: 1.6rem;
+}
+
+.series-list h2 a {
+  text-decoration: none;
+}
+
+.series-facts {
+  margin: 0.3rem 0 0;
+  font-family: var(--font-caps);
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+  color: var(--ink-soft);
+}
+
+.part-number {
+  display: block;
+  font-family: var(--font-caps);
+  font-size: 0.85rem;
+  letter-spacing: 0.16em;
+  color: var(--ink-soft);
+}
+
+/* Article. */
+.article-meta {
+  margin: 0 0 0.9rem;
+  font-family: var(--font-caps);
+  font-size: 0.85rem;
+  letter-spacing: 0.14em;
+  color: var(--ink-soft);
+}
+
+.article-meta.sep-list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.lede {
+  margin: 1rem auto 0;
+  max-width: 34rem;
+  font-style: italic;
+  font-size: 1.12em;
+  color: var(--ink-soft);
+}
+
+.series-box {
+  margin: 0 0 2.6rem;
+}
+
+.series-title {
+  margin: 0 0 0.8rem;
+  font-family: var(--font-caps);
+  font-size: 0.95rem;
+  letter-spacing: 0.12em;
+  text-align: center;
+  color: var(--ink-soft);
+}
+
+.series-title a {
+  color: var(--ink);
+}
+
+.series-parts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.3rem;
+}
+
+.series-parts li {
+  display: grid;
+  grid-template-columns: 2.6rem minmax(0, 1fr);
+  align-items: baseline;
+}
+
+.series-parts .num {
+  font-family: var(--font-caps);
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+}
+
+.series-parts [aria-current="page"] {
+  font-style: italic;
+}
+
+.series-parts .is-here .num {
+  color: var(--ink);
+}
+
+.article-foot {
+  margin-top: 3rem;
+  display: grid;
+  gap: 1.4rem;
+}
+
+.foot-group {
+  text-align: center;
+}
+
+.foot-group .rule-title {
+  margin-bottom: 0.7rem;
+  font-size: 0.9rem;
+}
+
+.foot-group .tags,
+.discuss {
+  justify-content: center;
+}
+
+.discuss {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.series-next {
+  margin: 0;
+  text-align: center;
+  font-style: italic;
+}
+
+.updated {
+  margin: 0;
+  text-align: center;
+  font-style: italic;
+  font-size: 0.92em;
+  color: var(--ink-soft);
+}
+
+.neighbours {
+  margin-top: 3rem;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--hair);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.4rem;
+}
+
+.neighbours a {
+  display: grid;
+  gap: 0.2rem;
+  text-decoration: none;
+}
+
+.neighbours .newer {
+  grid-column: 2;
+  text-align: right;
+}
+
+.neighbours .dir {
+  font-family: var(--font-caps);
+  font-size: 0.8rem;
+  letter-spacing: 0.14em;
+  color: var(--ink-soft);
+}
+
+.neighbours .title {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  line-height: 1.3;
+}
+
+/* Long form text. */
+.prose > :first-child {
+  margin-top: 0;
+}
+
+.prose > :last-child {
+  margin-bottom: 0;
+}
+
+.prose p,
+.prose ul,
+.prose ol,
+.prose blockquote,
+.prose pre,
+.prose table,
+.prose figure {
+  margin: 0 0 1.1em;
+}
+
+.prose h2 {
+  margin: 2.2em 0 0.6em;
+  font-size: 1.75rem;
+}
+
+.prose h3 {
+  margin: 1.8em 0 0.5em;
+  font-size: 1.4rem;
+}
+
+.prose h4 {
+  margin: 1.6em 0 0.4em;
+  font-family: var(--font-caps);
+  font-size: 1.05rem;
+  letter-spacing: 0.1em;
+}
+
+.prose ul,
+.prose ol {
+  padding-left: 1.4em;
+}
+
+.prose li + li {
+  margin-top: 0.25em;
+}
+
+.prose ul > li::marker {
+  color: var(--metal-soft);
+}
+
+.prose blockquote {
+  padding: 0.1em 0 0.1em 1.2em;
+  border-left: 1px solid var(--metal-soft);
+  font-style: italic;
+  color: var(--ink-soft);
+}
+
+.prose hr {
+  width: min(100%, 300px);
+  aspect-ratio: 15 / 1;
+  margin: 2.4em auto;
+  border: 0;
+  background: var(--metal);
+  -webkit-mask: url("../img/ornaments/divider.svg") center / contain no-repeat;
+  mask: url("../img/ornaments/divider.svg") center / contain no-repeat;
+}
+
+.prose img {
+  display: block;
+  height: auto;
+  margin-inline: auto;
+}
+
+.prose figcaption {
+  margin-top: 0.5em;
+  text-align: center;
+  font-style: italic;
+  font-size: 0.9em;
+  color: var(--ink-soft);
+}
+
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.93em;
+  display: block;
+  overflow-x: auto;
+}
+
+.prose th,
+.prose td {
+  padding: 0.45em 0.9em 0.45em 0;
+  text-align: left;
+  border-bottom: 1px solid var(--hair);
+}
+
+.prose thead th {
+  font-family: var(--font-caps);
+  font-weight: 400;
+  font-size: 0.88em;
+  letter-spacing: 0.1em;
+  border-bottom: 1px solid var(--metal);
+}
+
+.prose sup,
+.prose sub {
+  line-height: 0;
+}
+
+code,
+pre {
+  font-family: var(--font-code);
+  font-size: 0.74em;
+}
+
+:not(pre) > code {
+  padding: 0.08em 0.3em;
+  background: var(--paper-2);
+  border-radius: 2px;
+  white-space: break-spaces;
+}
+
+pre {
+  padding: 1rem 1.2rem;
+  overflow-x: auto;
+  line-height: 1.6;
+  background: var(--paper-2) !important;
+  border-top: 1px solid var(--hair);
+  border-bottom: 1px solid var(--hair);
+  tab-size: 4;
+}
+
+pre code {
+  font-size: 1em;
+}
+
+/* Required by the Giallo highlighter that Zola uses. */
+.giallo-l {
+  display: inline-block;
+  min-height: 1lh;
+  width: 100%;
+}
+
+.giallo-ln {
+  display: inline-block;
+  user-select: none;
+  margin-right: 0.4em;
+  padding: 0 0.4em;
+  min-width: 3ch;
+  text-align: right;
+  color: var(--ink-soft);
+}
+
+.footnote-definition {
+  font-size: 0.9em;
+}
+
+/* Not found page. */
+.lost {
+  text-align: center;
+}
+
+.lost-links {
+  list-style: none;
+  margin: 1.6rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  font-family: var(--font-caps);
+  letter-spacing: 0.12em;
+}
+
+.link-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.22em;
+}
+
+/* Search dialog. */
+.search {
+  width: min(40rem, calc(100vw - 2rem));
+  max-height: min(38rem, calc(100vh - 4rem));
+  margin: 8vh auto auto;
+  padding: 1.6rem 1.8rem 1.2rem;
+  color: var(--ink);
+  background: var(--paper);
+  border: 0;
+  overflow: hidden;
+}
+
+.search[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.search::backdrop {
+  background: color-mix(in srgb, var(--paper) 78%, transparent);
+  backdrop-filter: blur(2px);
+}
+
+.search-bar {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem 1rem;
+  padding: 0.4rem 0.4rem 0.9rem;
+}
+
+.search-bar label {
+  grid-column: 1 / -1;
+  font-family: var(--font-caps);
+  font-size: 0.95rem;
+  letter-spacing: 0.16em;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+.search-bar input {
+  width: 100%;
+  min-width: 0;
+  padding: 0.4rem 0.1rem;
+  font: inherit;
+  font-size: 1.15em;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--metal);
+  border-radius: 0;
+}
+
+.search-bar input:focus {
+  outline: none;
+  border-bottom-color: var(--accent);
+  box-shadow: 0 1px 0 0 var(--accent);
+}
+
+.search-close {
+  align-self: end;
+  padding: 0.3rem 0;
+  border: 0;
+  background: none;
+  font-family: var(--font-caps);
+  font-size: 0.9rem;
+  letter-spacing: 0.12em;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.search-close:hover {
+  color: var(--accent);
+}
+
+.search-status {
+  margin: 0;
+  padding: 0.3rem 0.4rem 0.5rem;
+  font-style: italic;
+  font-size: 0.9em;
+  color: var(--ink-soft);
+}
+
+.search-status:empty {
+  display: none;
+}
+
+.search-results {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0.4rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.search-results a {
+  display: block;
+  padding: 0.65rem 0.4rem;
+  border-top: 1px solid var(--hair);
+  text-decoration: none;
+}
+
+.search-results a:hover,
+.search-results a:focus-visible {
+  outline: none;
+  background: var(--paper-2);
+  color: var(--ink);
+}
+
+.search-results .r-title {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  line-height: 1.25;
+}
+
+.search-results .r-meta {
+  display: block;
+  font-family: var(--font-caps);
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  color: var(--ink-soft);
+}
+
+.search-results .r-snippet {
+  display: block;
+  font-size: 0.9em;
+  color: var(--ink-soft);
+}
+
+.search-results mark {
+  background: transparent;
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.15em;
+}
+
+/* Footer: a station seen from the side. Roof with cresting and valance, lamp posts, a hanging sign, and the tram. */
+.site-footer {
+  width: 100%;
+  margin-top: 2rem;
+}
+
+.tramway {
+  --rail-y: 26px;
+  position: relative;
+  height: 224px;
+  overflow: hidden;
+  container-type: inline-size;
+  color: var(--metal);
+}
+
+.roof {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 44px;
+  background: var(--metal);
+  -webkit-mask:
+    url("../img/ornaments/cresting.svg") 0 0 / 24px 20px repeat-x,
+    url("../img/ornaments/valance.svg") 0 21px / 28px 22px repeat-x;
+  mask:
+    url("../img/ornaments/cresting.svg") 0 0 / 24px 20px repeat-x,
+    url("../img/ornaments/valance.svg") 0 21px / 28px 22px repeat-x;
+}
+
+/* Overhead wire. Its height matches the top of the pantograph. */
+.tramway::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 117px;
+  border-top: 1px solid var(--metal);
+}
+
+/* Rail with sleepers. */
+.tramway::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--rail-y) - 8px);
+  height: 8px;
+  border-top: 1.6px solid var(--metal);
+  background: repeating-linear-gradient(90deg, var(--metal) 0 1.5px, transparent 1.5px 13px);
+}
+
+.lamp {
+  position: absolute;
+  bottom: var(--rail-y);
+  width: 46px;
+  height: 140px;
+  background: var(--metal);
+  -webkit-mask: url("../img/ornaments/lamp.svg") center / 100% no-repeat;
+  mask: url("../img/ornaments/lamp.svg") center / 100% no-repeat;
+}
+
+/* The glow sits beside the lamp, because a mask would cut it off. */
+.lamp-glow {
+  position: absolute;
+  bottom: calc(var(--rail-y) + 90px);
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--glow) 55%, transparent) 0 18%, transparent 68%);
+  animation: glow-breathe 5s ease-in-out infinite;
+}
+
+.lamp-left,
+.glow-left {
+  left: 9%;
+}
+
+.lamp-right,
+.glow-right {
+  right: 9%;
+}
+
+.halt {
+  position: absolute;
+  top: 42px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 210px;
+}
+
+.halt-bracket {
+  display: block;
+}
+
+.halt-sign {
+  min-width: 8rem;
+  margin-top: -1px;
+  padding: 0.05rem 1rem;
+  font-family: var(--font-caps);
+  font-size: 0.95rem;
+  letter-spacing: 0.14em;
+  line-height: 1.5;
+  text-align: center;
+  white-space: nowrap;
+  color: var(--ink);
+  background: var(--paper);
+  border: 3px double var(--metal);
+  transform: translateX(-10px);
+}
+
+.halt-bell {
+  transform-box: fill-box;
+  transform-origin: 50% 0;
+  animation: bell-sway 26s ease-in-out infinite;
+}
+
+.tram {
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  bottom: calc(var(--rail-y) - 1.4px);
+  width: 224px;
+  height: 84px;
+  overflow: visible;
+  transform: translateX(-240px);
+  animation: tram-run 26s infinite;
+  will-change: transform;
+}
+
+.tram-beam {
+  fill: var(--glow);
+  opacity: 0.4;
+}
+
+.tram-lamp {
+  fill: var(--glow);
+  animation: lamp-flicker 3.2s steps(1, end) infinite;
+}
+
+.tram-lamp-glow {
+  stroke: var(--glow);
+}
+
+.tram-tail {
+  fill: var(--accent);
+}
+
+.tram-wheel {
+  fill: var(--paper);
+  stroke: currentColor;
+  stroke-width: 1.1;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: wheel-spin 26s infinite;
+}
+
+.tramway:hover .tram,
+.tramway:hover .tram-wheel,
+.tramway:hover .halt-bell {
+  animation-play-state: paused;
+}
+
+/* The tram slows down into the station, waits under the sign, then leaves. */
+@keyframes tram-run {
+  0% {
+    transform: translateX(-240px);
+    animation-timing-function: cubic-bezier(0.25, 0.1, 0.3, 1);
+  }
+  36% {
+    transform: translateX(calc(50cqw - 112px));
+    animation-timing-function: linear;
+  }
+  52% {
+    transform: translateX(calc(50cqw - 112px));
+    animation-timing-function: cubic-bezier(0.6, 0, 0.8, 0.7);
+  }
+  100% {
+    transform: translateX(calc(100cqw + 20px));
+  }
+}
+
+@keyframes wheel-spin {
+  0% {
+    transform: rotate(0deg);
+    animation-timing-function: cubic-bezier(0.25, 0.1, 0.3, 1);
+  }
+  36% {
+    transform: rotate(2520deg);
+    animation-timing-function: linear;
+  }
+  52% {
+    transform: rotate(2520deg);
+    animation-timing-function: cubic-bezier(0.6, 0, 0.8, 0.7);
+  }
+  100% {
+    transform: rotate(5040deg);
+  }
+}
+
+/* The bell swings once, when the tram arrives. */
+@keyframes bell-sway {
+  0%,
+  33% {
+    transform: rotate(0deg);
+  }
+  35% {
+    transform: rotate(16deg);
+  }
+  37% {
+    transform: rotate(-12deg);
+  }
+  39% {
+    transform: rotate(7deg);
+  }
+  41%,
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes lamp-flicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  46% {
+    opacity: 0.55;
+  }
+  48% {
+    opacity: 1;
+  }
+}
+
+@keyframes glow-breathe {
+  0%,
+  100% {
+    opacity: 0.75;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.footer-text {
+  max-width: calc(var(--measure) + 2 * var(--gutter));
+  margin: 0 auto;
+  padding: 1.2rem var(--gutter) 2.2rem;
+  text-align: center;
+  font-size: 0.9em;
+  color: var(--ink-soft);
+}
+
+.footer-text p {
+  margin: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tram,
+  .tram-wheel,
+  .tram-lamp,
+  .halt-bell,
+  .lamp-glow {
+    animation: none;
+  }
+
+  .tram {
+    transform: translateX(calc(50cqw - 112px));
+  }
+
+  a,
+  .site-nav a::after,
+  .site-nav a::before,
+  .tag-filter a::after,
+  .tag-filter a::before,
+  .scheme-half,
+  .scheme-auto,
+  .lantern-flame {
+    transition: none;
+  }
+
+  .lantern-glow {
+    transition: none;
+    animation: none !important;
+  }
+}
+
+@media (max-width: 36rem) {
+  .lamp-left,
+  .glow-left {
+    left: 2%;
+  }
+
+  .lamp-right,
+  .glow-right {
+    right: 2%;
+  }
+
+  .sep-list > li + li::before {
+    margin: 0 0.55em;
+  }
+
+  .site-nav a,
+  .search-open {
+    font-size: 0.9rem;
+    letter-spacing: 0.06em;
+  }
+
+  .lantern {
+    width: 1.1rem;
+  }
+
+  .search-open span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .recent-list li {
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+
+  .recent-list li time {
+    order: -1;
+  }
+
+  .neighbours {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .neighbours .newer {
+    grid-column: auto;
+    text-align: left;
+  }
+}
+
+@media print {
+  .site-nav,
+  .tramway,
+  .neighbours,
+  .tag-filter,
+  .search {
+    display: none !important;
+  }
+
+  body {
+    font-size: 11pt;
+    background: #fff;
+    color: #000;
+  }
+
+  .prose a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.8em;
+  }
+}

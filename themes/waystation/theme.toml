@@ -1,0 +1,27 @@
+name = "waystation"
+tags = ["blog", "search", "series", "dark", "victorian"]
+homepage = "https://foresterre.github.io"
+min_version = "0.23.0"
+demo = ""
+
+[extra.waystation]
+# "auto", "light" or "dark"
+color_scheme = "auto"
+articles_section = "articles/_index.md"
+home_article_limit = 8
+# Date formats (strftime syntax of jiff crate)
+date_format = "%-d %B %Y"
+date_format_short = "%-d %b %Y"
+tram = true
+station_name = ""
+footer = ""
+menu = [
+    { name = "Home", path = "@/_index.md" },
+    { name = "Articles", path = "@/articles/_index.md" },
+    { name = "Tags", path = "tags/" },
+    { name = "Series", path = "series/" },
+]
+
+[author]
+name = "foresterre"
+homepage = "https://foresterre.github.io"

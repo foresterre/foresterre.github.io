@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="{{ lang }}" data-scheme="{{ config.extra.waystation.color_scheme or 'auto' }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="{{ 'light dark' if (config.extra.waystation.color_scheme or 'auto') == 'auto' else config.extra.waystation.color_scheme }}">
+  {% if (config.extra.waystation.color_scheme or 'auto') == 'auto' %}
+  {# Applies a stored choice before the first paint, so the page does not flash in the other scheme. #}
+  <script>try { var s = localStorage.getItem("waystation-scheme"); if (s === "light" || s === "dark") document.documentElement.dataset.scheme = s; } catch (e) {}</script>
+  {% endif %}
+  <title>{% block title %}{{ config.title or "" }}{% endblock title %}</title>
+  <meta name="description" content="{% block description %}{{ config.description or "" }}{% endblock description %}">
+  {% if current_url %}<link rel="canonical" href="{{ current_url }}">{% endif %}
+  {% if config.generate_feeds %}{% for feed in config.feed_filenames %}
+  <link rel="alternate" type="{{ 'application/rss+xml' if feed is ending_with(pat='rss.xml') else 'application/atom+xml' }}" title="{{ config.title or feed }}" href="{{ get_url(path=feed, trailing_slash=false) }}">
+  {% endfor %}{% endif %}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&family=Marcellus+SC&family=Martian+Mono:wght@400;600&family=Sorts+Mill+Goudy:ital@0;1&display=swap">
+  <link rel="stylesheet" href="{{ get_url(path='css/waystation.css', trailing_slash=false, cachebust=true) }}">
+  <link rel="icon" href="{{ get_url(path='img/favicon.svg', trailing_slash=false) }}" type="image/svg+xml">
+  {% block head_extra %}{% endblock head_extra %}
+</head>
+<body class="{% block body_class %}{% endblock body_class %}">
+  <a class="skip-link" href="#main">Skip to content</a>
+  {% include "waystation/header.html" %}
+  <main id="main" class="main" tabindex="-1">
+    {% block main %}{% endblock main %}
+  </main>
+  {% include "waystation/footer.html" %}
+  {% if config.build_search_index %}{% include "waystation/search.html" %}{% endif %}
+  <script src="{{ get_url(path='js/waystation.js', trailing_slash=false, cachebust=true) }}" defer></script>
+  {% block scripts %}{% endblock scripts %}
+</body>
+</html>

@@ -1,0 +1,9 @@
+<dialog class="search" id="search" data-search data-index="{{ get_url(path='search_index.' ~ config.default_language ~ '.json', trailing_slash=false) }}" aria-labelledby="search-label">
+  <div class="search-bar" role="search">
+    <label id="search-label" for="search-input">Search articles</label>
+    <input id="search-input" type="search" autocomplete="off" spellcheck="false" enterkeyhint="go" placeholder="Words from a title or text" aria-describedby="search-status" data-search-input>
+    <button type="button" class="search-close" data-search-close>Close</button>
+  </div>
+  <p id="search-status" class="search-status" role="status" aria-live="polite" data-search-status></p>
+  <ol class="search-results" data-search-results></ol>
+</dialog>

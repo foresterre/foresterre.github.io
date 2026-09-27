@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Page not found | {{ config.title or "" }}{% endblock title %}
+{% block body_class %}page-404{% endblock body_class %}
+
+{% block main %}
+<section class="lost page-head">
+  <h1>Page not found</h1>
+  <span class="ornament divider" aria-hidden="true"></span>
+  <p>404</p>
+  <ul class="lost-links sep-list">
+    <li><a href="{{ get_url(path='@/_index.md') }}">Home</a></li>
+    {% set articles = get_section(path=config.extra.waystation.articles_section, allow_missing=true) %}
+    {% if articles %}<li><a href="{{ articles.permalink }}">All articles</a></li>{% endif %}
+    {% if config.build_search_index %}<li><button type="button" class="link-button" data-search-open aria-haspopup="dialog" aria-controls="search">Search</button></li>{% endif %}
+  </ul>
+</section>
+{% endblock main %}

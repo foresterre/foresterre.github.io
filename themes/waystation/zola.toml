@@ -1,0 +1,45 @@
+# Demo config
+base_url = "https://example.com"
+title = "Waystation" # WIP Theme
+default_language = "en"
+author = "Martijn Gribnau"
+
+build_search_index = true
+generate_feeds = true
+feed_filenames = ["atom.xml"]
+
+taxonomies = [
+    { name = "tags", feed = true },
+    { name = "series" },
+]
+
+[markdown]
+
+[markdown.highlighting]
+light_theme = "waystation-light"
+dark_theme = "waystation-dark"
+extra_themes = ["highlight/waystation-light.json", "highlight/waystation-dark.json"]
+
+[search]
+index_format = "fuse_json"
+include_title = true
+include_description = true
+include_date = true
+include_content = true
+truncate_content_length = 4000
+
+[extra.waystation]
+color_scheme = "auto"
+articles_section = "articles/_index.md"
+home_article_limit = 6
+date_format = "%-d %B %Y"
+date_format_short = "%-d %b %Y"
+tram = true
+station_name = ""
+footer = ""
+menu = [
+    { name = "Home", path = "@/_index.md" },
+    { name = "Articles", path = "@/articles/_index.md" },
+    { name = "Tags", path = "tags/" },
+    { name = "Series", path = "series/" },
+]

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block body_class %}page-home{% endblock body_class %}
+
+{% block main %}
+{% set ws = config.extra.waystation %}
+{% set articles = get_section(path=ws.articles_section, allow_missing=true) %}
+{% if section.content %}<section class="prose intro">{{ section.content | safe }}</section>{% endif %}
+
+{% if section.extra.about %}
+<section class="about framed" aria-labelledby="about-title">
+  <span class="ornament fleur" aria-hidden="true"></span>
+  <h2 id="about-title">{{ section.extra.about_title or "About" }}</h2>
+  <div class="prose">{{ section.extra.about | markdown | safe }}</div>
+</section>
+{% endif %}
+
+<span class="ornament clock-rule" aria-hidden="true"></span>
+
+<section class="recent" aria-labelledby="recent-title">
+  <h2 class="rule-title" id="recent-title">Recent articles</h2>
+  {% if articles and articles.pages %}
+  <ol class="recent-list">
+    {% for p in articles.pages[:ws.home_article_limit] %}
+    <li><a href="{{ p.permalink }}">{{ p.title }}</a>{{ <ws.date value={p.date} format={ws.date_format_short} /> }}</li>
+    {% endfor %}
+  </ol>
+  <p class="more"><a href="{{ articles.permalink }}">All articles ({{ articles.pages | length }})</a></p>
+  {% elif articles %}
+  <p class="empty">No articles yet. Add a Markdown file to the <code>{{ ws.articles_section | replace(from="/_index.md", to="") }}</code> folder in your content to publish the first one.</p>
+  {% else %}
+  <p class="empty">The articles section <code>{{ ws.articles_section }}</code> does not exist. Create it, or set <code>articles_section</code> under <code>[extra.waystation]</code> in your zola.toml.</p>
+  {% endif %}
+</section>
+{% endblock main %}
