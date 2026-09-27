@@ -3,9 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="light">
+<meta name="color-scheme" content="light dark">
 <title>{% block title %}{{ config.title }}{% endblock title %}</title>
 {% if config.description %}<meta name="description" content="{{ config.description }}">{% endif %}
+<script>
+  // Runs before the first paint, so a remembered theme does not flash the system theme first
+  const THEME_KEY = "foresterre:blauwdruk:theme";
+  try {
+    const theme = localStorage.getItem(THEME_KEY);
+    if (theme === "light" || theme === "dark") document.documentElement.dataset.theme = theme;
+  } catch {}
+</script>
 <link rel="stylesheet" href="{{ get_url(path="style.css") | safe }}">
 {% if config.generate_feeds %}<link rel="alternate" type="application/atom+xml" title="{{ config.title }}" href="{{ get_url(path="atom.xml") | safe }}">{% endif %}
 </head>
@@ -13,13 +21,16 @@
 <main class="sheet">
   <header class="titlebar">
     <a class="site-name" href="{{ get_url(path="/") | safe }}">{{ config.title }}</a>
-    {% if config.extra.blauwdruk.menu %}
-    <nav>
-      {%- for item in config.extra.blauwdruk.menu %}
-      <a href="{{ item.url | safe }}">{{ item.name }}</a>
-      {%- endfor %}
-    </nav>
-    {% endif %}
+    <div class="titlebar-end">
+      {% if config.extra.blauwdruk.menu %}
+      <nav>
+        {%- for item in config.extra.blauwdruk.menu %}
+        <a href="{{ item.url | safe }}">{{ item.name }}</a>
+        {%- endfor %}
+      </nav>
+      {% endif %}
+      {% include "partials/theme-switch.html" %}
+    </div>
   </header>
   {% block content %}{% endblock content %}
   {% if config.extra.blauwdruk.colophon | default(value=true) %}
