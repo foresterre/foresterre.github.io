@@ -141,6 +141,7 @@ async function main() {
     try {
       result = { fetchedAt: new Date(), repos: await fetchRepos(user, wanted) };
       writeCache(result.fetchedAt, result.repos);
+      status.textContent = "";
     } catch (error) {
       status.textContent = describeError(error);
       return;
