@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Sharing declarative args between top level and subcommand using Clap | Don&#39;t panic, impl Things</title>
+<meta name="description" content="match x { &quot;Martijn Gribnau&quot; =&gt; blog!(), _ =&gt; open!(&quot;github.com/foresterre&quot;) } ">
+<script>
+  // Runs before the first paint, so a remembered theme does not flash the system theme first
+  const THEME_KEY = "foresterre:blauwdruk:theme";
+  try {
+    const theme = localStorage.getItem(THEME_KEY);
+    if (theme === "light" || theme === "dark") document.documentElement.dataset.theme = theme;
+  } catch {}
+</script>
+<link rel="stylesheet" href="https://gribnau.dev/style.css">
+<link rel="alternate" type="application/atom+xml" title="Don&#39;t panic, impl Things" href="https://gribnau.dev/atom.xml">
+</head>
+<body>
+<main class="sheet">
+  <header class="titlebar">
+    <div class="titlebar-start">
+      <fieldset class="theme-switch" hidden>
+  <legend class="visually-hidden">Color theme</legend>
+  <svg viewBox="0 0 44 40" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1"><path class="construction" d="M22 7V33M7 33L29.5 20M37 33L14.5 20"/><path class="edge" d="M22 7L37 33H7Z" stroke-linejoin="round"/><g class="glyph system"><circle class="knockout" cx="22" cy="7" r="5.2"/><circle cx="22" cy="7" r="3.4"/><path d="M22 3.6A3.4 3.4 0 0 0 22 10.4Z" fill="currentColor"/></g><g class="glyph light"><circle class="knockout" cx="7" cy="33" r="5.2"/><circle cx="7" cy="33" r="2"/><path d="M10.3 33L11.6 33M9.33 35.33L10.25 36.25M7 36.3L7 37.6M4.67 35.33L3.75 36.25M3.7 33L2.4 33M4.67 30.67L3.75 29.75M7 29.7L7 28.4M9.33 30.67L10.25 29.75" stroke-linecap="round"/></g><g class="glyph dark"><circle class="knockout" cx="37" cy="33" r="5.2"/><path d="M37.62 28.6A3.8 3.8 0 1 0 41.45 33.46A3.1 3.1 0 0 1 37.62 28.6Z"/></g><circle class="indicator" cx="22" cy="7" r="6.7"/></g></svg>
+  <input type="radio" name="theme" value="system" aria-label="System theme" title="System theme">
+  <input type="radio" name="theme" value="light" aria-label="Light theme" title="Light theme">
+  <input type="radio" name="theme" value="dark" aria-label="Dark theme" title="Dark theme">
+</fieldset>
+<script>
+  (function () {
+    const root = document.documentElement;
+    const themeSwitch = document.querySelector(".theme-switch");
+    const radios = themeSwitch.querySelectorAll("input");
+
+    function apply(theme) {
+      if (theme === "light" || theme === "dark") {
+        root.dataset.theme = theme;
+      } else {
+        theme = "system";
+        delete root.dataset.theme;
+      }
+      radios.forEach((radio) => (radio.checked = radio.value === theme));
+    }
+
+    themeSwitch.addEventListener("change", (event) => {
+      const theme = event.target.value;
+      apply(theme);
+      try {
+        if (theme === "system") {
+          localStorage.removeItem(THEME_KEY);
+        } else {
+          localStorage.setItem(THEME_KEY, theme);
+        }
+      } catch {
+        console.warn("[blauwdruk] Unable to set theme in localstorage");
+      }
+    });
+
+    // Keeps other open tabs in sync when the theme changes in one of them
+    window.addEventListener("storage", (event) => {
+      if (event.key === THEME_KEY || event.key === null) apply(event.newValue);
+    });
+
+    apply(root.dataset.theme);
+    themeSwitch.hidden = false;
+  })();
+</script>
+
+      <a class="site-name" href="https://gribnau.dev">Don&#39;t panic, impl Things</a>
+    </div>
+    
+    <nav>
+      <a href="/">Index</a>
+      <a href="/posts/">Writing</a>
+      <a href="/projects/">Projects</a>
+      <a href="https://github.com/foresterre">GitHub⤴</a>
+    </nav>
+    
+  </header>
+  
+<article>
+  <h1 class="page-title">Sharing declarative args between top level and subcommand using Clap</h1>
+  
+  <p class="meta">
+    <span><span class="mark">+</span> <time datetime="2024-06-25">2024-06-25</time></span>
+    <span>14 min read</span>
+    <span>
+      <a href="https://gribnau.dev/tags/rust/">#Rust</a>
+      <a href="https://gribnau.dev/tags/cargo-msrv/">#cargo-msrv</a>
+      <a href="https://gribnau.dev/tags/msrv/">#msrv</a>
+      <a href="https://gribnau.dev/tags/clap/">#clap</a>
+      <a href="https://gribnau.dev/tags/side-quest/">#side-quest</a>
+    </span>
+    <span class="human">All content is written by a human (unless stated otherwise)</span>
+  </p>
+  
+  <div class="prose"><p>Alternative title: <em>... And a short introduction to <code>cargo msrv</code></em></p>
+<h1 id="the-problem">The problem</h1>
+<p>In <a rel="external" href="https://github.com/foresterre/cargo-msrv">cargo-msrv</a> we have the following situation. The top level command is used when "finding the MSRV" of a Rust project, while a subcommand can be used to verify that a specific MSRV works for a given project.</p>
+<p>The former can be done by running <code>cargo msrv</code> while the latter would be <code>cargo msrv verify</code>.</p>
+<p>Once upon a time, an issue was reported that <code>cargo msrv --target x verify</code> worked, but <code>cargo msrv verify --target x</code> did not. Another Cargo tool used by the reporter, together with <code>cargo-msrv</code>, would always specify the latter form, so the former could not be used as a workaround.</p>
+<p>While diving into this issue I figured, this should work:</p>
+<ol>
+<li><code>cargo msrv --target x verify</code></li>
+<li><code>cargo msrv verify --target x</code> (equivalent to 2 for the user)</li>
+</ol>
+<p>But this should not:</p>
+<ul>
+<li><code>cargo msrv --target x verify --target y</code></li>
+</ul>
+<p>The latter form is confusing to a user. If you allow both, you have to consider which takes precedence. Or whether they define the same thing.</p>
+<p>This should also not work (since the <code>list</code> subcommand currently doesn't use the <code>target</code> CLI argument at all):</p>
+<ul>
+<li><code>cargo msrv --target x list</code></li>
+<li><code>cargo msrv list --target x</code></li>
+</ul>
+<p>This post describes a short journey into the search for a satisfying solution.</p>
+<p><code>cargo-msrv</code> uses <code>clap</code>, the most commonly used CLI argument parser (in the Rust library landscape). For the remainder of this post I will assume some familiarity with Rust and <code>clap</code>.</p>
+<h2 id="background-on-cargo-msrv">Background on cargo msrv</h2>
+<p>This section can be useful to better understand this post since I decided to keep the original problem, instead of describing a more minimal reproduction. But feel free to skip this section (I might refer back to it though 😜).</p>
+<p><strong>A short history</strong></p>
+<p><code>cargo-msrv</code> was originally born out of a desire to find the MSRV for a Rust project (more specifically package). MSRV stands for "minimal supported Rust version" and is the earliest or oldest version supported by a Rust project. For different projects this may mean different things, but for this post I will consider "support" as "does compile with a Rust toolchain of a certain version".</p>
+<p>Fast forward a few years, and the MSRV has become somewhat more ubiquitous which can also be seen by its inclusion into Cargo as the <a rel="external" href="https://doc.rust-lang.org/cargo/reference/manifest.html#the-rust-version-field">rust-version</a>. Over time some additional tools were added to <code>cargo-msrv</code>. One of these was the <code>cargo msrv verify</code> subcommand.</p>
+<p>This subcommand can be used to check whether a Rust project supports its defined MSRV (e.g. via this <code>rust-version</code> field in the Cargo manifest). For example, in a CI pipeline you can use this to check whether your project works for the version you promised to your users.</p>
+<p>Originally, I kept the <code>cargo msrv</code> top level command aside from the subcommands for backwards compatibility reasons. In hindsight I probably shouldn't have done that, but as is, their coexistence at least provides me with the opportunity to write this blog post 😅.</p>
+<p><strong>How cargo msrv works</strong></p>
+<p>I described the "support" from "minimal supported Rust version" (MSRV) above as the somewhat simplified "does compile with a Rust toolchain of a certain version".</p>
+<p>You may write that as a function like so:  <code>fn is_compatible(version) -&gt; bool</code>. If you run this test for some Rust version, when the function produces the value <code>true</code>, then we consider the Rust version to be supported. If instead the function produces the value <code>false</code>, then the Rust version is not supported.</p>
+<p><code>cargo msrv</code> specifically searches for the <em>minimal</em> Rust version which is supported by a given Rust project. While there are some caveats, we build upon Rust's <a rel="external" href="https://blog.rust-lang.org/2014/10/30/Stability.html#committing-to-stability">stability promise</a> . In our case that is the idea that Rust versions are backwards compatible.</p>
+<p>For a simple example to determine an MSRV, you can linearly walk backwards from the most recent Rust version to the earliest. When your project doesn't compile for a specific Rust version, then the last version that did compile can be considered your MSRV.</p>
+<p>Let's make it a bit more concrete with an example. For this example, we assume that Rust the following Rust versions exist: <code>1.0.0</code> up to and including <code>1.5.0</code>.</p>
+<p>Consider a project which uses the <a rel="external" href="https://doc.rust-lang.org/std/time/struct.Duration.html#">Duration</a> API which was stabilised by <a rel="external" href="https://github.com/rust-lang/rust/blob/master/RELEASES.md#version-130-2015-09-17">Rust 1.3.0</a> (and nothing more recent 😉).</p>
+<p>Then, if you would compile this project with Rust version from most recent to least recent, you would expect the following to happen:</p>
+<ul>
+<li><code>is_compatible(Rust 1.5.0)</code> returns <code>true</code> ✅</li>
+<li><code>is_compatible(Rust 1.4.0)</code> returns <code>true</code> ✅</li>
+<li><code>is_compatible(Rust 1.3.0)</code> returns <code>true</code> ✅</li>
+<li><code>is_compatible(Rust 1.2.0)</code> returns <code>false</code> ❌ ("Duration is not stable")</li>
+<li><code>is_compatible(Rust 1.1.0)</code> returns <code>false</code> ❌</li>
+<li><code>is_compatible(Rust 1.0.0)</code> returns false ❌</li>
+</ul>
+<p>Since we only care about the <em>minimal</em> Rust version, you could have stopped searching after compiling Rust 1.2.0; Rust 1.3.0 was the earliest released Rust version which worked.</p>
+<p>In reality doing a linear search is quite slow (at the time of writing, there are 79 minor versions), so we primarily use a binary search instead to incrementally reduce the search space.</p>
+<p><code>cargo msrv verify</code> works quite similar to "finding the MSRV", but instead of running a search which produces as primary output the MSRV, in this case the MSRV is already known in advance. So given a <code>MSRV</code> of <code>1.3.0</code> we just run the <code>is_compatible(Rust 1.3.0)</code> function once. If it returns <code>true</code> we can say that the 1.3.0 is an acceptable MSRV (although not necessarily strictly so). More importantly, if it returns false, then the specified version is actually not supported, and thus can not be an MSRV).</p>
+<p>Enough background, back to the post.</p>
+<h1 id="definition-of-the-cli">Definition of the CLI</h1>
+<p><code>cargo-msrv</code> uses <code>clap</code> as its CLI argument parser. It nowadays uses the <code>macro derive</code> based API. In the code blocks below, I have isolated the primary definition of the CLI which describes the <code>cargo msrv</code> top level command (a.k.a. <code>Find</code> in the code), and the <code>cargo msrv verify</code> subcommand.</p>
+<p>I've taken the liberty to remove some unnecessary details, and added some arrows and comments for relevant items. Otherwise, this code is the copied directly from the actual source.</p>
+<pre class="giallo" style="color: #BABED8; background-color: #0F111A;" ><code data-lang="rust"><span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>derive</span><span style="color: #89DDFF;">(</span><span style="color: #FFCB6B;">Debug</span><span style="color: #89DDFF;">,</span><span style="color: #FFCB6B;"> Args</span><span style="color: #89DDFF;">)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>command</span><span style="color: #89DDFF;">(</span><span>version</span><span style="color: #89DDFF;">)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">pub</span><span style="color: #C792EA;"> struct</span><span style="color: #FFCB6B;"> CargoMsrvOpts</span><span style="color: #89DDFF;"> {</span><span style="color: #464B5D;font-style: italic;">  // &lt;- The top level, i.e. `cargo msrv {...}`</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    #[</span><span>command</span><span style="color: #89DDFF;">(</span><span>flatten</span><span style="color: #89DDFF;">)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">    pub</span><span> find_opts</span><span style="color: #89DDFF;">:</span><span style="color: #FFCB6B;"> FindOpts</span><span style="color: #89DDFF;">,</span><span style="color: #464B5D;font-style: italic;"> // &lt;- Options relevant for &quot;find msrv&quot;</span></span>
+<span class="giallo-l"><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    #[</span><span>command</span><span style="color: #89DDFF;">(</span><span>flatten</span><span style="color: #89DDFF;">)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">    pub</span><span> shared_opts</span><span style="color: #89DDFF;">:</span><span style="color: #FFCB6B;"> SharedOpts</span><span style="color: #89DDFF;">,</span><span> </span></span>
+<span class="giallo-l"><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    #[</span><span>command</span><span style="color: #89DDFF;">(</span><span>subcommand</span><span style="color: #89DDFF;">)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">    pub</span><span> subcommand</span><span style="color: #89DDFF;">:</span><span style="color: #FFCB6B;"> Option</span><span style="color: #89DDFF;">&lt;</span><span style="color: #FFCB6B;">SubCommand</span><span style="color: #89DDFF;">&gt;,</span><span style="color: #464B5D;font-style: italic;"> // &lt;- Subcommands, like &quot;verify&quot; in &quot;cargo msrv verify&quot;</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>derive</span><span style="color: #89DDFF;">(</span><span style="color: #FFCB6B;">Debug</span><span style="color: #89DDFF;">,</span><span style="color: #FFCB6B;"> Args</span><span style="color: #89DDFF;">)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>command</span><span style="color: #89DDFF;">(</span><span>next_help_heading </span><span style="color: #89DDFF;">= &quot;</span><span style="color: #C3E88D;">Find MSRV options</span><span style="color: #89DDFF;">&quot;)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">pub</span><span style="color: #C792EA;"> struct</span><span style="color: #FFCB6B;"> FindOpts</span><span style="color: #89DDFF;"> {</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    #[</span><span>arg</span><span style="color: #89DDFF;">(</span><span>long</span><span style="color: #89DDFF;">,</span><span> conflicts_with </span><span style="color: #89DDFF;">= &quot;</span><span style="color: #C3E88D;">linear</span><span style="color: #89DDFF;">&quot;)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">    pub</span><span> bisect</span><span style="color: #89DDFF;">:</span><span style="color: #FFCB6B;"> bool</span><span style="color: #89DDFF;">,</span><span>  </span></span>
+<span class="giallo-l"><span>   </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">     #[</span><span>arg</span><span style="color: #89DDFF;">(</span><span>long</span><span style="color: #89DDFF;">,</span><span> conflicts_with </span><span style="color: #89DDFF;">= &quot;</span><span style="color: #C3E88D;">bisect</span><span style="color: #89DDFF;">&quot;)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">    pub</span><span> linear</span><span style="color: #89DDFF;">:</span><span style="color: #FFCB6B;"> bool</span><span style="color: #89DDFF;">,</span><span>  </span></span>
+<span class="giallo-l"><span>  </span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">	// ... omitted some options for brevity</span></span>
+<span class="giallo-l"><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    #[</span><span>command</span><span style="color: #89DDFF;">(</span><span>flatten</span><span style="color: #89DDFF;">)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">    pub</span><span> runner_opts</span><span style="color: #89DDFF;">:</span><span style="color: #FFCB6B;"> RunnerOptsFind</span><span style="color: #89DDFF;">,</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">}</span></span></code></pre>
+<p><code>CargoMsrvOpts</code> is the top level CLI interface, i.e. <code>cargo msrv</code>.
+The options relevant to "finding the MSRV" are specified on the top level (i.e. <code>FindOpts</code>).</p>
+<p><code>FindOpts</code> should not be used for other subcommands (ironic considering this post, I know, at least <code>cargo msrv verify --help</code> doesn't list them 😜).</p>
+<pre class="giallo" style="color: #BABED8; background-color: #0F111A;" ><code data-lang="rust"><span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>derive</span><span style="color: #89DDFF;">(</span><span style="color: #FFCB6B;">Debug</span><span style="color: #89DDFF;">,</span><span style="color: #FFCB6B;"> Subcommand</span><span style="color: #89DDFF;">)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>command</span><span style="color: #89DDFF;">(</span><span>propagate_version </span><span style="color: #89DDFF;">=</span><span> true</span><span style="color: #89DDFF;">)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">pub</span><span style="color: #C792EA;"> enum</span><span style="color: #FFCB6B;"> SubCommand</span><span style="color: #89DDFF;"> {</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #82AAFF;">    List</span><span style="color: #89DDFF;">(</span><span style="color: #FFCB6B;">ListOpts</span><span style="color: #89DDFF;">),</span><span>    </span></span>
+<span class="giallo-l"><span style="color: #82AAFF;">    Set</span><span style="color: #89DDFF;">(</span><span style="color: #FFCB6B;">SetOpts</span><span style="color: #89DDFF;">),</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #FFCB6B;">    Show</span><span style="color: #89DDFF;">,</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #82AAFF;">    Verify</span><span style="color: #89DDFF;">(</span><span style="color: #FFCB6B;">VerifyOpts</span><span style="color: #89DDFF;">),</span><span style="color: #464B5D;font-style: italic;"> // &lt;- The options for the verify subcommand</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>derive</span><span style="color: #89DDFF;">(</span><span style="color: #FFCB6B;">Debug</span><span style="color: #89DDFF;">,</span><span style="color: #FFCB6B;"> Args</span><span style="color: #89DDFF;">)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>command</span><span style="color: #89DDFF;">(</span><span>next_help_heading </span><span style="color: #89DDFF;">= &quot;</span><span style="color: #C3E88D;">Verify options</span><span style="color: #89DDFF;">&quot;)]</span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">pub</span><span style="color: #C792EA;"> struct</span><span style="color: #FFCB6B;"> VerifyOpts</span><span style="color: #89DDFF;"> {</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    #[</span><span>command</span><span style="color: #89DDFF;">(</span><span>flatten</span><span style="color: #89DDFF;">)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">    pub</span><span> runner_opts</span><span style="color: #89DDFF;">:</span><span style="color: #FFCB6B;"> RunnerOpts</span><span style="color: #89DDFF;">,</span><span style="color: #464B5D;font-style: italic;"> // &lt;- The options we want to share between the top level &quot;find msrv&quot; (i.e. &#39;cargo msrv&#39;) and &quot;verify msrv&quot; subcommand (i.e. &#39;cargo msrv verify&#39;)  </span></span>
+<span class="giallo-l"><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    #[</span><span>arg</span><span style="color: #89DDFF;">(</span><span>long</span><span style="color: #89DDFF;">,</span><span> value_name </span><span style="color: #89DDFF;">= &quot;</span><span style="color: #C3E88D;">rust-version</span><span style="color: #89DDFF;">&quot;)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">    pub</span><span> rust_version</span><span style="color: #89DDFF;">:</span><span style="color: #FFCB6B;"> Option</span><span style="color: #89DDFF;">&lt;</span><span style="color: #FFCB6B;">BareVersion</span><span style="color: #89DDFF;">&gt;,</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">}</span></span></code></pre>
+<p>Options supplied to the <code>verify</code> subcommand are specified by the <code>VerifyOpts</code> struct. As a user, you would interface with it like so: <code>cargo msrv verify {opts}</code>, e.g. <code>cargo msrv verify --target example</code>.</p>
+<pre class="giallo" style="color: #BABED8; background-color: #0F111A;" ><code data-lang="rust"><span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>derive</span><span style="color: #89DDFF;">(</span><span style="color: #FFCB6B;">Debug</span><span style="color: #89DDFF;">,</span><span style="color: #FFCB6B;"> Args</span><span style="color: #89DDFF;">)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">pub</span><span style="color: #C792EA;"> struct</span><span style="color: #FFCB6B;"> RunnerOpts</span><span style="color: #89DDFF;"> {</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    #[</span><span>command</span><span style="color: #89DDFF;">(</span><span>flatten</span><span style="color: #89DDFF;">)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">    pub</span><span> rust_releases_opts</span><span style="color: #89DDFF;">:</span><span style="color: #FFCB6B;"> RustReleasesOpts</span><span style="color: #89DDFF;">,</span><span>  </span></span>
+<span class="giallo-l"><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    #[</span><span>command</span><span style="color: #89DDFF;">(</span><span>flatten</span><span style="color: #89DDFF;">)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">    pub</span><span> toolchain_opts</span><span style="color: #89DDFF;">:</span><span style="color: #FFCB6B;"> ToolchainOpts</span><span style="color: #89DDFF;">,</span><span style="color: #464B5D;font-style: italic;"> // &lt;- The examples will use this one</span></span>
+<span class="giallo-l"><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    #[</span><span>command</span><span style="color: #89DDFF;">(</span><span>flatten</span><span style="color: #89DDFF;">)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">    pub</span><span> cargo_check_opts</span><span style="color: #89DDFF;">:</span><span style="color: #FFCB6B;"> CheckCommandOpts</span><span style="color: #89DDFF;">,</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>derive</span><span style="color: #89DDFF;">(</span><span style="color: #FFCB6B;">Debug</span><span style="color: #89DDFF;">,</span><span style="color: #FFCB6B;"> Args</span><span style="color: #89DDFF;">)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>command</span><span style="color: #89DDFF;">(</span><span>next_help_heading </span><span style="color: #89DDFF;">= &quot;</span><span style="color: #C3E88D;">Toolchain options</span><span style="color: #89DDFF;">&quot;)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">pub</span><span style="color: #C792EA;"> struct</span><span style="color: #FFCB6B;"> ToolchainOpts</span><span style="color: #89DDFF;"> {</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    #[</span><span>arg</span><span style="color: #89DDFF;">(</span><span>long</span><span style="color: #89DDFF;">,</span><span> value_name </span><span style="color: #89DDFF;">= &quot;</span><span style="color: #C3E88D;">TARGET</span><span style="color: #89DDFF;">&quot;)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">    pub</span><span> target</span><span style="color: #89DDFF;">:</span><span style="color: #FFCB6B;"> Option</span><span style="color: #89DDFF;">&lt;</span><span style="color: #FFCB6B;">String</span><span style="color: #89DDFF;">&gt;,</span><span>  </span></span>
+<span class="giallo-l"><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">	#[</span><span>arg</span><span style="color: #89DDFF;">(</span><span>long</span><span style="color: #89DDFF;">,</span><span> value_name </span><span style="color: #89DDFF;">= &quot;</span><span style="color: #C3E88D;">COMPONENT</span><span style="color: #89DDFF;">&quot;)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">    pub</span><span> add_component</span><span style="color: #89DDFF;">:</span><span style="color: #FFCB6B;"> Vec</span><span style="color: #89DDFF;">&lt;</span><span style="color: #FFCB6B;">String</span><span style="color: #89DDFF;">&gt;,</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">}</span></span></code></pre>
+<p><code>RunnerOpts</code> specifies options relevant to run the <code>is_compatible</code> test I introduced in the <em>How cargo msrv works</em> section. What this actually entails is not relevant to this post. All you need to know is that each of these flattened commands define some arguments. I will use the arguments in <code>ToolchainOpts</code> for the examples:  <code>--target</code> (as my primary example) and <code>--add-component</code> (just to point out some edge cases).</p>
+<p>The last detail I will add is that for both the "find msrv" top level command and each of the subcommands, we produce a flattened context which contains the inputs for that command. Both the <code>FindContext</code> and <code>VerifyContext</code> contain a <code>pub toolchain: ToolchainContext</code> field. The context is currently created via the <code>TryFrom</code> trait from the <code>Opts</code> (or resolved from the environment) to the <code>Context</code>.</p>
+<p>The fields in the <code>ToolchainContext</code> can be considered static for the duration of the program.</p>
+<h1 id="the-goal">The goal</h1>
+<p>Let's make the problem a bit more concrete again.</p>
+<p>First lets be explicit: the problem is limited to "matching (in name and type) CLI arguments which can be provided to both <code>cargo msrv</code> and <code>cargo msrv verify</code>", and I'll mention that if no value is given for either, we use some default which we will assume just exists.</p>
+<p>In the end, (1) <strong>we want to end up with a CLI interface like <code>cargo msrv {top_level_arg} verify {subcommand_arg}</code> where a matching argument is provided to either the top level <code>xor</code> the subcommand <code>xor</code> use the default</strong>.</p>
+<p>In addition, (2) <strong>the matching args should not be available to subcommands, other than <code>verify</code></strong>.</p>
+<p>In the next section, I'm going to throw some ideas over the wall. To generate these ideas I primarily used the <code>clap</code> rustdoc documentation on <a href="https://gribnau.dev/posts/puzzle-sharing-declarative-args-between-top-level-and-subcommand/docs.rs/clap%60">docs.rs</a> as a reference.</p>
+<p>Let me spoil it for you  in advance 🙄: None of these solutions really make me happy, so I will probably choose a pragmatic choice instead.</p>
+<p>I mention this beforehand because I want to explicitly state that none of this is something I blame on <code>clap</code> (or anyone else). <code>clap's</code> documentation is extensive, and is very well written. If it is described, then I didn't look in the right places. It might just be a puzzle I haven't solved yet 🧩.</p>
+<p>Also, this scenario where you have a top level CLI and some subcommands which have to share some things is most likely non standard, and honestly, discouraged for similar reasons as why I'm putting this effort in: user experience.</p>
+<h1 id="idea-1-merging-opts">Idea 1: merging Opts</h1>
+<p>A first idea is to keep the current definition and simply merge its values.</p>
+<p>You may see some obvious flaws with this: first, goal (2) will not be met, since one of the <code>RunnerOpts</code> is defined on <code>FindOpts</code> which is at the top level of the CLI, so subcommands other than <code>verify</code> will also have allow the arguments defined by <code>RunnerOpts</code> to be specified (even though they will be ignored). Second, goal (1) is dependent on custom merging logic.</p>
+<p>For this, let's quickly consider the output which we would get from <code>clap</code> after it parsed the CLI arguments like in this idea (in simplified Rust code), to consider what it would look like:</p>
+<pre class="giallo" style="color: #BABED8; background-color: #0F111A;" ><code data-lang="rust"><span class="giallo-l"><span style="color: #C792EA;">let</span><span> opts</span><span style="color: #89DDFF;"> =</span><span style="color: #FFCB6B;"> CargoMsrvOpts</span><span style="color: #89DDFF;"> { ... };</span><span style="color: #464B5D;font-style: italic;"> // Output from Clap&#39;s parse method</span></span>
+<span class="giallo-l"><span style="color: #C792EA;">let</span><span> find_opts</span><span style="color: #89DDFF;"> =</span><span> opts</span><span style="color: #89DDFF;">.</span><span>find_opts</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #C792EA;">let</span><span style="color: #FFCB6B;"> Some</span><span style="color: #89DDFF;">(</span><span style="color: #82AAFF;">VerifyOpts</span><span style="color: #89DDFF;">(</span><span>verify_opts</span><span style="color: #89DDFF;">)) =</span><span> opts</span><span style="color: #89DDFF;">.</span><span>subcommand </span><span style="color: #89DDFF;font-style: italic;">else</span><span style="color: #89DDFF;"> {</span><span style="color: #82AAFF;"> todo!</span><span style="color: #89DDFF;">() };</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C792EA;">let</span><span> find_toolchain_opts</span><span style="color: #89DDFF;"> =</span><span> find_opts</span><span style="color: #89DDFF;">.</span><span>runner_opts</span><span style="color: #89DDFF;">.</span><span>toolchain_opts</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #C792EA;">let</span><span> verify_toolchain_opts</span><span style="color: #89DDFF;"> =</span><span> verify_opts</span><span style="color: #89DDFF;">.</span><span>runner_opts</span><span style="color: #89DDFF;">.</span><span>toolchain_opts</span><span style="color: #89DDFF;">;</span></span></code></pre>
+<p>If <code>opts.subcommand</code> is not <code>Some(VerifyOpts(_))</code> then we can simply take all arguments from the <code>find_toolchain_opts</code>.</p>
+<p>If <code>opts.subcommand</code> is <code>Some(VerifyOpts(_))</code>, then we would need to merge <code>find_toolchain_opts</code> and <code>verify_toolchain_opts</code>.</p>
+<p>Most of this merging code would likely be fairly trivial considering the limited common CLI input options and the XOR-or-default condition that <code>clap</code> would enforce if this concept worked.</p>
+<blockquote>
+<p>Values which are marked as optional, i.e. via the <code>Option&lt;T&gt;</code> type are trivial. If one is <code>Some</code>, then the other one must be <code>None</code> (by the  XOR-or-default condition).</p>
+<p>Values which instead use a default value, may not be so clear cut. There is the question: did the user provide this default value, or was it omitted. The first case is a choice, similar to <code>Some</code>, while the second case is a fallback to a default like <code>None</code>. This information is no longer known after argument parsing.</p>
+<p>The good news however is that we only need to compare two values per field. Consider <code>enum Choice { #[default] A, B, C }</code>. Since we know that at most only one of the two values was provided, since if our idea works, the argument parser rejects if the user provides both.</p>
+<p>From an external point of view,  there are four options <code>A (default), A (provided), B and C</code>. However, we have to decide on a merged value for each pair just using their values <code>A, B and C</code>.  If values B or C, on both <code>find xor verify</code>, are given it is simple: by the XOR-or-default condition, B and C are always the user selected values. For A, we luckily do actually not need to care whether it was provided or not. If the other side provides B or C, it was the default (see previous), and if it is A, then we can simply use A.</p>
+<p>-&gt; I feel the merging/selecting would likely be reasonably possible with this fairly simple scenario in mind, but haven't put much thought into searching counter arguments where it doesn't work (or proving that it always works for that matter).</p>
+</blockquote>
+<p>Yet, it would still all be a bit too hairy for my liking considering we use the <code>derive</code> API to get a nice declarative, clean looking argument parser.</p>
+<p>Positives:</p>
+<ul>
+<li>The code (likely) compiles</li>
+<li>The interface becomes no worse than it is today</li>
+</ul>
+<p>Negatives:</p>
+<ul>
+<li>Custom merging logic on top of the declarative API</li>
+</ul>
+<p>Currently my preferred choice, mostly because it won't worsen the current user experience.</p>
+<h1 id="idea-2-naming-a-command">Idea 2: naming a command</h1>
+<p>If we could name one of these derived commands, then we might get away with saying to <code>clap</code>:  "the fields within this named command are incompatible with the fields in this other named command"; i.e. I'm trying to apply some constraint.</p>
+<pre class="giallo" style="color: #BABED8; background-color: #0F111A;" ><code data-lang="rust"><span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>derive</span><span style="color: #89DDFF;">(</span><span style="color: #FFCB6B;">Debug</span><span style="color: #89DDFF;">,</span><span style="color: #FFCB6B;"> Args</span><span style="color: #89DDFF;">)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>command</span><span style="color: #89DDFF;">(</span><span>next_help_heading </span><span style="color: #89DDFF;">= &quot;</span><span style="color: #C3E88D;">Find MSRV options</span><span style="color: #89DDFF;">&quot;)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">pub</span><span style="color: #C792EA;"> struct</span><span style="color: #FFCB6B;"> FindOpts</span><span style="color: #89DDFF;"> {</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    #[</span><span>arg</span><span style="color: #89DDFF;">(</span><span>long</span><span style="color: #89DDFF;">,</span><span> conflicts_with </span><span style="color: #89DDFF;">= &quot;</span><span style="color: #C3E88D;">linear</span><span style="color: #89DDFF;">&quot;)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">    pub</span><span> bisect</span><span style="color: #89DDFF;">:</span><span style="color: #FFCB6B;"> bool</span><span style="color: #89DDFF;">,</span><span>  </span></span>
+<span class="giallo-l"><span>   </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">     #[</span><span>arg</span><span style="color: #89DDFF;">(</span><span>long</span><span style="color: #89DDFF;">,</span><span> conflicts_with </span><span style="color: #89DDFF;">= &quot;</span><span style="color: #C3E88D;">bisect</span><span style="color: #89DDFF;">&quot;)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">    pub</span><span> linear</span><span style="color: #89DDFF;">:</span><span style="color: #FFCB6B;"> bool</span><span style="color: #89DDFF;">,</span><span>  </span></span>
+<span class="giallo-l"><span>  </span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">	// ... omitted some options for brevity</span></span>
+<span class="giallo-l"><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    #[</span><span>command</span><span style="color: #89DDFF;">(</span><span>flatten</span><span style="color: #89DDFF;">,</span><span> id </span><span style="color: #89DDFF;">= &quot;</span><span style="color: #C3E88D;">runner_opts_find</span><span style="color: #89DDFF;">&quot;,</span><span> conflicts_with </span><span style="color: #89DDFF;">= [&quot;</span><span style="color: #C3E88D;">runner_opts_verify</span><span style="color: #89DDFF;">&quot;])]</span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">    pub</span><span> runner_opts</span><span style="color: #89DDFF;">:</span><span style="color: #FFCB6B;"> RunnerOptsFind</span><span style="color: #89DDFF;">,</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>derive</span><span style="color: #89DDFF;">(</span><span style="color: #FFCB6B;">Debug</span><span style="color: #89DDFF;">,</span><span style="color: #FFCB6B;"> Args</span><span style="color: #89DDFF;">)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>command</span><span style="color: #89DDFF;">(</span><span>next_help_heading </span><span style="color: #89DDFF;">= &quot;</span><span style="color: #C3E88D;">Verify options</span><span style="color: #89DDFF;">&quot;)]</span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">pub</span><span style="color: #C792EA;"> struct</span><span style="color: #FFCB6B;"> VerifyOpts</span><span style="color: #89DDFF;"> {</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    #[</span><span>command</span><span style="color: #89DDFF;">(</span><span>flatten</span><span style="color: #89DDFF;">,</span><span> id </span><span style="color: #89DDFF;">= &quot;</span><span style="color: #C3E88D;">runner_opts_verify</span><span style="color: #89DDFF;">&quot;)]</span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">    pub</span><span> runner_opts</span><span style="color: #89DDFF;">:</span><span style="color: #FFCB6B;"> RunnerOpts</span><span style="color: #89DDFF;">,</span><span> </span></span>
+<span class="giallo-l"><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    #[</span><span>arg</span><span style="color: #89DDFF;">(</span><span>long</span><span style="color: #89DDFF;">,</span><span> value_name </span><span style="color: #89DDFF;">= &quot;</span><span style="color: #C3E88D;">rust-version</span><span style="color: #89DDFF;">&quot;)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">    pub</span><span> rust_version</span><span style="color: #89DDFF;">:</span><span style="color: #FFCB6B;"> Option</span><span style="color: #89DDFF;">&lt;</span><span style="color: #FFCB6B;">BareVersion</span><span style="color: #89DDFF;">&gt;,</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">}</span></span></code></pre>
+<p>Unfortunately, this idea doesn't quite cut it. Deriving <code>flatten</code> and supplying an <code>id</code> at the same time is not allowed:</p>
+<pre class="giallo" style="color: #BABED8; background-color: #0F111A;" ><code data-lang="plain"><span class="giallo-l"><span>error: methods are not allowed for flattened entry                                                                                                   </span></span>
+<span class="giallo-l"><span>  --&gt; src\cli\find_opts.rs:53:15</span></span>
+<span class="giallo-l"><span>   |</span></span>
+<span class="giallo-l"><span>53 |     #[command(flatten, id = &quot;runner_opts_find&quot;, conflicts_with = [&quot;runner_opts_verify&quot;])]</span></span>
+<span class="giallo-l"><span>   |               ^^^^^^^</span></span></code></pre>
+<p>--</p>
+<p>If this idea would have worked, we also would still need to merge the <code>Opts</code> together, like in the last example.</p>
+<p>The other reason why this idea is doomed is that when you put the id on the whole group of arguments, I suspect that once you give any argument in either the top level or the subcommand, all other values in the group must also be from the same group; otherwise they would be considered in conflict.</p>
+<p>Considering <code>cargo msrv {group_top_level} verify {group_subcommand}</code>,  then <code>cargo msrv --target x --add-component y verify</code> or <code>cargo msrv verify  --target x --add-component y</code> would be fine, but mixing it up like  <code>cargo msrv --target x verify --add-component y</code> would be in conflict.</p>
+<p>Positives:</p>
+<ul>
+<li>I can dream about a declarative only solution</li>
+<li>Maybe this would work on an argument level?
+<ul>
+<li>I haven't tried that yet</li>
+</ul>
+</li>
+</ul>
+<p>Negatives:</p>
+<ul>
+<li>Doesn't compile</li>
+<li>Likely wouldn't work in the first place</li>
+<li>If it did, it would likely work per whole group, so I would have to use a group per argument</li>
+</ul>
+<h1 id="idea-3-separate-structs-groups-and-conflicts">Idea 3: Separate structs, groups and conflicts</h1>
+<p>I also wanted to try a variation on the previous idea: this idea instead provides two 'separately' nameable things, which then  can be marked to be in conflict with one another.</p>
+<p>We only let the top level variant be in conflict with the subcommand variant, since the latter cannot exist without the former.</p>
+<pre class="giallo" style="color: #BABED8; background-color: #0F111A;" ><code data-lang="rust"><span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>derive</span><span style="color: #89DDFF;">(</span><span style="color: #FFCB6B;">Debug</span><span style="color: #89DDFF;">,</span><span style="color: #FFCB6B;"> Args</span><span style="color: #89DDFF;">)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>command</span><span style="color: #89DDFF;">(</span><span>next_help_heading </span><span style="color: #89DDFF;">= &quot;</span><span style="color: #C3E88D;">Find MSRV options</span><span style="color: #89DDFF;">&quot;)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">pub</span><span style="color: #C792EA;"> struct</span><span style="color: #FFCB6B;"> FindOpts</span><span style="color: #89DDFF;"> {</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    #[</span><span>command</span><span style="color: #89DDFF;">(</span><span>flatten</span><span style="color: #89DDFF;">)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">    pub</span><span> runner_opts</span><span style="color: #89DDFF;">:</span><span style="color: #FFCB6B;"> RunnerOptsFind</span><span style="color: #89DDFF;">,</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>derive</span><span style="color: #89DDFF;">(</span><span style="color: #FFCB6B;">Debug</span><span style="color: #89DDFF;">,</span><span style="color: #FFCB6B;"> Args</span><span style="color: #89DDFF;">)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>command</span><span style="color: #89DDFF;">(</span><span>next_help_heading </span><span style="color: #89DDFF;">= &quot;</span><span style="color: #C3E88D;">Verify options</span><span style="color: #89DDFF;">&quot;)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">pub</span><span style="color: #C792EA;"> struct</span><span style="color: #FFCB6B;"> VerifyOpts</span><span style="color: #89DDFF;"> {</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    #[</span><span>command</span><span style="color: #89DDFF;">(</span><span>flatten</span><span style="color: #89DDFF;">)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">    pub</span><span> runner_opts</span><span style="color: #89DDFF;">:</span><span style="color: #FFCB6B;"> RunnerOptsVerify</span><span style="color: #89DDFF;">,</span><span>  </span></span>
+<span class="giallo-l"><span>  </span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    // ... etc.</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">// NB: Should be kept in sync with `RunnerOptsVerify`!  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>derive</span><span style="color: #89DDFF;">(</span><span style="color: #FFCB6B;">Debug</span><span style="color: #89DDFF;">,</span><span style="color: #FFCB6B;"> Args</span><span style="color: #89DDFF;">)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>group</span><span style="color: #89DDFF;">(</span><span>id </span><span style="color: #89DDFF;">= &quot;</span><span style="color: #C3E88D;">runner_opts_find</span><span style="color: #89DDFF;">&quot;,</span><span> conflicts_with </span><span style="color: #89DDFF;">= &quot;</span><span style="color: #C3E88D;">runner_opts_verify</span><span style="color: #89DDFF;">&quot;,</span><span> multiple </span><span style="color: #89DDFF;">=</span><span> true</span><span style="color: #89DDFF;">)]</span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">pub</span><span style="color: #C792EA;"> struct</span><span style="color: #FFCB6B;"> RunnerOptsFind</span><span style="color: #89DDFF;"> {</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    #[</span><span>command</span><span style="color: #89DDFF;">(</span><span>flatten</span><span style="color: #89DDFF;">)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">    pub</span><span> rust_releases_opts</span><span style="color: #89DDFF;">:</span><span style="color: #FFCB6B;"> RustReleasesOpts</span><span style="color: #89DDFF;">,</span><span>  </span></span>
+<span class="giallo-l"><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    #[</span><span>command</span><span style="color: #89DDFF;">(</span><span>flatten</span><span style="color: #89DDFF;">)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">    pub</span><span> toolchain_opts</span><span style="color: #89DDFF;">:</span><span style="color: #FFCB6B;"> ToolchainOpts</span><span style="color: #89DDFF;">,</span><span>  </span></span>
+<span class="giallo-l"><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    #[</span><span>command</span><span style="color: #89DDFF;">(</span><span>flatten</span><span style="color: #89DDFF;">)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">    pub</span><span> cargo_check_opts</span><span style="color: #89DDFF;">:</span><span style="color: #FFCB6B;"> CheckCommandOpts</span><span style="color: #89DDFF;">,</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">// NB: Should be kept in sync with `RunnerOptsFind`!  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>derive</span><span style="color: #89DDFF;">(</span><span style="color: #FFCB6B;">Debug</span><span style="color: #89DDFF;">,</span><span style="color: #FFCB6B;"> Args</span><span style="color: #89DDFF;">)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>group</span><span style="color: #89DDFF;">(</span><span>id </span><span style="color: #89DDFF;">= &quot;</span><span style="color: #C3E88D;">runner_opts_verify</span><span style="color: #89DDFF;">&quot;,</span><span> multiple </span><span style="color: #89DDFF;">=</span><span> true</span><span style="color: #89DDFF;">)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">pub</span><span style="color: #C792EA;"> struct</span><span style="color: #FFCB6B;"> RunnerOptsVerify</span><span style="color: #89DDFF;"> {</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    #[</span><span>command</span><span style="color: #89DDFF;">(</span><span>flatten</span><span style="color: #89DDFF;">)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">    pub</span><span> rust_releases_opts</span><span style="color: #89DDFF;">:</span><span style="color: #FFCB6B;"> RustReleasesOpts</span><span style="color: #89DDFF;">,</span><span>  </span></span>
+<span class="giallo-l"><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    #[</span><span>command</span><span style="color: #89DDFF;">(</span><span>flatten</span><span style="color: #89DDFF;">)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">    pub</span><span> toolchain_opts</span><span style="color: #89DDFF;">:</span><span style="color: #FFCB6B;"> ToolchainOpts</span><span style="color: #89DDFF;">,</span><span>  </span></span>
+<span class="giallo-l"><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    #[</span><span>command</span><span style="color: #89DDFF;">(</span><span>flatten</span><span style="color: #89DDFF;">)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">    pub</span><span> cargo_check_opts</span><span style="color: #89DDFF;">:</span><span style="color: #FFCB6B;"> CheckCommandOpts</span><span style="color: #89DDFF;">,</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">}</span></span></code></pre>
+<p>However, running results in:</p>
+<pre class="giallo" style="color: #BABED8; background-color: #0F111A;" ><code data-lang="plain"><span class="giallo-l"><span>cargo run -- msrv verify --target x</span></span>
+<span class="giallo-l"><span>   Compiling cargo-msrv v0.16.0-beta.22 (C:\ws\cargo-msrv)</span></span>
+<span class="giallo-l"><span>    Finished `dev` profile [unoptimized + debuginfo] target(s) in 11.24s                                                                                                                                                      </span></span>
+<span class="giallo-l"><span>     Running `target\debug\cargo-msrv.exe msrv verify --target x`</span></span>
+<span class="giallo-l"><span>thread &#39;main&#39; panicked at C:\Users\x\.cargo\registry\src\index.crates.io-6f17d22bba15001f\clap_builder-4.5.7\src\builder\debug_asserts.rs:314:13:</span></span>
+<span class="giallo-l"><span>Command msrv: Argument group &#39;runner_opts_find&#39; conflicts with non-existent &#39;runner_opts_verify&#39; id</span></span>
+<span class="giallo-l"><span>stack backtrace:</span></span></code></pre>
+<p>There's probably a logical explanation here why this doesn't work; I guess I don't properly understand how <code>ArgGroup</code> works...</p>
+<p>Neutral:</p>
+<ul>
+<li>I don't seems to understand <code>ArgGroup</code> properly yet</li>
+</ul>
+<h1 id="idea-4-global-true">Idea 4: global = true</h1>
+<p>This was the first idea I had when I read the originally reported issue. It will again not satisfy goal (2), because marking a command as global, makes it, well, available to all subcommands.</p>
+<p>This could however be a pragmatic choice, since in the current form they're already present via the top level <code>FindOpts</code>.</p>
+<pre class="giallo" style="color: #BABED8; background-color: #0F111A;" ><code data-lang="rust"><span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>derive</span><span style="color: #89DDFF;">(</span><span style="color: #FFCB6B;">Debug</span><span style="color: #89DDFF;">,</span><span style="color: #FFCB6B;"> Args</span><span style="color: #89DDFF;">)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>command</span><span style="color: #89DDFF;">(</span><span>next_help_heading </span><span style="color: #89DDFF;">= &quot;</span><span style="color: #C3E88D;">Toolchain options</span><span style="color: #89DDFF;">&quot;)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">pub</span><span style="color: #C792EA;"> struct</span><span style="color: #FFCB6B;"> ToolchainOpts</span><span style="color: #89DDFF;"> {</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    #[</span><span>arg</span><span style="color: #89DDFF;">(</span><span>long</span><span style="color: #89DDFF;">,</span><span> value_name </span><span style="color: #89DDFF;">= &quot;</span><span style="color: #C3E88D;">TARGET</span><span style="color: #89DDFF;">&quot;,</span><span> global </span><span style="color: #89DDFF;">=</span><span> true</span><span style="color: #89DDFF;">)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">    pub</span><span> target</span><span style="color: #89DDFF;">:</span><span style="color: #FFCB6B;"> Option</span><span style="color: #89DDFF;">&lt;</span><span style="color: #FFCB6B;">String</span><span style="color: #89DDFF;">&gt;,</span><span>  </span></span>
+<span class="giallo-l"><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">	#[</span><span>arg</span><span style="color: #89DDFF;">(</span><span>long</span><span style="color: #89DDFF;">,</span><span> value_name </span><span style="color: #89DDFF;">= &quot;</span><span style="color: #C3E88D;">COMPONENT</span><span style="color: #89DDFF;">&quot;,</span><span> global </span><span style="color: #89DDFF;">=</span><span> true</span><span style="color: #89DDFF;">)]</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">    pub</span><span> add_component</span><span style="color: #89DDFF;">:</span><span style="color: #FFCB6B;"> Vec</span><span style="color: #89DDFF;">&lt;</span><span style="color: #FFCB6B;">String</span><span style="color: #89DDFF;">&gt;,</span><span>  </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">}</span></span></code></pre>
+<p>When I looked at this idea in more detail, I actually found that this may be considered slightly worse since <code>cargo msrv list --target x</code> would be valid when <code>global = true</code>, while the current form 'only' allows <code>cargo msrv --target x list</code> (the residue of having the <code>FindOpts</code> at the top level). Plus, the current form does, for better or worse, not show the <code>FindOpts</code> help text when providing <code>--help</code> on the subcommand: i.e. <code>cargo msrv verify --help</code>.</p>
+<p>Now, it also doesn't really satisfy goal (1). For example: <code>cargo msrv --add-component a --add-component b --target x verify --add-component c --add-component d --target y</code> , produces:</p>
+<pre class="giallo" style="color: #BABED8; background-color: #0F111A;" ><code data-lang="plain"><span class="giallo-l"><span>toolchain: ToolchainContext {</span></span>
+<span class="giallo-l"><span>        target: &quot;y&quot;,</span></span>
+<span class="giallo-l"><span>        components: [</span></span>
+<span class="giallo-l"><span>            &quot;c&quot;,</span></span>
+<span class="giallo-l"><span>            &quot;d&quot;,</span></span>
+<span class="giallo-l"><span>        ],</span></span>
+<span class="giallo-l"><span>    },</span></span></code></pre>
+<p>While,  <code>cargo msrv --target x --add-component a verify --add-component b --target y --target z</code> ,  does result in :</p>
+<p><code>error: the argument '--target &lt;TARGET&gt;' cannot be used multiple times</code></p>
+<p>Positives:</p>
+<ul>
+<li>The code compiles</li>
+<li>Most simple scenarios work</li>
+<li>It doesn't need hairy merging code (on the surface)</li>
+</ul>
+<p>Negatives:</p>
+<ul>
+<li>The interface will allow additional ignored arguments for subcommands other than verify
+<ul>
+<li>This list can grow large if all of <code>RunnerOpts</code> arguments are included</li>
+</ul>
+</li>
+<li>Mixed usage does not limit the <code>num_args</code> for <code>Args</code> on a global level</li>
+<li>Mixed usage overwrites values specified on a deeper subcommand level
+<ul>
+<li>Behaviour can possibly be changed with <code>ArgAction</code> (?)</li>
+<li>This wouldn't be a problem if on a global level  it is possible to enforce that arguments could be only provided to one level / for non collection types, that the <code>num_args</code> would be complied with on the global level</li>
+</ul>
+</li>
+<li>Mixed usage is unintuitive for a user</li>
+</ul>
+<h1 id="remarks-on-using-clap">Remarks on using Clap</h1>
+<p><em>In this likely non-standard use case.</em></p>
+<h2 id="clap-s-api-surface">Clap's API surface</h2>
+<p><code>Clap</code> has grown quite the set of options. There's something for everyone. It may very well still be possible to fulfill the use case I described above. Just because I couldn't find it after searching for it for a while doesn't mean it doesn't exist. In the end, I  decided to choose pragmatic over pure.</p>
+<h2 id="skip">Skip</h2>
+<p>Many attributes define the magic <code>skip</code> option. It is available for <code>ArgGroup</code> and <code>Arg</code>. It is not available to <code>Command</code> in general (a variation with different behaviour is on <code>Subcommand</code>).</p>
+<p>At first it sounded like  logical name for the something I'm looking for, however it ignores fields and sets a provided expression (or Default::default if omitted), so this doesn't feel like it works.</p>
+<p>Aside: what kind of expression should I even put in, even if it fulfilled my use case; you would need to be able to refer to something which ought to be skipped. In my case that would be conditionally skipping if the subcommand is <code>Some(s) where S is not Verify</code></p>
+<h2 id="command-args-conflicts-with-subcommands">Command::args_conflicts_with_subcommands</h2>
+<p>For a second, I hoped that if a command could be marked with  <code>args_conflicts_with_subcommands</code>  we could then reject all<br />
+subcommands which are not <code>verify</code>, but this method <code>args_conflicts_with_subcommands(...)</code> takes a bool;  not a list of subcommands... 😭, and has another use case altogether...</p>
+<h2 id="shared-value-state">Shared value state</h2>
+<p>At some point I had a fleeting wish that there could be a <code>GroupArg</code> (or something else altogether) where values share their state.</p>
+<p>I.e. given a group <code>G</code>, defined on the top level as <code>G_t</code> and on a subcommand as <code>G_s</code>, when setting a value  for <code>G_t</code> or <code>G_s</code>, their value state would be shared. Still just this would not solve the most prominent problem, i.e. for the user we want to explicitly allow just one of each argument for any <code>i</code> in <code>G_i</code> to be defined...</p>
+<p>I suppose, this is not dissimilar to <code>global = true</code> on <code>Args</code>, except for some action override since <code>global = true</code> doesn't work intuitively by default for args defined on mixed levels.</p>
+<h2 id="derive-and-groups">Derive and groups</h2>
+<p>When using derive, it is not always straightforward to get an <code>Arg</code> from a group, since we have the derived structs; not <code>ArgMatches</code>. With <code>ArgMatches</code> you can, if I understand the documentation correctly, get the value of the group using one of the <code>get_{}</code> methods on <code>ArgMatches</code>.</p>
+<p>Possibly I could hack this together by using <code>ArgAction::set</code> with <code>Command::args_override_self(true)</code> ..?</p>
+<p>I still think I don't really understand the true value of <code>ArgGroup</code>. The "a group of shared commands" I was looking for is probably something else entirely. 😉</p>
+<h1 id="conclusion">Conclusion</h1>
+<p>If you, dear reader, by any chance know how to solve the issue of this post, or have other ideas: I love <a rel="external" href="https://github.com/foresterre/cargo-msrv/issues/936">to learn</a> (about them). <sup>You also send me a mail, or contact me in another way, see my GitHub profile.</sup></p>
+<p>In the mean time, I suppose that this just isn't the way forward. To meet goal (2) in particular, having some shared arguments also at the top level makes solving the issue a lot harder. I tried to add constraints on how this definition could be used, but none of these really worked out.</p>
+<p>Maybe it is finally time to sunset the <code>cargo msrv</code> top level command and introduce a dedicated subcommand for "find your msrv" instead.</p>
+<p>p.s. I kind of wrote this all on a whim, so it may be full of mistakes 🫧.</p>
+<h1 id="thanks">Thanks!</h1>
+<p>This post is based on an <a rel="external" href="https://github.com/foresterre/cargo-msrv/issues/936">issue</a> originally reported by <a rel="external" href="https://github.com/Finomnis">Finomnis</a> , thanks!</p>
+</div>
+</article>
+
+  
+  <div class="colophon"><svg class="clock" viewBox="0 0 480 40" aria-hidden="true"><defs><linearGradient id="clock-l"><stop offset="0" stop-color="currentColor" stop-opacity="0"/><stop offset=".75" stop-color="currentColor"/></linearGradient><linearGradient id="clock-r"><stop offset=".25" stop-color="currentColor"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/></linearGradient></defs><rect x="20" y="19.5" width="188" height="1" fill="url(#clock-l)"/><rect x="272" y="19.5" width="188" height="1" fill="url(#clock-r)"/><g fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M216.5 16.5L220 20L216.5 23.5L213 20Z"/><path d="M263.5 16.5L267 20L263.5 23.5L260 20Z"/><circle cx="240" cy="20" r="13.5"/><path d="M240 7.5V9.5M252.5 20H250.5M240 32.5V30.5M227.5 20H229.5"/><path id="clock-hour" d="M240 20V14" transform="rotate(300 240 20)"/><path id="clock-minute" d="M240 20V11" transform="rotate(60 240 20)"/></g><path id="clock-second" d="M240 22.5V8.5" style="stroke: var(--grey)" stroke-width=".6" stroke-linecap="round"/><circle cx="240" cy="20" r="1.3" fill="currentColor"/></svg>
+<script>
+  (function () {
+    // This human also must have some fun. Haha. Time for bed :D.
+    const hour = document.getElementById("clock-hour");
+    const minute = document.getElementById("clock-minute");
+    const second = document.getElementById("clock-second");
+    function tick() {
+      const now = new Date();
+      const seconds = now.getSeconds();
+      const minutes = now.getMinutes() + seconds / 60;
+      const hours = (now.getHours() % 12) + minutes / 60;
+
+      const hourAngle = hours * 30;
+      const minuteAngle = minutes * 6;
+      const secondAngle = seconds * 6;
+
+      hour.setAttribute("transform", `rotate(${hourAngle} 240 20)`);
+      minute.setAttribute("transform", `rotate(${minuteAngle} 240 20)`);
+      second.setAttribute("transform", `rotate(${secondAngle} 240 20)`);
+    }
+    tick();
+    setInterval(tick, 1000);
+  })();
+</script>
+</div>
+  
+  <footer class="titleblock">
+    <div><span class="label">Project</span>Don&#39;t panic, impl Things</div>
+    <div><span class="label">By</span>© Martijn Gribnau</div>
+    <div><span class="label">Feed</span><a href="https://gribnau.dev/atom.xml">Atom</a></div>
+  </footer>
+</main>
+</body>
+</html>

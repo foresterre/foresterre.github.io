@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Github&#39;s malicious notification problem | Don&#39;t panic, impl Things</title>
+<meta name="description" content="match x { &quot;Martijn Gribnau&quot; =&gt; blog!(), _ =&gt; open!(&quot;github.com/foresterre&quot;) } ">
+<script>
+  // Runs before the first paint, so a remembered theme does not flash the system theme first
+  const THEME_KEY = "foresterre:blauwdruk:theme";
+  try {
+    const theme = localStorage.getItem(THEME_KEY);
+    if (theme === "light" || theme === "dark") document.documentElement.dataset.theme = theme;
+  } catch {}
+</script>
+<link rel="stylesheet" href="https://gribnau.dev/style.css">
+<link rel="alternate" type="application/atom+xml" title="Don&#39;t panic, impl Things" href="https://gribnau.dev/atom.xml">
+</head>
+<body>
+<main class="sheet">
+  <header class="titlebar">
+    <div class="titlebar-start">
+      <fieldset class="theme-switch" hidden>
+  <legend class="visually-hidden">Color theme</legend>
+  <svg viewBox="0 0 44 40" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1"><path class="construction" d="M22 7V33M7 33L29.5 20M37 33L14.5 20"/><path class="edge" d="M22 7L37 33H7Z" stroke-linejoin="round"/><g class="glyph system"><circle class="knockout" cx="22" cy="7" r="5.2"/><circle cx="22" cy="7" r="3.4"/><path d="M22 3.6A3.4 3.4 0 0 0 22 10.4Z" fill="currentColor"/></g><g class="glyph light"><circle class="knockout" cx="7" cy="33" r="5.2"/><circle cx="7" cy="33" r="2"/><path d="M10.3 33L11.6 33M9.33 35.33L10.25 36.25M7 36.3L7 37.6M4.67 35.33L3.75 36.25M3.7 33L2.4 33M4.67 30.67L3.75 29.75M7 29.7L7 28.4M9.33 30.67L10.25 29.75" stroke-linecap="round"/></g><g class="glyph dark"><circle class="knockout" cx="37" cy="33" r="5.2"/><path d="M37.62 28.6A3.8 3.8 0 1 0 41.45 33.46A3.1 3.1 0 0 1 37.62 28.6Z"/></g><circle class="indicator" cx="22" cy="7" r="6.7"/></g></svg>
+  <input type="radio" name="theme" value="system" aria-label="System theme" title="System theme">
+  <input type="radio" name="theme" value="light" aria-label="Light theme" title="Light theme">
+  <input type="radio" name="theme" value="dark" aria-label="Dark theme" title="Dark theme">
+</fieldset>
+<script>
+  (function () {
+    const root = document.documentElement;
+    const themeSwitch = document.querySelector(".theme-switch");
+    const radios = themeSwitch.querySelectorAll("input");
+
+    function apply(theme) {
+      if (theme === "light" || theme === "dark") {
+        root.dataset.theme = theme;
+      } else {
+        theme = "system";
+        delete root.dataset.theme;
+      }
+      radios.forEach((radio) => (radio.checked = radio.value === theme));
+    }
+
+    themeSwitch.addEventListener("change", (event) => {
+      const theme = event.target.value;
+      apply(theme);
+      try {
+        if (theme === "system") {
+          localStorage.removeItem(THEME_KEY);
+        } else {
+          localStorage.setItem(THEME_KEY, theme);
+        }
+      } catch {
+        console.warn("[blauwdruk] Unable to set theme in localstorage");
+      }
+    });
+
+    // Keeps other open tabs in sync when the theme changes in one of them
+    window.addEventListener("storage", (event) => {
+      if (event.key === THEME_KEY || event.key === null) apply(event.newValue);
+    });
+
+    apply(root.dataset.theme);
+    themeSwitch.hidden = false;
+  })();
+</script>
+
+      <a class="site-name" href="https://gribnau.dev">Don&#39;t panic, impl Things</a>
+    </div>
+    
+    <nav>
+      <a href="/">Index</a>
+      <a href="/posts/">Writing</a>
+      <a href="/projects/">Projects</a>
+      <a href="https://github.com/foresterre">GitHub⤴</a>
+    </nav>
+    
+  </header>
+  
+<article>
+  <h1 class="page-title">Github&#39;s malicious notification problem</h1>
+  
+  <p class="meta">
+    <span><span class="mark">+</span> <time datetime="2025-11-04">2025-11-04</time></span>
+    <span>3 min read</span>
+    <span>
+      <a href="https://gribnau.dev/tags/github/">#github</a>
+    </span>
+    <span class="human">All content is written by a human (unless stated otherwise)</span>
+  </p>
+  
+  <div class="prose"><p>In the past four days or so, I've had notifications popping up for repositories which I didn't subscribe to myself.</p>
+<p>At first I thought the notification bubble just wouldn't disappear because of a little bug in <a rel="external" href="https://github.com/refined-github/refined-github">Refined GitHub</a>, but on closer inspection (and disabling the extension to be sure), it turned out it wasn't so.</p>
+<p>This is what it looks like in my notifications list:</p>
+<p><img src="/img/github_malicious_notifications_unread.png" alt="List of unread malicious notifications on GitHub" /></p>
+<p>And because these notification aren't marked as read, the notification bubble at the top consistently suggests there's something new:</p>
+<p><img src="/img/github_malicious_notifications_icon.png" alt="Notification bubble due to malicious undismissable notifications on GitHub" /></p>
+<p>I wrote "aren't marked as read", but in reality the right word would be "can't". That is, the first image also shows that once you filter on the repository, while the bubble suggests there is one notification, according to the UI, there is none.</p>
+<h2 id="how">How</h2>
+<p>In GitHub you can tag someone by using <code>@username</code> syntax, which is useful in good faith situations. I presume spammers created some issues in their repository and started tagging lots of users.</p>
+<p>Presumably the repositories and accounts were removed by GitHub staff as manually navigating to the repository on GitHub, shows 404 pages.</p>
+<p><img src="/img/github_malicious_notifications_repo_404.png" alt="Removed repositories used by the spammers" /></p>
+<p>I'm sad that the notifications weren't removed too, and we now have to resort to alternative methods to remove the notifications.</p>
+<p>... Further searching suggests that this issue was initially <a rel="external" href="https://github.com/orgs/community/discussions/6874">reported</a> on 28th of October, 2021, so it isn't a new problem.</p>
+<h2 id="workarounds">Workarounds</h2>
+<p><a rel="external" href="https://github.com/orgs/community/discussions/174283">As</a> <a rel="external" href="https://github.com/orgs/community/discussions/178439">it</a> turns out, I wasn't quite the only one who was affected by these spammers. In my searching, I found many community threads reporting the same issue, and asking for solutions to remove the "ghost" notifications.</p>
+<p>For example, in <a rel="external" href="https://github.com/orgs/community/discussions/174246#discussioncomment-14471133">this</a> community thread, someone suggested to mark the notification as <em>read</em> using the GitHub API, which can be done using GitHub's own <code>gh</code> CLI tool (replace the <code>last_read_at</code> date as required):</p>
+<pre class="giallo" style="color: #BABED8; background-color: #0F111A;" ><code data-lang="shellscript"><span class="giallo-l"><span style="color: #FFCB6B;">gh</span><span style="color: #C3E88D;"> api notifications -X PUT -F last_read_at=2025-11-04T00:00:00Z</span></span></code></pre>
+<p>However, you should know that it doesn't quite remove the malicious notifications from your notifications dashboard:</p>
+<p><img src="/img/github_malicious_notifications_read.png" alt="List of read malicious notifications on GitHub" /></p>
+<p>Apparently, that can be done with the API too. I've adapted the invocation from <a rel="external" href="https://github.com/orgs/community/discussions/178439">this</a> thread, to match on the repository owner (instead of the notification subject title), and added a flag to paginate the notifications in case you have more than one page like me:</p>
+<pre class="giallo" style="color: #BABED8; background-color: #0F111A;" ><code data-lang="shellscript"><span class="giallo-l"><span style="color: #FFCB6B;">gh</span><span style="color: #C3E88D;"> api notifications</span><span>\?</span><span style="color: #C3E88D;">all=</span><span style="color: #89DDFF;">true |</span><span style="color: #FFCB6B;"> jq</span><span style="color: #C3E88D;"> -r</span><span style="color: #89DDFF;"> &#39;</span><span style="color: #C3E88D;">.[] | select(.repository.owner.login | test(&quot;(kamino-network|gitcoincom|ycombiinator|paradigm-notification)&quot;; &quot;i&quot;)) | .id</span><span style="color: #89DDFF;">&#39;</span><span> \</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">|</span><span style="color: #FFCB6B;"> xargs</span><span style="color: #C3E88D;"> -L1 -I</span><span>{} gh api --method DELETE \</span></span>
+<span class="giallo-l"><span style="color: #FFCB6B;">  -H</span><span style="color: #89DDFF;"> &quot;</span><span style="color: #C3E88D;">Accept: application/vnd.github+json</span><span style="color: #89DDFF;">&quot;</span><span> \</span></span>
+<span class="giallo-l"><span style="color: #C3E88D;">  -H</span><span style="color: #89DDFF;"> &quot;</span><span style="color: #C3E88D;">X-GitHub-Api-Version: 2022-11-28</span><span style="color: #89DDFF;">&quot;</span><span> \</span></span>
+<span class="giallo-l"><span style="color: #C3E88D;">  /notifications/threads/{}</span></span></code></pre>
+<p>Step by step explained in case you too want to adapt the query (I did use the <code>gh</code> CLI, but you can send HTTP requests directly too).</p>
+<p>First we get all notifications by walking through all pages:</p>
+<pre class="giallo" style="color: #BABED8; background-color: #0F111A;" ><code data-lang="shellscript"><span class="giallo-l"><span style="color: #FFCB6B;">gh</span><span style="color: #C3E88D;"> api notifications</span><span>\?</span><span style="color: #C3E88D;">all=</span><span style="color: #89DDFF;">true</span><span style="color: #C3E88D;"> --paginate</span><span style="color: #89DDFF;">`</span></span></code></pre>
+<p>Then we use <code>jq</code> to query the JSON response from the GitHub API and filter specifically on the spam GitHub account names <code>kamino-network</code>, <code>ycombiinator</code>, <code>gitcoincom</code>, and <code>paradigm-notification</code>. Return the <code>.id</code> of the notification if it's a match.</p>
+<pre class="giallo" style="color: #BABED8; background-color: #0F111A;" ><code data-lang="shellscript"><span class="giallo-l"><span style="color: #FFCB6B;">jq</span><span style="color: #C3E88D;"> -r</span><span style="color: #89DDFF;"> &#39;</span><span style="color: #C3E88D;">.[] | select(.repository.owner.login | test(&quot;(kamino-network|ycombiinator|gitcoincom|paradigm-notification)&quot;)) | .id</span><span style="color: #89DDFF;">&#39;</span></span></code></pre>
+<p>Combined so far with output:</p>
+<pre class="giallo" style="color: #BABED8; background-color: #0F111A;" ><code data-lang="shellscript"><span class="giallo-l"><span style="color: #FFCB6B;">gh</span><span style="color: #C3E88D;"> api notifications</span><span>\?</span><span style="color: #C3E88D;">all=</span><span style="color: #89DDFF;">true</span><span style="color: #C3E88D;"> --paginate</span><span style="color: #89DDFF;"> |</span><span style="color: #FFCB6B;"> jq</span><span style="color: #C3E88D;"> -r</span><span style="color: #89DDFF;"> &#39;</span><span style="color: #C3E88D;">.[] | select(.repository.owner.login | test(&quot;(kamino-network|ycombiinator|gitcoincom|paradigm-notification)&quot;)) | .id</span><span style="color: #89DDFF;">&#39;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #FFCB6B;">19167019306</span></span>
+<span class="giallo-l"><span style="color: #FFCB6B;">19143656043</span></span>
+<span class="giallo-l"><span style="color: #FFCB6B;">19133393664</span></span>
+<span class="giallo-l"><span style="color: #FFCB6B;">19073885018</span></span></code></pre>
+<p>Now we want to remove each of these notifications. To just remove one we can just substitute one of these id's:</p>
+<pre class="giallo" style="color: #BABED8; background-color: #0F111A;" ><code data-lang="shellscript"><span class="giallo-l"><span style="color: #FFCB6B;">gh</span><span style="color: #C3E88D;"> api --method DELETE</span><span> \</span></span>
+<span class="giallo-l"><span style="color: #C3E88D;">  -H</span><span style="color: #89DDFF;"> &quot;</span><span style="color: #C3E88D;">Accept: application/vnd.github+json</span><span style="color: #89DDFF;">&quot;</span><span> \</span></span>
+<span class="giallo-l"><span style="color: #C3E88D;">  -H</span><span style="color: #89DDFF;"> &quot;</span><span style="color: #C3E88D;">X-GitHub-Api-Version: 2022-11-28</span><span style="color: #89DDFF;">&quot;</span><span> \</span></span>
+<span class="giallo-l"><span style="color: #C3E88D;">  /notifications/threads/19167019306</span></span></code></pre>
+<p>We can use <code>xargs</code> to do this for all id's, resulting in the suggested query:</p>
+<pre class="giallo" style="color: #BABED8; background-color: #0F111A;" ><code data-lang="shellscript"><span class="giallo-l"><span style="color: #FFCB6B;">gh</span><span style="color: #C3E88D;"> api notifications</span><span>\?</span><span style="color: #C3E88D;">all=</span><span style="color: #89DDFF;">true |</span><span style="color: #FFCB6B;"> jq</span><span style="color: #C3E88D;"> -r</span><span style="color: #89DDFF;"> &#39;</span><span style="color: #C3E88D;">.[] | select(.repository.owner.login | test(&quot;(kamino-network|gitcoincom|ycombiinator|paradigm-notification)&quot;; &quot;i&quot;)) | .id</span><span style="color: #89DDFF;">&#39;</span><span> \</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">|</span><span style="color: #FFCB6B;"> xargs</span><span style="color: #C3E88D;"> -L1 -I</span><span>{} gh api --method DELETE \</span></span>
+<span class="giallo-l"><span style="color: #FFCB6B;">  -H</span><span style="color: #89DDFF;"> &quot;</span><span style="color: #C3E88D;">Accept: application/vnd.github+json</span><span style="color: #89DDFF;">&quot;</span><span> \</span></span>
+<span class="giallo-l"><span style="color: #C3E88D;">  -H</span><span style="color: #89DDFF;"> &quot;</span><span style="color: #C3E88D;">X-GitHub-Api-Version: 2022-11-28</span><span style="color: #89DDFF;">&quot;</span><span> \</span></span>
+<span class="giallo-l"><span style="color: #C3E88D;">  /notifications/threads/{}</span></span></code></pre>
+<p><img src="/img/github_malicious_notifications_removed.png" alt="List of read malicious notifications on GitHub" /></p>
+<p>Tada!</p>
+</div>
+</article>
+
+  
+  <div class="colophon"><svg class="clock" viewBox="0 0 480 40" aria-hidden="true"><defs><linearGradient id="clock-l"><stop offset="0" stop-color="currentColor" stop-opacity="0"/><stop offset=".75" stop-color="currentColor"/></linearGradient><linearGradient id="clock-r"><stop offset=".25" stop-color="currentColor"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/></linearGradient></defs><rect x="20" y="19.5" width="188" height="1" fill="url(#clock-l)"/><rect x="272" y="19.5" width="188" height="1" fill="url(#clock-r)"/><g fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M216.5 16.5L220 20L216.5 23.5L213 20Z"/><path d="M263.5 16.5L267 20L263.5 23.5L260 20Z"/><circle cx="240" cy="20" r="13.5"/><path d="M240 7.5V9.5M252.5 20H250.5M240 32.5V30.5M227.5 20H229.5"/><path id="clock-hour" d="M240 20V14" transform="rotate(300 240 20)"/><path id="clock-minute" d="M240 20V11" transform="rotate(60 240 20)"/></g><path id="clock-second" d="M240 22.5V8.5" style="stroke: var(--grey)" stroke-width=".6" stroke-linecap="round"/><circle cx="240" cy="20" r="1.3" fill="currentColor"/></svg>
+<script>
+  (function () {
+    // This human also must have some fun. Haha. Time for bed :D.
+    const hour = document.getElementById("clock-hour");
+    const minute = document.getElementById("clock-minute");
+    const second = document.getElementById("clock-second");
+    function tick() {
+      const now = new Date();
+      const seconds = now.getSeconds();
+      const minutes = now.getMinutes() + seconds / 60;
+      const hours = (now.getHours() % 12) + minutes / 60;
+
+      const hourAngle = hours * 30;
+      const minuteAngle = minutes * 6;
+      const secondAngle = seconds * 6;
+
+      hour.setAttribute("transform", `rotate(${hourAngle} 240 20)`);
+      minute.setAttribute("transform", `rotate(${minuteAngle} 240 20)`);
+      second.setAttribute("transform", `rotate(${secondAngle} 240 20)`);
+    }
+    tick();
+    setInterval(tick, 1000);
+  })();
+</script>
+</div>
+  
+  <footer class="titleblock">
+    <div><span class="label">Project</span>Don&#39;t panic, impl Things</div>
+    <div><span class="label">By</span>© Martijn Gribnau</div>
+    <div><span class="label">Feed</span><a href="https://gribnau.dev/atom.xml">Atom</a></div>
+  </footer>
+</main>
+</body>
+</html>

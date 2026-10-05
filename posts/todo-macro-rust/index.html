@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Using the todo! macro to prototype your API in Rust | Don&#39;t panic, impl Things</title>
+<meta name="description" content="match x { &quot;Martijn Gribnau&quot; =&gt; blog!(), _ =&gt; open!(&quot;github.com/foresterre&quot;) } ">
+<script>
+  // Runs before the first paint, so a remembered theme does not flash the system theme first
+  const THEME_KEY = "foresterre:blauwdruk:theme";
+  try {
+    const theme = localStorage.getItem(THEME_KEY);
+    if (theme === "light" || theme === "dark") document.documentElement.dataset.theme = theme;
+  } catch {}
+</script>
+<link rel="stylesheet" href="https://gribnau.dev/style.css">
+<link rel="alternate" type="application/atom+xml" title="Don&#39;t panic, impl Things" href="https://gribnau.dev/atom.xml">
+</head>
+<body>
+<main class="sheet">
+  <header class="titlebar">
+    <div class="titlebar-start">
+      <fieldset class="theme-switch" hidden>
+  <legend class="visually-hidden">Color theme</legend>
+  <svg viewBox="0 0 44 40" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1"><path class="construction" d="M22 7V33M7 33L29.5 20M37 33L14.5 20"/><path class="edge" d="M22 7L37 33H7Z" stroke-linejoin="round"/><g class="glyph system"><circle class="knockout" cx="22" cy="7" r="5.2"/><circle cx="22" cy="7" r="3.4"/><path d="M22 3.6A3.4 3.4 0 0 0 22 10.4Z" fill="currentColor"/></g><g class="glyph light"><circle class="knockout" cx="7" cy="33" r="5.2"/><circle cx="7" cy="33" r="2"/><path d="M10.3 33L11.6 33M9.33 35.33L10.25 36.25M7 36.3L7 37.6M4.67 35.33L3.75 36.25M3.7 33L2.4 33M4.67 30.67L3.75 29.75M7 29.7L7 28.4M9.33 30.67L10.25 29.75" stroke-linecap="round"/></g><g class="glyph dark"><circle class="knockout" cx="37" cy="33" r="5.2"/><path d="M37.62 28.6A3.8 3.8 0 1 0 41.45 33.46A3.1 3.1 0 0 1 37.62 28.6Z"/></g><circle class="indicator" cx="22" cy="7" r="6.7"/></g></svg>
+  <input type="radio" name="theme" value="system" aria-label="System theme" title="System theme">
+  <input type="radio" name="theme" value="light" aria-label="Light theme" title="Light theme">
+  <input type="radio" name="theme" value="dark" aria-label="Dark theme" title="Dark theme">
+</fieldset>
+<script>
+  (function () {
+    const root = document.documentElement;
+    const themeSwitch = document.querySelector(".theme-switch");
+    const radios = themeSwitch.querySelectorAll("input");
+
+    function apply(theme) {
+      if (theme === "light" || theme === "dark") {
+        root.dataset.theme = theme;
+      } else {
+        theme = "system";
+        delete root.dataset.theme;
+      }
+      radios.forEach((radio) => (radio.checked = radio.value === theme));
+    }
+
+    themeSwitch.addEventListener("change", (event) => {
+      const theme = event.target.value;
+      apply(theme);
+      try {
+        if (theme === "system") {
+          localStorage.removeItem(THEME_KEY);
+        } else {
+          localStorage.setItem(THEME_KEY, theme);
+        }
+      } catch {
+        console.warn("[blauwdruk] Unable to set theme in localstorage");
+      }
+    });
+
+    // Keeps other open tabs in sync when the theme changes in one of them
+    window.addEventListener("storage", (event) => {
+      if (event.key === THEME_KEY || event.key === null) apply(event.newValue);
+    });
+
+    apply(root.dataset.theme);
+    themeSwitch.hidden = false;
+  })();
+</script>
+
+      <a class="site-name" href="https://gribnau.dev">Don&#39;t panic, impl Things</a>
+    </div>
+    
+    <nav>
+      <a href="/">Index</a>
+      <a href="/posts/">Writing</a>
+      <a href="/projects/">Projects</a>
+      <a href="https://github.com/foresterre">GitHub⤴</a>
+    </nav>
+    
+  </header>
+  
+<article>
+  <h1 class="page-title">Using the todo! macro to prototype your API in Rust</h1>
+  
+  <p class="meta">
+    <span><span class="mark">+</span> <time datetime="2023-04-24">2023-04-24</time></span>
+    <span>5 min read</span>
+    <span>
+      <a href="https://gribnau.dev/tags/rust/">#Rust</a>
+      <a href="https://gribnau.dev/tags/macro/">#macro</a>
+      <a href="https://gribnau.dev/tags/api-design/">#API design</a>
+    </span>
+    <span class="human">All content is written by a human (unless stated otherwise)</span>
+  </p>
+  
+  <div class="prose"><p>Let's sketch a situation. You're designing and implementing a library in Rust, for some great idea you had. And, you aim to create a seamless API that makes this library user-friendly not only for others, but also for yourself.</p>
+<p>One way to figure out the design of the library is to write a prototype, and write the bare minimum code to stub out the the initial API.
+I hear you think: Rust is not to most convenient prototyping language, because it's quite strict and verbose: we have to satisfy the borrow checker and, in many places, Rust requires you to explicitely type your code. And altough I believe both will help you design better code, I can also understand the argument that it reduces the prototyping velocity at least a bit.</p>
+<p>Luckily for us, the Rust standard library has a useful tool in its toolbox: the <a rel="external" href="https://doc.rust-lang.org/std/macro.todo.html">todo!</a> macro.</p>
+<p>Let's look at an example. Imagine<sup><a href="#footnote1">1</a></sup> we're re-designing a Rust API to fetch Rust releases metadata.</p>
+<p>We will first prototype a few data structures around the concept of "releases":</p>
+<pre class="giallo" style="color: #BABED8; background-color: #0F111A;" ><code data-lang="rust"><span class="giallo-l"><span style="color: #464B5D;font-style: italic;">/// A data structure consisting of the set of known Rust releases.  </span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">///  </span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">/// Whether a release is known, and how much information is known</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">/// about a release, depends on the source used to build up this</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">/// information.</span></span>
+<span class="giallo-l"><span style="color: #C792EA;">struct</span><span style="color: #FFCB6B;"> RustReleases</span><span style="color: #89DDFF;"> {</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    // We divide all releases by platform, so we end up with the</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    // set of available toolchains for each platform.</span></span>
+<span class="giallo-l"><span>    registry</span><span style="color: #89DDFF;">:</span><span style="color: #FFCB6B;"> HashMap</span><span style="color: #89DDFF;">&lt;</span><span>rust_toolchain</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">Platform</span><span style="color: #89DDFF;">,</span><span style="color: #FFCB6B;"> ReleaseRecords</span><span style="color: #89DDFF;">&gt;,</span><span> </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">/// A set of releases, for a single platform.</span></span>
+<span class="giallo-l"><span style="color: #C792EA;">struct</span><span style="color: #FFCB6B;"> ReleaseRecords</span><span style="color: #89DDFF;"> {</span></span>
+<span class="giallo-l"><span>    releases</span><span style="color: #89DDFF;">:</span><span style="color: #FFCB6B;"> BTreeSet</span><span style="color: #89DDFF;">&lt;</span><span style="color: #FFCB6B;">Release</span><span style="color: #89DDFF;">&gt;,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">/// A single release. </span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">///</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">/// In this example, we define a release as a toolchain of a specific</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">/// version (stable, beta) or date (nightly), and its associated</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">/// components.</span></span>
+<span class="giallo-l"><span style="color: #C792EA;">struct</span><span style="color: #FFCB6B;"> Release</span><span style="color: #89DDFF;"> {</span></span>
+<span class="giallo-l"><span>    toolchain</span><span style="color: #89DDFF;">:</span><span style="color: #FFCB6B;"> rust_toolchain</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">Toolchain</span><span style="color: #89DDFF;">,</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    /// Rustup has the concept of components and extensions.</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    /// </span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    /// When installing a toolchain, components are installed by default, while extensions are optional components.</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    /// In this implementation, they&#39;re combined.</span></span>
+<span class="giallo-l"><span>    components</span><span style="color: #89DDFF;">:</span><span style="color: #FFCB6B;"> Vec</span><span style="color: #89DDFF;">&lt;</span><span>rust_toolchain</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">Component</span><span style="color: #89DDFF;">&gt;,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">}</span></span></code></pre>
+<p>Now, let's consider how we want to use the data captured by these data structures.
+For example, we may want to find the most recently released Rust release:</p>
+<pre class="giallo" style="color: #BABED8; background-color: #0F111A;" ><code data-lang="rust"><span class="giallo-l"><span style="color: #F78C6C;">impl</span><span style="color: #FFCB6B;"> ReleaseRecords</span><span style="color: #89DDFF;"> {</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    /// Find the most recent Rust release.</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    ///</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    /// Returns `None` if no release could be found.</span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">    pub fn</span><span style="color: #82AAFF;"> last_released</span><span style="color: #89DDFF;">(&amp;</span><span>self</span><span style="color: #89DDFF;">) -&gt;</span><span style="color: #FFCB6B;"> Option</span><span style="color: #89DDFF;">&lt;&amp;</span><span style="color: #FFCB6B;">Release</span><span style="color: #89DDFF;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #82AAFF;">        todo!</span><span style="color: #89DDFF;">()</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    }</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">}</span></span></code></pre>
+<p>See that <code>todo!</code> macro 😃? Instead of providing an actual, or fake, implementation which needs to satisfy the return type of our method, we placed a <code>todo!</code> macro in the body.
+This allows us to not worry about our implementation just yet, so we can focus on the design of our API instead.</p>
+<p>It also accepts the same arguments as <a rel="external" href="https://doc.rust-lang.org/std/macro.panic.html">panic!</a>, so the following will work as well:</p>
+<pre class="giallo" style="color: #BABED8; background-color: #0F111A;" ><code data-lang="rust"><span class="giallo-l"><span style="color: #F78C6C;">impl</span><span style="color: #FFCB6B;"> Release</span><span style="color: #89DDFF;"> {</span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">    pub fn</span><span style="color: #82AAFF;"> release_date</span><span style="color: #89DDFF;">(&amp;</span><span>self</span><span style="color: #89DDFF;">) -&gt;</span><span style="color: #FFCB6B;"> rust_toolchain</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">ReleaseDate</span><span style="color: #89DDFF;"> {</span></span>
+<span class="giallo-l"><span style="color: #82AAFF;">        todo!</span><span style="color: #89DDFF;">(&quot;</span><span style="color: #C3E88D;">release date of the toolchain</span><span style="color: #89DDFF;">&quot;)</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F78C6C;">    pub fn</span><span style="color: #82AAFF;"> find_component</span><span style="color: #89DDFF;">(&amp;</span><span>self</span><span style="color: #89DDFF;">,</span><span> name</span><span style="color: #89DDFF;">: &amp;</span><span style="color: #FFCB6B;">str</span><span style="color: #89DDFF;">) -&gt;</span><span style="color: #FFCB6B;"> Option</span><span style="color: #89DDFF;">&lt;</span><span>rust_toolchain</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">Component</span><span style="color: #89DDFF;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #82AAFF;">        todo!</span><span style="color: #89DDFF;">(&quot;</span><span style="color: #C3E88D;">find component with name: &#39;</span><span style="color: #89DDFF;">{</span><span style="color: #C3E88D;">name</span><span style="color: #89DDFF;">}</span><span style="color: #C3E88D;">&#39;</span><span style="color: #89DDFF;">&quot;)</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    }</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">}</span></span></code></pre>
+<p>If we run the <code>find_component</code> method, we'll find that it panics the thread, and shows the panic message we provided, prefixed with "not yet implemented":</p>
+<pre class="giallo" style="color: #BABED8; background-color: #0F111A;" ><code data-lang="plain"><span class="giallo-l"><span>not yet implemented: find component with name: &#39;hello-world&#39;</span></span>
+<span class="giallo-l"><span>thread &#39;tests::find_component&#39; panicked at &#39;not yet implemented: find component with name: &#39;hello-world&#39;&#39;, crates/rust-releases-core/src/lib.rs:77:9</span></span>
+<span class="giallo-l"><span>stack backtrace:</span></span>
+<span class="giallo-l"><span>   0: std::panicking::begin_panic_handler</span></span>
+<span class="giallo-l"><span>             at /rustc/84c898d65adf2f39a5a98507f1fe0ce10a2b8dbc/library/std/src/panicking.rs:579</span></span>
+<span class="giallo-l"><span>   1: &lt;snip&gt;</span></span>
+<span class="giallo-l"><span>note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.</span></span></code></pre>
+<p>Under the hood, <code>todo!</code> is the same as <code>panic!</code>, to which it defers its implementation, but with a clear change of semantics: this bit is not yet implemented, but we'll do so soon.</p>
+<h2 id="every-rose-has-its-thorn">Every rose has its thorn</h2>
+<p>Let's expand our design and add a few more useful methods:</p>
+<pre class="giallo" style="color: #BABED8; background-color: #0F111A;" ><code data-lang="rust"><span class="giallo-l"><span style="color: #F78C6C;">impl</span><span style="color: #FFCB6B;"> Release</span><span style="color: #89DDFF;"> {</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    /// Returns an iterator over the components which are installed by default.</span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">    pub fn</span><span style="color: #82AAFF;"> components</span><span style="color: #89DDFF;">(&amp;</span><span>self</span><span style="color: #89DDFF;">) -&gt;</span><span style="color: #F78C6C;"> impl</span><span style="color: #FFCB6B;"> Iterator</span><span style="color: #89DDFF;">&lt;</span><span style="color: #FFCB6B;">Item</span><span style="color: #89DDFF;"> = &amp;</span><span>rust_toolchain</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">Component</span><span style="color: #89DDFF;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #82AAFF;">        todo!</span><span style="color: #89DDFF;">(&quot;</span><span style="color: #C3E88D;">components installed by default</span><span style="color: #89DDFF;">&quot;)</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    /// Returns an iterator over the components which are optional,</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    /// and not installed by default.</span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">    pub fn</span><span style="color: #82AAFF;"> extensions</span><span style="color: #89DDFF;">(&amp;</span><span>self</span><span style="color: #89DDFF;">) -&gt;</span><span style="color: #F78C6C;"> impl</span><span style="color: #FFCB6B;"> Iterator</span><span style="color: #89DDFF;">&lt;</span><span style="color: #FFCB6B;">Item</span><span style="color: #89DDFF;"> = &amp;</span><span>rust_toolchain</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">Component</span><span style="color: #89DDFF;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #82AAFF;">        todo!</span><span style="color: #89DDFF;">(&quot;</span><span style="color: #C3E88D;">components not installed by default</span><span style="color: #89DDFF;">&quot;)</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    }</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">}</span></span></code></pre>
+<p>In the above code we defined two methods on <code>Release</code>, which both return an iterator of <code>&amp;rust_toolchain::Component</code> items.
+What happens if we try to compile the code above?:</p>
+<pre class="giallo" style="color: #BABED8; background-color: #0F111A;" ><code data-lang="plain"><span class="giallo-l"><span>error[E0277]: `()` is not an iterator</span></span>
+<span class="giallo-l"><span>  --&gt; crates/rust-releases-core/src/lib.rs:80:33</span></span>
+<span class="giallo-l"><span>   |</span></span>
+<span class="giallo-l"><span>80 |     pub fn components(&amp;self) -&gt; impl Iterator&lt;Item = &amp;rust_toolchain::Component&gt; {</span></span>
+<span class="giallo-l"><span>   |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `()` is not an iterator</span></span>
+<span class="giallo-l"><span>   |</span></span>
+<span class="giallo-l"><span>   = help: the trait `Iterator` is not implemented for `()`</span></span></code></pre>
+<p>😢</p>
+<p>It <a rel="external" href="https://github.com/rust-lang/rust/issues/36375#issuecomment-357216289">turns out</a>, there is an <a rel="external" href="https://github.com/rust-lang/rust/issues/36375">issue</a> where the compiler is unable to figure out what type to use for types which have the never type as their return type and use <code>impl Trait</code> in return position. The  <code>todo!</code> macro falls in this category.</p>
+<p>There are several ways to work around the problem though.</p>
+<p>One option is to use dynamic dispatch and box:</p>
+<pre class="giallo" style="color: #BABED8; background-color: #0F111A;" ><code data-lang="rust"><span class="giallo-l"><span style="color: #F78C6C;">impl</span><span style="color: #FFCB6B;"> Release</span><span style="color: #89DDFF;"> {</span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">   pub fn</span><span style="color: #82AAFF;"> extensions</span><span style="color: #89DDFF;">&lt;&#39;</span><span style="color: #FFCB6B;">this</span><span style="color: #89DDFF;">&gt;(</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">        &amp;&#39;</span><span style="color: #FFCB6B;">this</span><span> self</span><span style="color: #89DDFF;">,</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    ) -&gt;</span><span style="color: #FFCB6B;"> Box</span><span style="color: #89DDFF;">&lt;</span><span style="color: #F78C6C;">dyn</span><span style="color: #FFCB6B;"> Iterator</span><span style="color: #89DDFF;">&lt;</span><span style="color: #FFCB6B;">Item</span><span style="color: #89DDFF;"> = &amp;&#39;</span><span style="color: #FFCB6B;">this</span><span> rust_toolchain</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">Component</span><span style="color: #89DDFF;">&gt; + &#39;</span><span style="color: #FFCB6B;">this</span><span style="color: #89DDFF;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #82AAFF;">        todo!</span><span style="color: #89DDFF;">(&quot;</span><span style="color: #C3E88D;">components not installed by default</span><span style="color: #89DDFF;">&quot;)</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    }</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">}</span></span></code></pre>
+<p>Another is to return a simple concrete type:</p>
+<pre class="giallo" style="color: #BABED8; background-color: #0F111A;" ><code data-lang="rust"><span class="giallo-l"><span style="color: #F78C6C;">impl</span><span style="color: #FFCB6B;"> Release</span><span style="color: #89DDFF;"> {</span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">    pub fn</span><span style="color: #82AAFF;"> extensions</span><span style="color: #89DDFF;">(&amp;</span><span>self</span><span style="color: #89DDFF;">) -&gt;</span><span style="color: #FFCB6B;"> Vec</span><span style="color: #89DDFF;">&lt;&amp;</span><span>rust_toolchain</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">Component</span><span style="color: #89DDFF;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #82AAFF;">        todo!</span><span style="color: #89DDFF;">(&quot;</span><span style="color: #C3E88D;">components not installed by default</span><span style="color: #89DDFF;">&quot;)</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    }</span><span>   </span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">}</span></span></code></pre>
+<p>A third is to use the explicit type in the return type, but this requires you to think ahead on which iterator type you will be using, which you probably don't want to worry about (especially if you will be using <code>impl Iterator</code> on implementation). A fourth would be to implement <code>Iterator</code> for a concrete type, but this also adds a lot of boilerplate.</p>
+<p>A <a rel="external" href="https://reddit.com/r/rust/comments/12x1lfd/blog_post_using_the_todo_macro_to_prototype_your/jhjecab/">fifth</a> was suggested by <em>natalialt</em>. I like this one very much, because it is short and to the point (altough also not universably applicable to any <code>impl Trait</code> return type). This solution returns an iterator via the <code>std::iter::once()</code> function:</p>
+<pre class="giallo" style="color: #BABED8; background-color: #0F111A;" ><code data-lang="rust"><span class="giallo-l"><span style="color: #F78C6C;">use</span><span style="color: #FFCB6B;"> std</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">iter</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F78C6C;">impl</span><span style="color: #FFCB6B;"> Release</span><span style="color: #89DDFF;"> {</span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">    pub fn</span><span style="color: #82AAFF;"> extensions</span><span style="color: #89DDFF;">(&amp;</span><span>self</span><span style="color: #89DDFF;">) -&gt;</span><span style="color: #F78C6C;"> impl</span><span style="color: #FFCB6B;"> Iterator</span><span style="color: #89DDFF;">&lt;</span><span style="color: #FFCB6B;">Item</span><span style="color: #89DDFF;"> = &amp;</span><span>rust_toolchain</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">Component</span><span style="color: #89DDFF;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #FFCB6B;">        iter</span><span style="color: #89DDFF;">::</span><span style="color: #82AAFF;">once</span><span style="color: #89DDFF;">(</span><span style="color: #82AAFF;">todo!</span><span style="color: #89DDFF;">(&quot;</span><span style="color: #C3E88D;">components not installed by default</span><span style="color: #89DDFF;">&quot;))</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    }</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">}</span></span></code></pre>
+<p>The reason that this works, is because <code>std::iter::once</code> returns a valid iterator, namely <a rel="external" href="https://doc.rust-lang.org/std/iter/struct.Once.html">Once</a>, which makes the return type satisfiable. Where the never type <code>!</code> didn't implement <code>Iterator</code>, <code>Once</code> does.</p>
+<h2 id="taking-it-to-the-next-level">Taking it to the next level</h2>
+<p>So far, we saw that <code>todo!</code> can be a powerful prototyping tool. If we want to take it to the next level,
+we should start making use of Rust's type checking capabilities for the composition and usage of our API.
+This helps us be much more confident throughout designing of the library.</p>
+<p>As shown before, the compiler knows that we do not need to satisfy our return types (within the method body).
+However, the return type of these methods will still be checked wherever we use these methods.
+This allows us to not only define the new API, while leaving the implementation for later but also write some code on how to use it.
+This can be particularly useful to explore whether an API is easy to use as a caller.</p>
+<p>I like to do this by writing unit tests for my API. If your API is painful to use, you're much more likely to find this out if you had to write
+a usage example yourself. Plus, this way you also already have a first test in place. Example:</p>
+<pre class="giallo" style="color: #BABED8; background-color: #0F111A;" ><code data-lang="rust"><span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>test</span><span style="color: #89DDFF;">]</span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">fn</span><span style="color: #82AAFF;"> find_component_returns_none_if_release_has_no_components</span><span style="color: #89DDFF;">() {</span></span>
+<span class="giallo-l"><span style="color: #C792EA;">    let</span><span> channel</span><span style="color: #89DDFF;"> =</span><span style="color: #FFCB6B;"> rust_toolchain</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">Channel</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">Nightly</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"><span style="color: #C792EA;">    let</span><span> release_date</span><span style="color: #89DDFF;"> =</span><span style="color: #FFCB6B;"> rust_toolchain</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">ReleaseDate</span><span style="color: #89DDFF;">::</span><span style="color: #82AAFF;">new</span><span style="color: #89DDFF;">(</span><span style="color: #F78C6C;">2023</span><span style="color: #89DDFF;">,</span><span style="color: #F78C6C;"> 1</span><span style="color: #89DDFF;">,</span><span style="color: #F78C6C;"> 1</span><span style="color: #89DDFF;">);</span></span>
+<span class="giallo-l"><span style="color: #C792EA;">    let</span><span> platform</span><span style="color: #89DDFF;"> =</span><span style="color: #FFCB6B;"> rust_toolchain</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">Platform</span><span style="color: #89DDFF;">::</span><span style="color: #82AAFF;">host</span><span style="color: #89DDFF;">();</span></span>
+<span class="giallo-l"><span style="color: #C792EA;">    let</span><span> version</span><span style="color: #89DDFF;"> =</span><span style="color: #FFCB6B;"> None</span><span style="color: #89DDFF;">;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C792EA;">    let</span><span> toolchain</span><span style="color: #89DDFF;"> =</span><span style="color: #FFCB6B;"> rust_toolchain</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">Toolchain</span><span style="color: #89DDFF;">::</span><span style="color: #82AAFF;">new</span><span style="color: #89DDFF;">(</span><span>channel</span><span style="color: #89DDFF;">,</span><span> release_date</span><span style="color: #89DDFF;">,</span><span> platform</span><span style="color: #89DDFF;">,</span><span> version</span><span style="color: #89DDFF;">);</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #C792EA;">    let</span><span> release</span><span style="color: #89DDFF;"> =</span><span style="color: #FFCB6B;"> Release</span><span style="color: #89DDFF;">::</span><span style="color: #82AAFF;">new</span><span style="color: #89DDFF;">(</span><span>toolchain</span><span style="color: #89DDFF;">,</span><span style="color: #82AAFF;"> vec!</span><span style="color: #89DDFF;">[]);</span></span>
+<span class="giallo-l"><span style="color: #C792EA;">    let</span><span> component</span><span style="color: #89DDFF;"> =</span><span> release</span><span style="color: #89DDFF;">.</span><span style="color: #82AAFF;">find_component</span><span style="color: #89DDFF;">(&quot;</span><span style="color: #C3E88D;">hello</span><span style="color: #89DDFF;">&quot;);</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #82AAFF;">    assert!</span><span style="color: #89DDFF;">(</span><span>component</span><span style="color: #89DDFF;">.</span><span style="color: #82AAFF;">is_none</span><span style="color: #89DDFF;">());</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">}</span></span></code></pre>
+<p>And if we were not yet sure how to construct an input for our function under test, we can also use the <code>todo!</code> macro here:</p>
+<pre class="giallo" style="color: #BABED8; background-color: #0F111A;" ><code data-lang="rust"><span class="giallo-l"><span style="color: #89DDFF;">#[</span><span>test</span><span style="color: #89DDFF;">]</span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">fn</span><span style="color: #82AAFF;"> find_component_returns_none_if_release_has_no_components</span><span style="color: #89DDFF;">() {</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    // We can use todo!() here too!</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    //</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    // We may not be sure yet how to construct our input.</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    // Let&#39;s take the design of the API, one step at a time.</span></span>
+<span class="giallo-l"><span style="color: #C792EA;">    let</span><span> toolchain</span><span style="color: #89DDFF;"> =</span><span style="color: #82AAFF;"> todo!</span><span style="color: #89DDFF;">();</span></span>
+<span class="giallo-l"><span>    </span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    // The code below will be unreachable though!</span></span>
+<span class="giallo-l"><span style="color: #C792EA;">    let</span><span> release</span><span style="color: #89DDFF;"> =</span><span style="color: #FFCB6B;"> Release</span><span style="color: #89DDFF;">::</span><span style="color: #82AAFF;">new</span><span style="color: #89DDFF;">(</span><span>toolchain</span><span style="color: #89DDFF;">,</span><span style="color: #82AAFF;"> vec!</span><span style="color: #89DDFF;">[]);</span></span>
+<span class="giallo-l"><span style="color: #C792EA;">    let</span><span> component</span><span style="color: #89DDFF;"> =</span><span> release</span><span style="color: #89DDFF;">.</span><span style="color: #82AAFF;">find_component</span><span style="color: #89DDFF;">(&quot;</span><span style="color: #C3E88D;">hello</span><span style="color: #89DDFF;">&quot;);</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #82AAFF;">    assert!</span><span style="color: #89DDFF;">(</span><span>component</span><span style="color: #89DDFF;">.</span><span style="color: #82AAFF;">is_none</span><span style="color: #89DDFF;">());</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">}</span></span></code></pre>
+<p>Alternatively, instead of writing inline unit tests, you could also use <a rel="external" href="https://doc.rust-lang.org/rustdoc/write-documentation/documentation-tests.html">doctests</a> for this purpose:</p>
+<pre class="giallo" style="color: #BABED8; background-color: #0F111A;" ><code data-lang="rust"><span class="giallo-l"><span style="color: #F78C6C;">impl</span><span style="color: #FFCB6B;"> Release</span><span style="color: #89DDFF;"> {</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    /// Find a component by its name.</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    ///</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    /// If the component does not exist for this `Release`,</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    /// returns `Option::None`.</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    ///</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    /// # Example</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    ///</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    /// ```rust</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    /// use rust_releases_core::Release;</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    ///</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    /// let channel = rust_toolchain::Channel::Nightly;</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    /// let release_date = rust_toolchain::ReleaseDate::new(2023, 1, 1);</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    /// let platform = rust_toolchain::Platform::host();</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    /// let version = None;</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    ///</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    /// let toolchain = rust_toolchain::Toolchain::new(channel, release_date, platform, version);</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    ///</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    /// let release = Release::new(toolchain, vec![]);</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    /// let component = release.find_component(&quot;hello&quot;);</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    ///</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    /// assert!(component.is_none());</span></span>
+<span class="giallo-l"><span style="color: #464B5D;font-style: italic;">    /// ```</span></span>
+<span class="giallo-l"><span style="color: #F78C6C;">    pub fn</span><span style="color: #82AAFF;"> find_component</span><span style="color: #89DDFF;">(&amp;</span><span>self</span><span style="color: #89DDFF;">,</span><span> name</span><span style="color: #89DDFF;">: &amp;</span><span style="color: #FFCB6B;">str</span><span style="color: #89DDFF;">) -&gt;</span><span style="color: #FFCB6B;"> Option</span><span style="color: #89DDFF;">&lt;&amp;</span><span>rust_toolchain</span><span style="color: #89DDFF;">::</span><span style="color: #FFCB6B;">Component</span><span style="color: #89DDFF;">&gt; {</span></span>
+<span class="giallo-l"><span style="color: #82AAFF;">        todo!</span><span style="color: #89DDFF;">(&quot;</span><span style="color: #C3E88D;">find component with name: &#39;</span><span style="color: #89DDFF;">{</span><span style="color: #C3E88D;">name</span><span style="color: #89DDFF;">}</span><span style="color: #C3E88D;">&#39;</span><span style="color: #89DDFF;">&quot;)</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">    }</span></span>
+<span class="giallo-l"><span style="color: #89DDFF;">}</span></span></code></pre><h2 id="implementation-time">Implementation time!</h2>
+<p>Once we are satisfied with the basic structure of our API, we can gradually replace each <code>todo!</code> macro with an actual implementation. We do not have to replace all the macros simultaneously, so we can focus on one implementation step at a time. Developing a well-designed API requires careful planning and attention to detail. Taking the time to establish a solid foundation will pay off in the long run, as it will result in  more user-friendly and reliably designed API.</p>
+<h1 id="footnotes">Footnotes</h1>
+<p><sup><span id="footnote1">1</span></sup> I'm currently working on the next version of <a rel="external" href="https://github.com/foresterre/rust-releases">rust-releases</a>.</p>
+<h1 id="thanks">Thanks!</h1>
+<p>Special thanks to Chris Langhout, Jean de Leeuw and Martijn Steenbergen for proofreading my blog post; any mistakes are solely mine.</p>
+<p>Also many thanks to <em>proudHaskeller</em> on <a rel="external" href="https://reddit.com/r/rust/comments/12x1lfd/blog_post_using_the_todo_macro_to_prototype_your/jhhn8na/">Reddit</a> for reporting an issue I missed: the type signature I initially used to deal with the <code>todo!</code> and <code>impl Trait</code> would never type check with a concrete implementation (this has been addressed), and to <em>natalialt</em> on <a rel="external" href="https://reddit.com/r/rust/comments/12x1lfd/blog_post_using_the_todo_macro_to_prototype_your/jhjecab/">Reddit</a> for suggesting a useful workaround to the same issue when the return type is <code>impl Iterator</code>, by using <code>iter::once(todo!())</code>.</p>
+<h1 id="discuss">Discuss</h1>
+<p>Discussions and feedback are most welcome! Discuss on <a rel="external" href="https://reddit.com/r/rust/comments/12x1lfd/blog_post_using_the_todo_macro_to_prototype_your/">Reddit</a>, <a rel="external" href="https://news.ycombinator.com/item?id=35683396">HackerNews</a> or create an <a rel="external" href="https://github.com/foresterre/foresterre.github.io/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc">issue</a>.</p>
+</div>
+</article>
+
+  
+  <div class="colophon"><svg class="clock" viewBox="0 0 480 40" aria-hidden="true"><defs><linearGradient id="clock-l"><stop offset="0" stop-color="currentColor" stop-opacity="0"/><stop offset=".75" stop-color="currentColor"/></linearGradient><linearGradient id="clock-r"><stop offset=".25" stop-color="currentColor"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/></linearGradient></defs><rect x="20" y="19.5" width="188" height="1" fill="url(#clock-l)"/><rect x="272" y="19.5" width="188" height="1" fill="url(#clock-r)"/><g fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><path d="M216.5 16.5L220 20L216.5 23.5L213 20Z"/><path d="M263.5 16.5L267 20L263.5 23.5L260 20Z"/><circle cx="240" cy="20" r="13.5"/><path d="M240 7.5V9.5M252.5 20H250.5M240 32.5V30.5M227.5 20H229.5"/><path id="clock-hour" d="M240 20V14" transform="rotate(300 240 20)"/><path id="clock-minute" d="M240 20V11" transform="rotate(60 240 20)"/></g><path id="clock-second" d="M240 22.5V8.5" style="stroke: var(--grey)" stroke-width=".6" stroke-linecap="round"/><circle cx="240" cy="20" r="1.3" fill="currentColor"/></svg>
+<script>
+  (function () {
+    // This human also must have some fun. Haha. Time for bed :D.
+    const hour = document.getElementById("clock-hour");
+    const minute = document.getElementById("clock-minute");
+    const second = document.getElementById("clock-second");
+    function tick() {
+      const now = new Date();
+      const seconds = now.getSeconds();
+      const minutes = now.getMinutes() + seconds / 60;
+      const hours = (now.getHours() % 12) + minutes / 60;
+
+      const hourAngle = hours * 30;
+      const minuteAngle = minutes * 6;
+      const secondAngle = seconds * 6;
+
+      hour.setAttribute("transform", `rotate(${hourAngle} 240 20)`);
+      minute.setAttribute("transform", `rotate(${minuteAngle} 240 20)`);
+      second.setAttribute("transform", `rotate(${secondAngle} 240 20)`);
+    }
+    tick();
+    setInterval(tick, 1000);
+  })();
+</script>
+</div>
+  
+  <footer class="titleblock">
+    <div><span class="label">Project</span>Don&#39;t panic, impl Things</div>
+    <div><span class="label">By</span>© Martijn Gribnau</div>
+    <div><span class="label">Feed</span><a href="https://gribnau.dev/atom.xml">Atom</a></div>
+  </footer>
+</main>
+</body>
+</html>
